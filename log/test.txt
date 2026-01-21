@@ -24632,3 +24632,163 @@
 2026-01-21 03:24:49,877 - Stocklogger - INFO - Agent 49 says: 
 2026-01-21 03:24:49,877 - Stocklogger - DEBUG - --------DAY 7---------
 2026-01-21 03:24:49,883 - Stocklogger - DEBUG - SESSION 1
+2026-01-21 22:10:07,635 - Stocklogger - DEBUG - Agents initial...
+2026-01-21 22:10:07,636 - Stocklogger - DEBUG - cash: 921979.4588425356, stock a: 55442, stock b:49551, debt: [{'loan': 'yes', 'amount': 1353711.5053746635, 'loan_type': 2, 'repayment_date': 88}]
+2026-01-21 22:10:07,637 - Stocklogger - DEBUG - cash: 2544515.077271977, stock a: 27501, stock b:18181, debt: [{'loan': 'yes', 'amount': 151215.5637726875, 'loan_type': 1, 'repayment_date': 198}]
+2026-01-21 22:10:07,637 - Stocklogger - DEBUG - cash: 3074803.353646606, stock a: 1456, stock b:8870, debt: [{'loan': 'yes', 'amount': 56448.50162301762, 'loan_type': 0, 'repayment_date': 66}]
+2026-01-21 22:10:07,637 - Stocklogger - DEBUG - cash: 3622184.804813114, stock a: 33656, stock b:4165, debt: [{'loan': 'yes', 'amount': 675215.8552740295, 'loan_type': 2, 'repayment_date': 242}]
+2026-01-21 22:10:07,638 - Stocklogger - DEBUG - cash: 3592855.4434373635, stock a: 17135, stock b:2569, debt: [{'loan': 'yes', 'amount': 1653170.905293948, 'loan_type': 0, 'repayment_date': 132}]
+2026-01-21 22:10:07,638 - Stocklogger - DEBUG - cash: 3588878.840637879, stock a: 7906, stock b:3837, debt: [{'loan': 'yes', 'amount': 1678702.5628489843, 'loan_type': 0, 'repayment_date': 176}]
+2026-01-21 22:10:07,638 - Stocklogger - DEBUG - cash: 3241592.0685969098, stock a: 45113, stock b:381, debt: [{'loan': 'yes', 'amount': 795475.6760333631, 'loan_type': 0, 'repayment_date': 264}]
+2026-01-21 22:10:07,638 - Stocklogger - DEBUG - cash: 452508.39904500515, stock a: 32751, stock b:37927, debt: [{'loan': 'yes', 'amount': 2761249.6582087283, 'loan_type': 0, 'repayment_date': 198}]
+2026-01-21 22:10:07,638 - Stocklogger - DEBUG - cash: 1883842.9275061602, stock a: 27242, stock b:27399, debt: [{'loan': 'yes', 'amount': 723299.9877685186, 'loan_type': 2, 'repayment_date': 66}]
+2026-01-21 22:10:07,638 - Stocklogger - DEBUG - cash: 1916258.55875183, stock a: 11575, stock b:50802, debt: [{'loan': 'yes', 'amount': 3295955.2062562183, 'loan_type': 1, 'repayment_date': 22}]
+2026-01-21 22:10:07,638 - Stocklogger - DEBUG - cash: 3861364.419752049, stock a: 2973, stock b:13156, debt: [{'loan': 'yes', 'amount': 2123900.559776139, 'loan_type': 0, 'repayment_date': 110}]
+2026-01-21 22:10:07,639 - Stocklogger - DEBUG - cash: 185084.93114617054, stock a: 6858, stock b:112839, debt: [{'loan': 'yes', 'amount': 1340398.717686606, 'loan_type': 1, 'repayment_date': 132}]
+2026-01-21 22:10:07,639 - Stocklogger - DEBUG - cash: 600460.0759771311, stock a: 98534, stock b:25533, debt: [{'loan': 'yes', 'amount': 831854.6690820205, 'loan_type': 1, 'repayment_date': 66}]
+2026-01-21 22:10:07,639 - Stocklogger - DEBUG - cash: 1200039.0633086676, stock a: 110215, stock b:1702, debt: [{'loan': 'yes', 'amount': 3232625.944289731, 'loan_type': 0, 'repayment_date': 242}]
+2026-01-21 22:10:07,639 - Stocklogger - DEBUG - cash: 331368.0612858966, stock a: 1353, stock b:52665, debt: [{'loan': 'yes', 'amount': 1858238.1889147116, 'loan_type': 1, 'repayment_date': 176}]
+2026-01-21 22:10:07,639 - Stocklogger - DEBUG - cash: 635669.1823200888, stock a: 105315, stock b:19169, debt: [{'loan': 'yes', 'amount': 4378050.7124598, 'loan_type': 1, 'repayment_date': 220}]
+2026-01-21 22:10:07,640 - Stocklogger - DEBUG - cash: 3681491.621046006, stock a: 9076, stock b:7996, debt: [{'loan': 'yes', 'amount': 283417.2694530024, 'loan_type': 1, 'repayment_date': 88}]
+2026-01-21 22:10:07,640 - Stocklogger - DEBUG - cash: 2497467.1768840766, stock a: 21280, stock b:5834, debt: [{'loan': 'yes', 'amount': 2532027.1897661034, 'loan_type': 0, 'repayment_date': 198}]
+2026-01-21 22:10:07,640 - Stocklogger - DEBUG - cash: 1127702.5796490582, stock a: 100638, stock b:16634, debt: [{'loan': 'yes', 'amount': 2626309.9036268056, 'loan_type': 2, 'repayment_date': 176}]
+2026-01-21 22:10:07,640 - Stocklogger - DEBUG - cash: 987592.9357065904, stock a: 53370, stock b:45423, debt: [{'loan': 'yes', 'amount': 1087950.1624620613, 'loan_type': 1, 'repayment_date': 88}]
+2026-01-21 22:10:07,640 - Stocklogger - DEBUG - cash: 1326774.46083052, stock a: 15736, stock b:18011, debt: [{'loan': 'yes', 'amount': 1215741.1239517967, 'loan_type': 2, 'repayment_date': 220}]
+2026-01-21 22:10:07,640 - Stocklogger - DEBUG - cash: 1438989.3499062895, stock a: 52279, stock b:31174, debt: [{'loan': 'yes', 'amount': 3356380.9971138304, 'loan_type': 0, 'repayment_date': 264}]
+2026-01-21 22:10:07,641 - Stocklogger - DEBUG - cash: 2903106.158778514, stock a: 16282, stock b:13446, debt: [{'loan': 'yes', 'amount': 3867604.599817884, 'loan_type': 0, 'repayment_date': 88}]
+2026-01-21 22:10:07,641 - Stocklogger - DEBUG - cash: 3079862.2028621035, stock a: 42498, stock b:2750, debt: [{'loan': 'yes', 'amount': 2126200.3599281413, 'loan_type': 1, 'repayment_date': 110}]
+2026-01-21 22:10:07,641 - Stocklogger - DEBUG - cash: 953504.5098782241, stock a: 33763, stock b:8813, debt: [{'loan': 'yes', 'amount': 1346852.6858081808, 'loan_type': 2, 'repayment_date': 176}]
+2026-01-21 22:10:07,641 - Stocklogger - DEBUG - cash: 3339184.7123379605, stock a: 9873, stock b:30461, debt: [{'loan': 'yes', 'amount': 1326325.6610020718, 'loan_type': 1, 'repayment_date': 88}]
+2026-01-21 22:10:07,641 - Stocklogger - DEBUG - cash: 113375.33187381066, stock a: 73769, stock b:37989, debt: [{'loan': 'yes', 'amount': 1717600.8691345074, 'loan_type': 1, 'repayment_date': 154}]
+2026-01-21 22:10:07,641 - Stocklogger - DEBUG - cash: 413365.4649247809, stock a: 85699, stock b:15572, debt: [{'loan': 'yes', 'amount': 2069203.296591635, 'loan_type': 1, 'repayment_date': 132}]
+2026-01-21 22:10:07,641 - Stocklogger - DEBUG - cash: 794095.8497887385, stock a: 106094, stock b:3036, debt: [{'loan': 'yes', 'amount': 1143266.9051765716, 'loan_type': 2, 'repayment_date': 198}]
+2026-01-21 22:10:07,642 - Stocklogger - DEBUG - cash: 2504162.0659997165, stock a: 6684, stock b:26119, debt: [{'loan': 'yes', 'amount': 97525.97563111364, 'loan_type': 0, 'repayment_date': 44}]
+2026-01-21 22:10:07,645 - Stocklogger - DEBUG - cash: 684458.8804258828, stock a: 95107, stock b:2122, debt: [{'loan': 'yes', 'amount': 203483.79225969216, 'loan_type': 1, 'repayment_date': 110}]
+2026-01-21 22:10:07,645 - Stocklogger - DEBUG - cash: 444913.4800423926, stock a: 42505, stock b:72888, debt: [{'loan': 'yes', 'amount': 1390486.606053582, 'loan_type': 1, 'repayment_date': 110}]
+2026-01-21 22:10:07,645 - Stocklogger - DEBUG - cash: 715245.2619792992, stock a: 31547, stock b:53972, debt: [{'loan': 'yes', 'amount': 2279656.0406368314, 'loan_type': 0, 'repayment_date': 264}]
+2026-01-21 22:10:07,646 - Stocklogger - DEBUG - cash: 2726651.5474824193, stock a: 24678, stock b:21338, debt: [{'loan': 'yes', 'amount': 487315.52475578367, 'loan_type': 0, 'repayment_date': 22}]
+2026-01-21 22:10:07,646 - Stocklogger - DEBUG - cash: 839476.1966211412, stock a: 100799, stock b:23501, debt: [{'loan': 'yes', 'amount': 3667189.419713508, 'loan_type': 0, 'repayment_date': 44}]
+2026-01-21 22:10:07,646 - Stocklogger - DEBUG - cash: 659162.5374591553, stock a: 78772, stock b:34377, debt: [{'loan': 'yes', 'amount': 2221430.602886042, 'loan_type': 0, 'repayment_date': 44}]
+2026-01-21 22:10:07,646 - Stocklogger - DEBUG - cash: 236700.02978774696, stock a: 68147, stock b:59620, debt: [{'loan': 'yes', 'amount': 3509239.5380273946, 'loan_type': 0, 'repayment_date': 88}]
+2026-01-21 22:10:07,647 - Stocklogger - DEBUG - cash: 500630.569226172, stock a: 74468, stock b:20655, debt: [{'loan': 'yes', 'amount': 256176.56554421998, 'loan_type': 1, 'repayment_date': 220}]
+2026-01-21 22:10:07,647 - Stocklogger - DEBUG - cash: 1238069.9222387648, stock a: 75340, stock b:32592, debt: [{'loan': 'yes', 'amount': 4085511.1511501796, 'loan_type': 2, 'repayment_date': 132}]
+2026-01-21 22:10:07,647 - Stocklogger - DEBUG - cash: 1608274.7013056176, stock a: 7505, stock b:34665, debt: [{'loan': 'yes', 'amount': 354586.7817431003, 'loan_type': 0, 'repayment_date': 242}]
+2026-01-21 22:10:07,647 - Stocklogger - DEBUG - cash: 638260.6714781846, stock a: 74750, stock b:50332, debt: [{'loan': 'yes', 'amount': 3513669.93017814, 'loan_type': 1, 'repayment_date': 220}]
+2026-01-21 22:10:07,648 - Stocklogger - DEBUG - cash: 3369172.172220263, stock a: 2979, stock b:5562, debt: [{'loan': 'yes', 'amount': 2340664.618100072, 'loan_type': 2, 'repayment_date': 176}]
+2026-01-21 22:10:07,648 - Stocklogger - DEBUG - cash: 1481535.6801039476, stock a: 62941, stock b:32916, debt: [{'loan': 'yes', 'amount': 1089881.1181977335, 'loan_type': 2, 'repayment_date': 154}]
+2026-01-21 22:10:07,648 - Stocklogger - DEBUG - cash: 1405390.7512751329, stock a: 24739, stock b:5730, debt: [{'loan': 'yes', 'amount': 1733061.186075406, 'loan_type': 2, 'repayment_date': 132}]
+2026-01-21 22:10:07,649 - Stocklogger - DEBUG - cash: 1465708.947422535, stock a: 15341, stock b:23607, debt: [{'loan': 'yes', 'amount': 1564137.2080198878, 'loan_type': 1, 'repayment_date': 264}]
+2026-01-21 22:10:07,649 - Stocklogger - DEBUG - cash: 1053459.9469369098, stock a: 101403, stock b:7603, debt: [{'loan': 'yes', 'amount': 1691630.5042035796, 'loan_type': 2, 'repayment_date': 44}]
+2026-01-21 22:10:07,650 - Stocklogger - DEBUG - cash: 1799248.2832052559, stock a: 75323, stock b:4327, debt: [{'loan': 'yes', 'amount': 2628773.12132653, 'loan_type': 1, 'repayment_date': 88}]
+2026-01-21 22:10:07,650 - Stocklogger - DEBUG - cash: 739359.0317675242, stock a: 94847, stock b:9605, debt: [{'loan': 'yes', 'amount': 3167702.3230905132, 'loan_type': 1, 'repayment_date': 264}]
+2026-01-21 22:10:07,651 - Stocklogger - DEBUG - cash: 377096.81658994185, stock a: 77770, stock b:2052, debt: [{'loan': 'yes', 'amount': 637005.8944635909, 'loan_type': 2, 'repayment_date': 242}]
+2026-01-21 22:10:07,651 - Stocklogger - DEBUG - cash: 1015541.8070971295, stock a: 34850, stock b:68432, debt: [{'loan': 'yes', 'amount': 2951915.061547203, 'loan_type': 1, 'repayment_date': 264}]
+2026-01-21 22:10:07,652 - Stocklogger - DEBUG - --------Simulation Start!--------
+2026-01-21 22:10:07,652 - Stocklogger - DEBUG - --------DAY 1---------
+2026-01-21 22:10:07,657 - Stocklogger - DEBUG - SESSION 1
+2026-01-21 22:10:36,215 - Stocklogger - DEBUG - SESSION 2
+2026-01-21 22:11:06,312 - Stocklogger - DEBUG - SESSION 3
+2026-01-21 22:11:37,183 - Stocklogger - INFO - Agent 0 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:37,460 - Stocklogger - INFO - Agent 1 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:37,720 - Stocklogger - INFO - Agent 2 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:37,976 - Stocklogger - INFO - Agent 3 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:38,253 - Stocklogger - INFO - Agent 4 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:38,507 - Stocklogger - INFO - Agent 5 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:38,848 - Stocklogger - INFO - Agent 6 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:39,102 - Stocklogger - INFO - Agent 7 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:39,360 - Stocklogger - INFO - Agent 8 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:39,616 - Stocklogger - INFO - Agent 9 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:39,873 - Stocklogger - INFO - Agent 10 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:40,130 - Stocklogger - INFO - Agent 11 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:40,389 - Stocklogger - INFO - Agent 12 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:40,651 - Stocklogger - INFO - Agent 13 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:40,912 - Stocklogger - INFO - Agent 14 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:41,169 - Stocklogger - INFO - Agent 15 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:41,426 - Stocklogger - INFO - Agent 16 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:41,766 - Stocklogger - INFO - Agent 17 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:42,039 - Stocklogger - INFO - Agent 18 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:42,298 - Stocklogger - INFO - Agent 19 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:42,558 - Stocklogger - INFO - Agent 20 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:42,826 - Stocklogger - INFO - Agent 21 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:43,093 - Stocklogger - INFO - Agent 22 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:43,363 - Stocklogger - INFO - Agent 23 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:43,638 - Stocklogger - INFO - Agent 24 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:43,907 - Stocklogger - INFO - Agent 25 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:44,173 - Stocklogger - INFO - Agent 26 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:44,440 - Stocklogger - INFO - Agent 27 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:44,785 - Stocklogger - INFO - Agent 28 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:45,059 - Stocklogger - INFO - Agent 29 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:45,319 - Stocklogger - INFO - Agent 30 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:45,581 - Stocklogger - INFO - Agent 31 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:45,846 - Stocklogger - INFO - Agent 32 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:46,108 - Stocklogger - INFO - Agent 33 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:46,373 - Stocklogger - INFO - Agent 34 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:46,638 - Stocklogger - INFO - Agent 35 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:46,904 - Stocklogger - INFO - Agent 36 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:47,169 - Stocklogger - INFO - Agent 37 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:47,521 - Stocklogger - INFO - Agent 38 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:47,785 - Stocklogger - INFO - Agent 39 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:48,061 - Stocklogger - INFO - Agent 40 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:48,332 - Stocklogger - INFO - Agent 41 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:48,608 - Stocklogger - INFO - Agent 42 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:48,881 - Stocklogger - INFO - Agent 43 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:49,150 - Stocklogger - INFO - Agent 44 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:49,420 - Stocklogger - INFO - Agent 45 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:49,686 - Stocklogger - INFO - Agent 46 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:49,951 - Stocklogger - INFO - Agent 47 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:50,217 - Stocklogger - INFO - Agent 48 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:50,574 - Stocklogger - INFO - Agent 49 tomorrow estimation: {'buy_A': 'no', 'buy_B': 'no', 'sell_A': 'no', 'sell_B': 'no', 'loan': 'no'}
+2026-01-21 22:11:50,846 - Stocklogger - DEBUG - DAY 1 ends, display forum messages...
+2026-01-21 22:11:50,847 - Stocklogger - INFO - Agent 0 says: 
+2026-01-21 22:11:50,847 - Stocklogger - INFO - Agent 1 says: 
+2026-01-21 22:11:50,847 - Stocklogger - INFO - Agent 2 says: 
+2026-01-21 22:11:50,848 - Stocklogger - INFO - Agent 3 says: 
+2026-01-21 22:11:50,848 - Stocklogger - INFO - Agent 4 says: 
+2026-01-21 22:11:50,848 - Stocklogger - INFO - Agent 5 says: 
+2026-01-21 22:11:50,849 - Stocklogger - INFO - Agent 6 says: 
+2026-01-21 22:11:50,849 - Stocklogger - INFO - Agent 7 says: 
+2026-01-21 22:11:50,849 - Stocklogger - INFO - Agent 8 says: 
+2026-01-21 22:11:50,849 - Stocklogger - INFO - Agent 9 says: 
+2026-01-21 22:11:50,850 - Stocklogger - INFO - Agent 10 says: 
+2026-01-21 22:11:50,850 - Stocklogger - INFO - Agent 11 says: 
+2026-01-21 22:11:50,850 - Stocklogger - INFO - Agent 12 says: 
+2026-01-21 22:11:50,850 - Stocklogger - INFO - Agent 13 says: 
+2026-01-21 22:11:50,850 - Stocklogger - INFO - Agent 14 says: 
+2026-01-21 22:11:50,851 - Stocklogger - INFO - Agent 15 says: 
+2026-01-21 22:11:50,851 - Stocklogger - INFO - Agent 16 says: 
+2026-01-21 22:11:50,851 - Stocklogger - INFO - Agent 17 says: 
+2026-01-21 22:11:50,851 - Stocklogger - INFO - Agent 18 says: 
+2026-01-21 22:11:50,851 - Stocklogger - INFO - Agent 19 says: 
+2026-01-21 22:11:50,852 - Stocklogger - INFO - Agent 20 says: 
+2026-01-21 22:11:50,852 - Stocklogger - INFO - Agent 21 says: 
+2026-01-21 22:11:50,852 - Stocklogger - INFO - Agent 22 says: 
+2026-01-21 22:11:50,852 - Stocklogger - INFO - Agent 23 says: 
+2026-01-21 22:11:50,853 - Stocklogger - INFO - Agent 24 says: 
+2026-01-21 22:11:50,853 - Stocklogger - INFO - Agent 25 says: 
+2026-01-21 22:11:50,853 - Stocklogger - INFO - Agent 26 says: 
+2026-01-21 22:11:50,853 - Stocklogger - INFO - Agent 27 says: 
+2026-01-21 22:11:50,854 - Stocklogger - INFO - Agent 28 says: 
+2026-01-21 22:11:50,854 - Stocklogger - INFO - Agent 29 says: 
+2026-01-21 22:11:50,854 - Stocklogger - INFO - Agent 30 says: 
+2026-01-21 22:11:50,854 - Stocklogger - INFO - Agent 31 says: 
+2026-01-21 22:11:50,855 - Stocklogger - INFO - Agent 32 says: 
+2026-01-21 22:11:50,855 - Stocklogger - INFO - Agent 33 says: 
+2026-01-21 22:11:50,855 - Stocklogger - INFO - Agent 34 says: 
+2026-01-21 22:11:50,855 - Stocklogger - INFO - Agent 35 says: 
+2026-01-21 22:11:50,855 - Stocklogger - INFO - Agent 36 says: 
+2026-01-21 22:11:50,855 - Stocklogger - INFO - Agent 37 says: 
+2026-01-21 22:11:50,856 - Stocklogger - INFO - Agent 38 says: 
+2026-01-21 22:11:50,856 - Stocklogger - INFO - Agent 39 says: 
+2026-01-21 22:11:50,856 - Stocklogger - INFO - Agent 40 says: 
+2026-01-21 22:11:50,856 - Stocklogger - INFO - Agent 41 says: 
+2026-01-21 22:11:50,856 - Stocklogger - INFO - Agent 42 says: 
+2026-01-21 22:11:50,857 - Stocklogger - INFO - Agent 43 says: 
+2026-01-21 22:11:50,857 - Stocklogger - INFO - Agent 44 says: 
+2026-01-21 22:11:50,857 - Stocklogger - INFO - Agent 45 says: 
+2026-01-21 22:11:50,857 - Stocklogger - INFO - Agent 46 says: 
+2026-01-21 22:11:50,857 - Stocklogger - INFO - Agent 47 says: 
+2026-01-21 22:11:50,858 - Stocklogger - INFO - Agent 48 says: 
+2026-01-21 22:11:50,858 - Stocklogger - INFO - Agent 49 says: 
+2026-01-21 22:11:50,858 - Stocklogger - DEBUG - --------DAY 2---------
+2026-01-21 22:11:50,864 - Stocklogger - DEBUG - SESSION 1
+2026-01-21 22:12:22,270 - Stocklogger - DEBUG - SESSION 2

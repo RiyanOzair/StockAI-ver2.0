@@ -1913,6 +1913,19 @@ def render_market():
     
     st.markdown('<p class="section-title">📈 Market Analysis</p>', unsafe_allow_html=True)
     
+    # Calculate high/low safely
+    def get_high_low(price_history):
+        if not price_history:
+            return 0.0, 0.0
+        try:
+            prices = [p['price'] if isinstance(p, dict) else p for p in price_history]
+            return max(prices), min(prices)
+        except:
+            return 0.0, 0.0
+    
+    high_a, low_a = get_high_low(state.stock_a.price_history)
+    high_b, low_b = get_high_low(state.stock_b.price_history) if state.stock_b else (0.0, 0.0)
+    
     # Stock overview cards
     col1, col2 = st.columns(2)
     
@@ -1940,11 +1953,11 @@ def render_market():
             <div style="margin-top: 16px; display: flex; gap: 24px;">
                 <div>
                     <div style="font-size: 11px; color: var(--text-dim);">HIGH</div>
-                    <div style="font-size: 14px; font-weight: 600; color: #10b981;">${max(state.stock_a.price_history):.2f}</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #10b981;">${high_a:.2f}</div>
                 </div>
                 <div>
                     <div style="font-size: 11px; color: var(--text-dim);">LOW</div>
-                    <div style="font-size: 14px; font-weight: 600; color: #ef4444;">${min(state.stock_a.price_history):.2f}</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #ef4444;">${low_a:.2f}</div>
                 </div>
                 <div>
                     <div style="font-size: 11px; color: var(--text-dim);">VOLUME</div>
@@ -1978,11 +1991,11 @@ def render_market():
             <div style="margin-top: 16px; display: flex; gap: 24px;">
                 <div>
                     <div style="font-size: 11px; color: var(--text-dim);">HIGH</div>
-                    <div style="font-size: 14px; font-weight: 600; color: #10b981;">${max(state.stock_b.price_history):.2f}</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #10b981;">${high_b:.2f}</div>
                 </div>
                 <div>
                     <div style="font-size: 11px; color: var(--text-dim);">LOW</div>
-                    <div style="font-size: 14px; font-weight: 600; color: #ef4444;">${min(state.stock_b.price_history):.2f}</div>
+                    <div style="font-size: 14px; font-weight: 600; color: #ef4444;">${low_b:.2f}</div>
                 </div>
                 <div>
                     <div style="font-size: 11px; color: var(--text-dim);">VOLUME</div>

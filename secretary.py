@@ -1,12 +1,19 @@
 import json
 import os
 import openai
+from dotenv import load_dotenv
 from log.custom_logger import log
+
+# Load environment variables
+load_dotenv()
 
 
 def run_api(model, prompt, temperature: float = 0):
-    openai.api_key = ""
-    client = openai.OpenAI(api_key=openai.api_key)
+    """Run OpenAI API call with proper key management."""
+    api_key = os.getenv("OPENAI_API_KEY", "")
+    if not api_key:
+        log.logger.warning("OPENAI_API_KEY not set in environment variables")
+    client = openai.OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model=model,
         messages=[

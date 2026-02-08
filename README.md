@@ -1,72 +1,201 @@
-# When AI Meets Finance (StockAgent): Large Language Model-based Stock Trading in Simulated Real-world Environments
+# StockAI - Market Simulation Lab
 
-![workflow](fig/workflow.png)
-![schematic](fig/schematic.png)
+![Python](https://img.shields.io/badge/Python-3.9+-blue.svg)
+![Streamlit](https://img.shields.io/badge/Streamlit-1.28+-red.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-Can AI Agents simulate real-world trading environments to investigate the impact of external factors on stock trading activities (e.g., macroeconomics, policy changes, company fundamentals, and global events)? These factors, which frequently influence trading behaviors, are critical elements in the quest for maximizing investors' profits. Our work attempts to solve this problem through large language model-based agents. We have developed a multi-agent AI system called StockAgent, driven by LLMs,  designed to simulate investors' trading behaviors in response to the real stock market. The StockAgent allows users to evaluate the impact of different external factors on investor trading and to analyze trading behavior and profitability effects. Additionally, StockAgent avoids the test set leakage issue present in existing trading simulation systems based on AI Agents. Specifically, it prevents the model from leveraging prior knowledge it may have acquired related to the test data. We evaluate different LLMs under the framework of StockAgent in a stock trading environment that closely resembles real-world conditions. The experimental results demonstrate the impact of key external factors on stock market trading, including trading behavior and stock price fluctuation rules. This research explores the study of agents' free trading gaps in the context of no prior knowledge related to market data. The patterns identified through StockAgent simulations provide valuable insights for LLM-based investment advice and stock recommendation. 
+An agent-based stock market simulation platform that explores the intersection of behavioral finance and artificial intelligence. Watch autonomous trading agents with unique personalities compete, collaborate, and shape market dynamics in real-time simulations.
 
-## Link
-ARXIV LINK: https://arxiv.org/pdf/2407.18957
-## Architecture
-![architect](fig/workflow2.png)
+## ✨ Features
 
-The Workflow of Trading Simulation Flow. There are four Phases, namely **Initial Phase**, **Trading Phase**, **Post-Trading Phase** and **Special Events Phase**. In the Post-Trading Phase, Daily events and Quarterly events occur with daily and quarterly frequency respectively. A Specific Events Phase is an event that occurs randomly and acts on a random trading day.
+- **🤖 50+ AI Trading Agents** - Autonomous agents with different trading strategies (Conservative, Aggressive, Balanced, Growth-Oriented)
+- **📊 Real-Time Analytics** - Interactive Plotly charts showing price movements, volume, and technical indicators
+- **🧠 Behavioral Finance** - Agents exhibit real behavioral biases (Herding, Loss Aversion, Overconfidence, Anchoring)
+- **💬 BBS Forum** - Agents communicate through a bulletin board system, sharing opinions and sentiment
+- **📈 Market Events** - Random economic events that impact stock prices and agent behavior
+- **🏆 Leaderboard** - Track top-performing agents and compare strategy effectiveness
+- **📤 Export Data** - Download simulation results for further analysis
 
-## Quick Start
+## 🖥️ Screenshots
 
-#### Environment
+### Landing Page
+Premium glassmorphism design with animated gradients and feature highlights.
 
+### Simulation Dashboard
+Real-time market overview with stock performance charts, agent activities, and key metrics.
+
+### Guidelines Page
+Comprehensive documentation for using the platform effectively.
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Python 3.9+
+- pip
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/RiyanOzair/StockAI.git
+cd StockAI
 ```
-conda create --name stockagent python=3.9
-conda activate stockagent
 
-git clone https://github.com/dhh1995/PromptCoder
-cd PromptCoder
-pip install -e .
-cd ..
+2. Create and activate virtual environment:
+```bash
+python -m venv venv
 
-git clone <This Github Project>
-cd Stockagent
+# Windows
+.\venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
+```
+
+3. Install dependencies:
+```bash
 pip install -r requirements.txt
 ```
 
-#### API keys
+4. Set up FREE LLM API Key (Groq recommended):
+   - Go to https://console.groq.com and create a free account
+   - Click "API Keys" and generate a new key
+   - Copy `.env.example` to `.env` and paste your key:
+     ```env
+     GROQ_API_KEY=your_groq_api_key_here
+     ```
+   - (Optional) For Google Gemini, get a key at https://aistudio.google.com
 
-Use GPTs as agent LLM:
-
-```
-export OPENAI_API_KEY=YOUR_OPENAI_API_KEY
-```
-
-Use Gemini as agent LLM:
-
-```
-export GOOGLE_API_KEY=YOUR_GEMINI_API_KEY
-```
-
-#### Start simulation
-
-You can choose a basic LLM and start simulation in one line:
-
-```
-python main.py --model MODEL_NAME
+5. Run the application:
+```bash
+streamlit run ui/app.py --server.port 8510
 ```
 
-We set gemini-pro for default LLM.
+6. Open your browser at `http://localhost:8510`
 
-#### About ’procoder‘
+**Default LLM:** Llama 3.3 70B (free via Groq)
 
-Here we use the: https://github.com/dhh1995/PromptCoder.git this tool, please download after its installation.
+**Security:** Never share your `.env` file or API keys publicly. `.env` is gitignored by default.
 
-#### Citation
-If you find the code is valuable, please use this citation.
+## 🚢 Deployment
+
+### Streamlit Cloud (Recommended - Free)
+
+1. Push your code to GitHub
+2. Go to [share.streamlit.io](https://share.streamlit.io)
+3. Connect your repository
+4. Add secrets in the dashboard (Settings → Secrets):
+   ```toml
+   GROQ_API_KEY = "your_key"
+   GOOGLE_API_KEY = "your_key"
+   ```
+5. Deploy!
+
+### Docker
+
+```bash
+# Build the image
+docker build -t stockai .
+
+# Run the container
+docker run -p 8510:8510 --env-file .env stockai
 ```
-@article{zhang2024ai,
-  title={When AI Meets Finance (StockAgent): Large Language Model-based Stock Trading in Simulated Real-world Environments},
-  author={Zhang, Chong and Liu, Xinyi and Jin, Mingyu and Zhang, Zhongmou and Li, Lingyao and Wang, Zhengting and Hua, Wenyue and Shu, Dong and Zhu, Suiyuan and Jin, Xiaobo and others},
-  journal={arXiv preprint arXiv:2407.18957},
-  year={2024}
-}
+
+### Manual Server Deployment
+
+```bash
+# Install on server
+pip install -r requirements.txt
+
+# Run with production settings
+streamlit run ui/app.py --server.port 8510 --server.address 0.0.0.0 --server.headless true
 ```
+
+## 📁 Project Structure
+
+```
+StockAI/
+├── ui/
+│   ├── app.py              # Main Streamlit application
+│   ├── simulation_engine.py # Backend simulation logic
+│   └── favicon.svg         # Custom logo
+├── .streamlit/
+│   └── config.toml         # Streamlit configuration
+├── fig/                    # Architecture diagrams
+├── log/                    # Logging utilities
+├── prompt/                 # Agent prompts
+├── res/                    # Simulation results
+├── requirements.txt        # Python dependencies
+└── README.md
+```
+
+## 🎮 How to Use
+
+1. **Launch the App** - Start the Streamlit server
+2. **Read Guidelines** - Click "View Guidelines" to understand the platform
+3. **Configure Simulation** - Set parameters (agents, days, volatility, seed)
+4. **Run Simulation** - Click "Run Day" to advance trading days
+5. **Monitor Dashboard** - Watch real-time updates on Overview tab
+6. **Analyze Results** - Use the Analysis tab to compare agent strategies
+
+## 🔧 Configuration
+
+Edit `.streamlit/config.toml` to customize the theme:
+
+```toml
+[theme]
+primaryColor = "#10b981"
+backgroundColor = "#0a0a0f"
+secondaryBackgroundColor = "#16161d"
+textColor = "#fafafa"
+font = "sans serif"
+```
+
+## 📊 Agent Strategies
+
+| Strategy | Risk Level | Description |
+|----------|------------|-------------|
+| 🛡️ Conservative | Low | Prefers stable assets, uses stop-loss orders |
+| 🔥 Aggressive | High | Trades on momentum, uses leverage |
+| ⚖️ Balanced | Medium | Diversifies, follows fundamental analysis |
+| 🚀 Growth-Oriented | High | Focuses on high-growth opportunities |
+
+## 🧠 Behavioral Biases
+
+- **🐑 Herding** - Following crowd behavior
+- **😰 Loss Aversion** - Feeling losses more than gains
+- **😤 Overconfidence** - Overestimating abilities
+- **⚓ Anchoring** - Relying on initial information
+
+## 🛠️ Tech Stack
+
+- **Frontend**: Streamlit, Custom CSS (Glassmorphism)
+- **Charts**: Plotly
+- **Backend**: Python, Dataclasses
+- **Fonts**: Inter, JetBrains Mono
+
+## 📝 License
+
+This project is licensed under the MIT License.
+
+## 👥 Authors
+
+- Riyan Ozair
+- Nabeel Rizwan
+- Samiullah
+
+## 🙏 Acknowledgments
+
+Based on research from "When AI Meets Finance (StockAgent): Large Language Model-based Stock Trading in Simulated Real-world Environments"
+
+- **Reffernced Repository**: [MingyuJ666/Stockagent](https://github.com/MingyuJ666/Stockagent)
+- **Paper**: [arXiv:2407.18957](https://arxiv.org/pdf/2407.18957)
+
+---
+
+<p align="center">
+  <b>StockAI</b> - Explore the future of AI-driven market simulation
+</p>
 
 

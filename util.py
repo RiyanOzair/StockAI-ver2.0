@@ -1,8 +1,40 @@
 """
-DONT FORGET TO DELETE!!!
+FREE LLM Configuration
+- Groq: Free cloud API (Llama 3.3, Mixtral) - Get key at https://console.groq.com
+- Ollama: Free local LLMs - Install from https://ollama.ai
+- Google Gemini: Free tier available - Get key at https://aistudio.google.com
 """
-OPENAI_API_KEY = ""
-GOOGLE_API_KEY = ""
+import os
+from dotenv import load_dotenv
+
+load_dotenv()  # Load from .env file if exists
+
+# API Keys - Use environment variables for security
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")  # Free at https://console.groq.com
+GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")  # Free tier at https://aistudio.google.com
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")  # Paid (legacy support)
+
+# Ollama settings (free local LLMs)
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+
+# FREE LLM Models
+MODELS = {
+    # Groq - FREE cloud API (very fast!)
+    "llama-3.3-70b": {"provider": "groq", "name": "llama-3.3-70b-versatile"},
+    "llama-3.1-8b": {"provider": "groq", "name": "llama-3.1-8b-instant"},
+    "mixtral-8x7b": {"provider": "groq", "name": "mixtral-8x7b-32768"},
+    "gemma2-9b": {"provider": "groq", "name": "gemma2-9b-it"},
+    # Ollama - FREE local LLMs (requires Ollama installed)
+    "ollama-llama3": {"provider": "ollama", "name": "llama3"},
+    "ollama-mistral": {"provider": "ollama", "name": "mistral"},
+    "ollama-qwen2": {"provider": "ollama", "name": "qwen2"},
+    # Google Gemini - FREE tier
+    "gemini-1.5-flash": {"provider": "google", "name": "gemini-1.5-flash"},
+    "gemini-2.0-flash": {"provider": "google", "name": "gemini-2.0-flash-exp"},
+}
+
+# Default model (Groq Llama 3.3 70B - FREE and powerful!)
+DEFAULT_MODEL = "llama-3.3-70b"
 
 # 基础设置
 AGENTS_NUM = 50  # 交易员数量

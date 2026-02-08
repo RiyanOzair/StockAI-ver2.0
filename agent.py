@@ -5,6 +5,8 @@ import tiktoken
 import random
 import requests
 import google.generativeai as genai
+from groq import Groq
+import ollama
 
 import util
 from log.custom_logger import log
@@ -74,16 +76,93 @@ class Agent:
     #     # elif 'gemini' in self.model:
     #     #     return self.run_api_gemini(prompt, temperature)
     def run_api(self, prompt, temperature: float = 1):
-        # Disable all LLM calls completely for baseline run
+        """Route to appropriate FREE LLM provider based on model configuration."""
+        if self.model in util.MODELS:
+            provider = util.MODELS[self.model]["provider"]
+            model_name = util.MODELS[self.model]["name"]
+            
+            if provider == "groq":
+                return self.run_api_groq(prompt, model_name, temperature)
+            elif provider == "ollama":
+                return self.run_api_ollama(prompt, model_name, temperature)
+            elif provider == "google":
+                return self.run_api_gemini(prompt, model_name, temperature)
+            elif provider == "openai":
+                return self.run_api_gpt(prompt, temperature)
+        
+        # Legacy fallback
+        if 'gemini' in self.model:
+            return self.run_api_gemini(prompt, self.model, temperature)
+        elif 'gpt' in self.model:
+            return self.run_api_gpt(prompt, temperature)
+        
+        log.logger.error(f"Unknown model: {self.model}. Use: llama-3.3-70b, gemini-1.5-flash, or ollama-llama3")
+        return ""
+    
+    def run_api_groq(self, prompt, model_name, temperature: float = 1):
+        """Call Groq API - FREE Llama 3.3 70B, Mixtral, etc."""
+        if not util.GROQ_API_KEY:
+            log.logger.error("GROQ_API_KEY not set. Get free key at https://console.groq.com")
+            return ""
+        
+        client = Groq(api_key=util.GROQ_API_KEY)
+        self.chat_history.append({"role": "user", "content": prompt})
+        max_retry = 2
+        retry = 0
+
+        while retry < max_retry:
+            try:
+                response = client.chat.completions.create(
+                    model=model_name,
+                    messages=self.chat_history,
+                    temperature=temperature,
+                )
+                new_message_dict = {"role": response.choices[0].message.role,
+                                    "content": response.choices[0].message.content}
+                self.chat_history.append(new_message_dict)
+                return response.choices[0].message.content
+            except Exception as e:
+                log.logger.warning(f"Groq API retry... {e}")
+                retry += 1
+                time.sleep(1)
+        log.logger.error("ERROR: GROQ API FAILED. SKIP THIS INTERACTION.")
+        return ""
+    
+    def run_api_ollama(self, prompt, model_name, temperature: float = 1):
+        """Call Ollama - FREE local LLMs (Llama 3, Mistral, etc.)"""
+        self.chat_history.append({"role": "user", "content": prompt})
+        max_retry = 2
+        retry = 0
+
+        while retry < max_retry:
+            try:
+                response = ollama.chat(
+                    model=model_name,
+                    messages=self.chat_history,
+                    options={"temperature": temperature}
+                )
+                resp_text = response['message']['content']
+                self.chat_history.append({"role": "assistant", "content": resp_text})
+                return resp_text
+            except Exception as e:
+                log.logger.warning(f"Ollama API retry... {e}. Make sure Ollama is running!")
+                retry += 1
+                time.sleep(1)
+        log.logger.error("ERROR: OLLAMA FAILED. Install from https://ollama.ai and run 'ollama pull llama3'")
         return ""
     
 
-    def run_api_gemini(self, prompt, temperature: float = 1):
+    def run_api_gemini(self, prompt, model_name, temperature: float = 1):
+        """Call Google Gemini API - FREE tier available"""
+        if not util.GOOGLE_API_KEY:
+            log.logger.error("GOOGLE_API_KEY not set. Get free key at https://aistudio.google.com")
+            return ""
+        
         genai.configure(api_key=util.GOOGLE_API_KEY, transport='rest')
         generation_config = genai.types.GenerationConfig(
             candidate_count=1,
             temperature=temperature)
-        model = genai.GenerativeModel(self.model)
+        model = genai.GenerativeModel(model_name)
         self.chat_history.append({"role": "user", "parts": [prompt]})
         max_retry = 2
         retry = 0
@@ -94,10 +173,11 @@ class Agent:
                 self.chat_history.append(new_message_dict)
                 return response.text
             except Exception as e:
-                log.logger.warning("Gemini api retry...{}".format(e))
+                log.logger.warning("Gemini API retry...{}".format(e))
                 retry += 1
                 time.sleep(1)
         log.logger.error("ERROR: GEMINI API FAILED. SKIP THIS INTERACTION.")
+        return ""
         return ""
 
 

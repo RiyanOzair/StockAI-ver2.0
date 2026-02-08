@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "name": "rajesh",
+  "nickname": "the fox",
+  "display_name": "rajesh \"the fox\"",
+  "character": "Growth-Oriented",
+  "strategy_preference": "Momentum",
+  "risk_tolerance": 71,
+  "trading_frequency": "Medium",
+  "initial_capital": 10000,
+  "herding_level": "Medium",
+  "loss_aversion_level": "Medium",
+  "overconfidence_level": "Low",
+  "anchoring_level": "Medium",
+  "avatar_type": "icon",
+  "avatar_icon": "fox"
+}

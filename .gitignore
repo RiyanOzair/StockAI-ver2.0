@@ -9,6 +9,13 @@ log/
 # Virtual environment
 venv/
 
+# Environment variables (API keys - NEVER commit!)
+.env
+.env.local
+
 # OS-generated files
 .DS_Store
 Thumbs.db
+
+# Project private docs
+PROJECT_OVERVIEW_PRIVATE.md

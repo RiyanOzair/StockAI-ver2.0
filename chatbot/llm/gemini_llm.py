@@ -13,11 +13,19 @@ _genai = None
 _gemini_available = False
 
 try:
-    import google.generativeai as genai
+    # Try the modern `google.genai` package first (newer clients)
+    import google.genai as genai
     _genai = genai
     _gemini_available = True
-except ImportError:
-    pass
+except Exception:
+    try:
+        # Fall back to the older `google.generativeai` package if present
+        import google.generativeai as genai
+        _genai = genai
+        _gemini_available = True
+    except Exception:
+        _genai = None
+        _gemini_available = False
 
 # Rate limiter (optional)
 _gemini_limiter = None

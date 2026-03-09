@@ -2013,9 +2013,8 @@ function updateMetrics() {
    SIMULATION CONTROLS
 ═══════════════════════════════════════════ */
 async function simStart() {
-  const r = await apiPost('/simulation/start');
-  if (r) { toast('Simulation started', 'var(--lime)'); pollStatus(); }
-  else toast('Already running or error', 'var(--red)');
+  // Each press runs exactly 1 more day
+  await simRunDays(1);
 }
 async function simPause() {
   const r = await apiPost('/simulation/pause');

@@ -2039,9 +2039,11 @@ async function simRunDays(n) {
   if (live) handleStatus(live);
   const currentDay = live ? live.day : state.day;
 
-  // Stop any running simulation (check both client and server state)
+  // Stop any running simulation — then wait briefly so the old background
+  // task can detect is_running=False and exit before we start a new one.
   if ((live && live.is_running) || state.is_running) {
     await apiPost('/simulation/stop');
+    await new Promise(r => setTimeout(r, 300));
   }
 
   if (currentDay >= configuredDays) {
@@ -2059,6 +2061,26 @@ async function simRunDays(n) {
   if (s) toast(`▶ Day ${currentDay + 1}–${targetDay} of ${configuredDays}`, 'var(--lime)');
   else toast('Start failed', 'var(--red)');
   pollStatus();
+
+  // Active polling: keep updating until the backend says the sim finished.
+  // Works even if WebSocket is disconnected or Render drops the WS.
+  _awaitSimCompletion(targetDay);
+}
+
+// Poll the backend until the sim stops running, updating the UI each time.
+let _simPollTimer = null;
+function _awaitSimCompletion(targetDay) {
+  clearInterval(_simPollTimer);
+  _simPollTimer = setInterval(async () => {
+    const s = await apiFetch('/simulation/status');
+    if (!s) return;                   // transient fetch error
+    handleStatus(s);
+    if (!s.is_running) {
+      clearInterval(_simPollTimer);
+      _simPollTimer = null;
+      handleComplete({ day: s.day, total_days: s.total_days });
+    }
+  }, 1500);
 }
 
 function handleComplete(d) {

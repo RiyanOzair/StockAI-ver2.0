@@ -464,110 +464,126 @@ class SimulationLoop:
         # Resume from current day position so extend works correctly
         start_step = self.day * self.sessions_per_day
 
-        for step_i in range(start_step, total_steps):
-            if not self.is_running or self._run_id != my_run_id:
-                break
-            while self.is_paused:
-                await asyncio.sleep(0.5)
-                if not self.is_running:
-                    return
+        logger.info(
+            "run_simulation start: run_id=%s, day=%s, total_days=%s, "
+            "start_step=%s, total_steps=%s",
+            my_run_id, self.day, self.total_days, start_step, total_steps,
+        )
 
-            self.day = (step_i // self.sessions_per_day) + 1
-            self.session = (step_i % self.sessions_per_day) + 1
+        try:
+            for step_i in range(start_step, total_steps):
+                if not self.is_running or self._run_id != my_run_id:
+                    logger.info("run_simulation interrupted at step %s (run_id match=%s)",
+                                step_i, self._run_id == my_run_id)
+                    break
+                while self.is_paused:
+                    await asyncio.sleep(0.5)
+                    if not self.is_running:
+                        return
 
-            # Circuit breakers last the full trading day — only lift at day open
-            if self.session == 1:
-                self.halted_stocks.clear()
-            self._session_open = {s: (b.last_price or 100.0) for s, b in self.order_books.items()}
+                self.day = (step_i // self.sessions_per_day) + 1
+                self.session = (step_i % self.sessions_per_day) + 1
+                day_events = []  # init before try so tick broadcast always has it
 
-            # Events at start of each day
-            day_events: List[MarketEvent] = []
-            report_data = None
-            if self.session == 1:
-                day_events = self._generate_events(self.day)
-                self.events.extend(day_events)
-                # Loans at day start
-                self._process_loans(self.day)
-                # Financial reports
-                report_data = self._generate_financial_reports(self.day)
+                try:
+                    # Circuit breakers last the full trading day — only lift at day open
+                    if self.session == 1:
+                        self.halted_stocks.clear()
+                    self._session_open = {s: (b.last_price or 100.0) for s, b in self.order_books.items()}
 
-            # Sector-correlated price movement
-            sector_impacts = self._event_impact_by_sector(day_events)
-            sector_drifts = self._generate_sector_drifts(sector_impacts)
-            self._apply_correlated_walk(sector_drifts)
+                    # Events at start of each day
+                    report_data = None
+                    if self.session == 1:
+                        day_events = self._generate_events(self.day)
+                        self.events.extend(day_events)
+                        # Loans at day start
+                        self._process_loans(self.day)
+                        # Financial reports
+                        report_data = self._generate_financial_reports(self.day)
 
-            # Circuit breakers
-            cb_events = self._check_circuit_breakers()
-            if cb_events:
-                self.events.extend(cb_events)
-                day_events.extend(cb_events)
+                    # Sector-correlated price movement
+                    sector_impacts = self._event_impact_by_sector(day_events)
+                    sector_drifts = self._generate_sector_drifts(sector_impacts)
+                    self._apply_correlated_walk(sector_drifts)
 
-            # Build state snapshot
-            prices = {s: (b.last_price or 100.0) for s, b in self.order_books.items()}
-            trends = {s: self._calculate_trend(s) for s in self.order_books}
+                    # Circuit breakers
+                    cb_events = self._check_circuit_breakers()
+                    if cb_events:
+                        self.events.extend(cb_events)
+                        day_events.extend(cb_events)
 
-            # Overall sentiment
-            bullish = sum(1 for t in trends.values() if t == "Bullish")
-            bearish = sum(1 for t in trends.values() if t == "Bearish")
-            sentiment = "bullish" if bullish > bearish else ("bearish" if bearish > bullish else "neutral")
+                    # Build state snapshot
+                    prices = {s: (b.last_price or 100.0) for s, b in self.order_books.items()}
+                    trends = {s: self._calculate_trend(s) for s in self.order_books}
 
-            market_state = {
-                "day": self.day,
-                "session": self.session,
-                "time": f"{9 + self.session}:30:00",
-                "prices": prices,
-                "trends": trends,
-                "sentiment": sentiment,
-                "volume_level": "High" if day_events else "Normal",
-                "is_high_volume": bool(day_events),
-                "timestamp": datetime.now(),
-                "events": [{"title": e.title, "severity": e.severity} for e in day_events],
-                "halted": self.halted_stocks,
-                "financial_report": report_data,
-            }
+                    # Overall sentiment
+                    bullish = sum(1 for t in trends.values() if t == "Bullish")
+                    bearish = sum(1 for t in trends.values() if t == "Bearish")
+                    sentiment = "bullish" if bullish > bearish else ("bearish" if bearish > bullish else "neutral")
 
-            news = (
-                "; ".join(f"{e.title} ({e.severity})" for e in day_events)
-                if day_events else "Market is stable. No major events."
-            )
+                    market_state = {
+                        "day": self.day,
+                        "session": self.session,
+                        "time": f"{9 + self.session}:30:00",
+                        "prices": prices,
+                        "trends": trends,
+                        "sentiment": sentiment,
+                        "volume_level": "High" if day_events else "Normal",
+                        "is_high_volume": bool(day_events),
+                        "timestamp": datetime.now(),
+                        "events": [{"title": e.title, "severity": e.severity} for e in day_events],
+                        "halted": self.halted_stocks,
+                        "financial_report": report_data,
+                    }
 
-            await self.step(market_state, news)
+                    news = (
+                        "; ".join(f"{e.title} ({e.severity})" for e in day_events)
+                        if day_events else "Market is stable. No major events."
+                    )
 
-            # Forum at end of day
-            if self.session == self.sessions_per_day:
-                self._generate_forum_posts(self.day)
-                self._take_snapshot()
+                    await self.step(market_state, news)
 
-            # WebSocket broadcast
+                    # Forum at end of day
+                    if self.session == self.sessions_per_day:
+                        self._generate_forum_posts(self.day)
+                        self._take_snapshot()
+
+                except Exception as exc:
+                    logger.error("Step %s (day %s session %s) error: %s",
+                                 step_i, self.day, self.session, exc, exc_info=True)
+                    # Continue to next step instead of crashing the whole run
+
+                # WebSocket broadcast (outside inner try so ticks always fire)
+                if self.ws_broadcast:
+                    try:
+                        await self.ws_broadcast({
+                            "type": "tick",
+                            "day": self.day,
+                            "session": self.session,
+                            "prices": {s: (b.last_price or 100.0) for s, b in self.order_books.items()},
+                            "trades": self.total_trade_count,
+                            "agents": len([a for a in self.agents if a.status == "active"]),
+                            "halted": list(self.halted_stocks),
+                            "events": [{"title": e.title, "severity": e.severity}
+                                       for e in day_events],
+                        })
+                    except Exception:
+                        pass
+
+                await asyncio.sleep(self.speed)
+
+        finally:
+            # Always clean up — even if an unexpected error killed the loop
+            if self._run_id != my_run_id:
+                return
+            self.is_running = False
+            logger.info("Simulation complete at day %s!", self.day)
             if self.ws_broadcast:
                 try:
                     await self.ws_broadcast({
-                        "type": "tick",
+                        "type": "complete",
                         "day": self.day,
-                        "session": self.session,
-                        "prices": prices,
-                        "trades": self.total_trade_count,
-                        "agents": len([a for a in self.agents if a.status == "active"]),
-                        "halted": list(self.halted_stocks),
-                        "events": [{"title": e.title, "severity": e.severity} for e in day_events],
+                        "total_days": self.total_days,
                     })
                 except Exception:
                     pass
-
-            await asyncio.sleep(self.speed)
-
-        # Only clean up if this is still the active run (prevents stale task from killing new run)
-        if self._run_id != my_run_id:
-            return
-        self.is_running = False
-        logger.info("Simulation complete!")
-        # Notify all connected clients that this batch is done
-        if self.ws_broadcast:
-            try:
-                await self.ws_broadcast({
-                    "type": "complete",
-                    "day": self.day,
-                    "total_days": self.total_days,
-                })
-            except Exception:
-                pass

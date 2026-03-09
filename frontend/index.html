@@ -2014,8 +2014,26 @@ function updateMetrics() {
    SIMULATION CONTROLS
 ═══════════════════════════════════════════ */
 async function simStart() {
-  // Each press runs exactly 1 more day
-  await simRunDays(1);
+  // If paused, resume
+  if (state.is_paused) {
+    const r = await apiPost('/simulation/start');
+    if (r) { toast('Resumed', 'var(--lime)'); pollStatus(); }
+    return;
+  }
+  // If already running, no-op
+  if (state.is_running) {
+    toast('Simulation already running');
+    return;
+  }
+  // Run all remaining days to the ceiling
+  const live = await apiFetch('/simulation/status');
+  if (live) handleStatus(live);
+  const currentDay = live ? live.day : state.day;
+  if (currentDay >= configuredDays) {
+    toast(`✓ All ${configuredDays} days complete — reset to run again`, 'var(--cyan)');
+    return;
+  }
+  await simRunDays(configuredDays - currentDay);
 }
 async function simPause() {
   const r = await apiPost('/simulation/pause');
@@ -2033,21 +2051,18 @@ async function simRunDays(n) {
   if (live) handleStatus(live);
   const currentDay = live ? live.day : state.day;
 
-  // Check if we've hit the ceiling
-  if (currentDay >= configuredDays) {
-    toast(`✓ All ${configuredDays} days complete — reset to run again`, 'var(--cyan)');
-    return;
+  // Extend the ceiling if this run would exceed it
+  const targetDay = currentDay + n;
+  if (targetDay > configuredDays) {
+    configuredDays = targetDay;
   }
 
-  // Cap daysToRun so we never exceed the ceiling
-  const daysToRun = Math.min(n, configuredDays - currentDay);
-
   // Extend total_days target without rebuilding the world
-  const ext = await apiPost('/simulation/extend', { additional_days: daysToRun });
+  const ext = await apiPost('/simulation/extend', { additional_days: n });
   if (!ext) { toast('Extend failed', 'var(--red)'); return; }
 
   const s = await apiPost('/simulation/start');
-  if (s) toast(`▶ Day ${currentDay + 1}–${currentDay + daysToRun} of ${configuredDays}`, 'var(--lime)');
+  if (s) toast(`▶ Day ${currentDay + 1}–${targetDay} of ${configuredDays}`, 'var(--lime)');
   else toast('Start failed', 'var(--red)');
   pollStatus();
 }

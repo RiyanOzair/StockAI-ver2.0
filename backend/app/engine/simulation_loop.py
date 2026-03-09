@@ -469,8 +469,9 @@ class SimulationLoop:
             self.day = (step_i // self.sessions_per_day) + 1
             self.session = (step_i % self.sessions_per_day) + 1
 
-            # Reset halted stocks at session start
-            self.halted_stocks.clear()
+            # Circuit breakers last the full trading day — only lift at day open
+            if self.session == 1:
+                self.halted_stocks.clear()
             self._session_open = {s: (b.last_price or 100.0) for s, b in self.order_books.items()}
 
             # Events at start of each day

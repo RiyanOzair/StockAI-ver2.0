@@ -1,6 +1,7 @@
 """Market data endpoints."""
 from fastapi import APIRouter, HTTPException
-from backend.app.state import market_books, STOCKS, simulation
+import backend.app.state as state
+from backend.app.state import STOCKS
 
 router = APIRouter(prefix="/market", tags=["market"])
 
@@ -15,7 +16,7 @@ async def get_all_stocks():
             "emoji": meta.emoji,
             "initial_price": meta.initial_price,
             "volatility": meta.volatility_multiplier,
-            "price": market_books[sym].last_price or meta.initial_price,
+            "price": state.market_books[sym].last_price or meta.initial_price,
         }
         for sym, meta in STOCKS.items()
     }
@@ -23,7 +24,7 @@ async def get_all_stocks():
 
 @router.get("/trades")
 async def get_recent_trades():
-    recent = simulation.all_trades[-50:]
+    recent = state.simulation.all_trades[-50:]
     return [
         {
             "trade_id": t.trade_id,
@@ -41,16 +42,16 @@ async def get_recent_trades():
 @router.get("/history/{symbol}")
 async def get_price_history(symbol: str):
     symbol = symbol.upper()
-    history = simulation.price_history.get(symbol, [])
+    history = state.simulation.price_history.get(symbol, [])
     return {"symbol": symbol, "history": history}
 
 
 @router.get("/{symbol}")
 async def get_market_state(symbol: str):
     symbol = symbol.upper()
-    if symbol not in market_books:
+    if symbol not in state.market_books:
         raise HTTPException(404, "Symbol not found")
-    book = market_books[symbol]
+    book = state.market_books[symbol]
     depth = book.get_depth()
     meta = STOCKS.get(symbol)
     return {

@@ -3,7 +3,8 @@ import uuid
 import random
 import logging
 from fastapi import APIRouter, HTTPException
-from backend.app.state import agents, market_books, simulation, STOCKS, ALL_SYMBOLS
+import backend.app.state as state
+from backend.app.state import STOCKS, ALL_SYMBOLS
 from backend.app.agents.behavioral_agent import BehavioralAgent, RuleBasedAgent, AGENT_PERSONAS
 from backend.app.models.types import CustomAgentRequest
 
@@ -13,13 +14,13 @@ logger = logging.getLogger("api.agents")
 
 @router.get("")
 async def get_agents():
-    prices = {s: (b.last_price or 100.0) for s, b in market_books.items()}
-    return [a.get_snapshot(prices) for a in agents]
+    prices = {s: (b.last_price or 100.0) for s, b in state.market_books.items()}
+    return [a.get_snapshot(prices) for a in state.agents]
 
 
 @router.get("/{agent_id}/decisions")
 async def get_decisions(agent_id: str):
-    for a in agents:
+    for a in state.agents:
         if str(a.id) == agent_id:
             return {"agent_id": agent_id, "decisions": a.decision_log}
     raise HTTPException(404, "Agent not found")
@@ -27,7 +28,7 @@ async def get_decisions(agent_id: str):
 
 @router.get("/{agent_id}/analytics")
 async def get_analytics(agent_id: str):
-    for a in agents:
+    for a in state.agents:
         if str(a.id) == agent_id:
             return a.get_analytics()
     raise HTTPException(404, "Agent not found")
@@ -36,7 +37,7 @@ async def get_analytics(agent_id: str):
 @router.post("/custom")
 async def create_custom_agent(req: CustomAgentRequest):
     """Inject a user-defined agent into the running simulation."""
-    initial_prices = {sym: (market_books[sym].last_price or STOCKS[sym].initial_price) for sym in STOCKS}
+    initial_prices = {sym: (state.market_books[sym].last_price or STOCKS[sym].initial_price) for sym in STOCKS}
     cash = 100_000.0
     holdings = {}
     chosen = random.sample(ALL_SYMBOLS, min(3, len(ALL_SYMBOLS)))
@@ -44,7 +45,7 @@ async def create_custom_agent(req: CustomAgentRequest):
         price = initial_prices[sym]
         holdings[sym] = max(1, int(5000 / price))
 
-    new_id = str(len(agents))
+    new_id = str(uuid.uuid4())
     persona = {
         "name": req.name,
         "type": req.character_type,
@@ -59,8 +60,8 @@ async def create_custom_agent(req: CustomAgentRequest):
         initial_holdings=holdings,
         initial_prices=initial_prices,
     )
-    agents.append(agent)
-    simulation.agents.append(agent)
+    state.agents.append(agent)
+    state.simulation.agents.append(agent)
     logger.info(f"Custom agent created: {req.name} (id={new_id})")
     return {"message": f"Agent '{req.name}' created", "id": new_id}
 
@@ -73,7 +74,7 @@ async def get_explainability():
     top_stocks_global: dict = {}
     per_agent = []
 
-    for a in agents:
+    for a in state.agents:
         agent_action_counts = {"buy": 0, "sell": 0, "hold": 0}
         agent_top_stocks: dict = {}
 

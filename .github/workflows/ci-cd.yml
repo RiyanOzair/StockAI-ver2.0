@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
@@ -35,8 +35,10 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run pytest
-        run: python -m pytest tests/ -q
+      - name: Run tests
+        env:
+          GROQ_API_KEY: ""          # tests run in demo/mock mode without a key
+        run: python -m pytest tests/ -q --tb=short
 
   build_and_push:
     name: Build and push Docker image
@@ -48,14 +50,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: .
           push: true
@@ -64,7 +66,14 @@ jobs:
             ghcr.io/${{ github.repository_owner }}/stockai:${{ github.sha }}
 
       - name: Confirm
-        run: echo "Docker images pushed to ghcr.io/${{ github.repository_owner }}/stockai"
+        run: echo "Image pushed → ghcr.io/${{ github.repository_owner }}/stockai:${{ github.sha }}"
 
-      # Optional: deploy to Google Cloud Run or other platforms here using
-      # secrets (e.g. GCP_SERVICE_ACCOUNT_KEY) and the corresponding actions.
+      # ── Optional: deploy to Google Cloud Run ──────────────────────────────
+      # Uncomment and add GCP_SERVICE_ACCOUNT_KEY secret to enable:
+      #
+      # - name: Deploy to Cloud Run
+      #   uses: google-github-actions/deploy-cloudrun@v2
+      #   with:
+      #     service: stockai
+      #     region: us-central1
+      #     image: ghcr.io/${{ github.repository_owner }}/stockai:${{ github.sha }}

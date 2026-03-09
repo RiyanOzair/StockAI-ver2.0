@@ -13,7 +13,6 @@ class OrderBook:
         self.asks: List[Tuple[float, float, int, Order]] = []
         self.trades: List[Trade] = []
         self.last_price: Optional[float] = None
-        self.price_history: List[dict] = []
         self._seq = 0  # Unique sequence counter to break heap ties
 
     def add_order(self, order: Order) -> List[Trade]:
@@ -99,8 +98,6 @@ class OrderBook:
         taker.status = OrderStatus.FILLED if taker.filled_quantity >= taker.quantity else OrderStatus.PARTIALLY_FILLED
         maker.status = OrderStatus.FILLED if maker.filled_quantity >= maker.quantity else OrderStatus.PARTIALLY_FILLED
 
-        self.price_history.append({"time": time.time(), "price": price})
-
         trade = Trade(
             trade_id=f"t_{int(time.time()*1000000)}",
             buy_order_id=taker.id if taker.side == OrderSide.BUY else maker.id,
@@ -116,7 +113,6 @@ class OrderBook:
     def update_price(self, price: float, day: int = 0, session: int = 0):
         """Update price from external random walk (no trade needed)"""
         self.last_price = price
-        self.price_history.append({"time": time.time(), "price": price, "day": day, "session": session})
 
     def get_depth(self, level: int = 10):
         # Snapshot of the book

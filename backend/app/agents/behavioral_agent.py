@@ -1,6 +1,7 @@
 import uuid
 import json
 import math
+import asyncio
 import logging
 import random
 from typing import Dict, Any, Optional, List
@@ -105,7 +106,8 @@ class BaseAgent:
         self._pnl_history: List[float] = []   # PnL at end of each session
         self._peak_value: float = float(initial_cash)
         self._max_drawdown: float = 0.0
-        self._profitable_trades: int = 0
+        self._profitable_sessions: int = 0    # sessions where PnL improved
+        self._sessions_count: int = 0         # total sessions measured
         self._total_trade_qty: int = 0
 
     # ── Character profile lookup ──
@@ -134,6 +136,12 @@ class BaseAgent:
         drawdown = (self._peak_value - self.total_value) / self._peak_value if self._peak_value > 0 else 0
         if drawdown > self._max_drawdown:
             self._max_drawdown = drawdown
+
+        # Track session win-rate (PnL-improving sessions vs total sessions)
+        if self._pnl_history:
+            self._sessions_count += 1
+            if self.pnl > self._pnl_history[-1]:
+                self._profitable_sessions += 1
         self._pnl_history.append(self.pnl)
 
     # ── Loans ──
@@ -195,11 +203,9 @@ class BaseAgent:
         if len(self.decision_log) > 200:
             self.decision_log = self.decision_log[-200:]
 
-    def _record_trade(self, qty: int, is_profitable: bool = False):
+    def _record_trade(self, qty: int):
         self.trade_count += 1
         self._total_trade_qty += qty
-        if is_profitable:
-            self._profitable_trades += 1
 
     # ── Snapshot ──
     def get_snapshot(self, current_prices: Dict[str, float]) -> Dict:
@@ -240,7 +246,7 @@ class BaseAgent:
             "agent_id": str(self.id),
             "sharpe_ratio": sharpe,
             "max_drawdown": round(self._max_drawdown * 100, 2),
-            "win_rate": round(self._profitable_trades / self.trade_count * 100, 1) if self.trade_count else 0,
+            "win_rate": round(self._profitable_sessions / self._sessions_count * 100, 1) if self._sessions_count else 0,
             "avg_trade_size": round(self._total_trade_qty / self.trade_count, 1) if self.trade_count else 0,
             "total_trades": self.trade_count,
         }
@@ -360,7 +366,8 @@ class BehavioralAgent(BaseAgent):
         )
 
         try:
-            response_str = self.llm.generate(
+            response_str = await asyncio.to_thread(
+                self.llm.generate,
                 prompt=prompt,
                 system_message="You are a realistic trading agent. Output JSON only."
             )

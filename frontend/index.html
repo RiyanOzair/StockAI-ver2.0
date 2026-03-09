@@ -1769,10 +1769,13 @@ let priceAlerts = [];               // { sym, dir, target, id }
    NAVIGATION
 ═══════════════════════════════════════════ */
 function nav(page) {
+  const pageEl = document.getElementById('page-' + page);
+  const navEl  = document.querySelector(`[data-page="${page}"]`);
+  if (!pageEl || !navEl) return; // ignore unknown hashes
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-  document.querySelector(`[data-page="${page}"]`).classList.add('active');
+  pageEl.classList.add('active');
+  navEl.classList.add('active');
   window.location.hash = page;
 
   if (page === 'analysis')       { loadAnalysis(); }
@@ -1844,12 +1847,19 @@ function connectWS() {
   if (dot) dot.className = 'connecting';
   if (lbl) lbl.textContent = 'Connecting…';
 
-  ws = new WebSocket(`ws://${location.host}/ws`);
+  try {
+    ws = new WebSocket(`ws://${location.host}/ws`);
+  } catch (e) {
+    console.warn('WebSocket not available, using polling', e);
+    wsConnected = false; setWsDot(false, false); startPoll();
+    return;
+  }
 
   // Kill the socket if it hasn't connected within 5 seconds
   _wsConnectTimer = setTimeout(() => {
     if (ws && ws.readyState === WebSocket.CONNECTING) {
-      ws.close();
+      try { ws.close(); } catch(_) {}
+      wsConnected = false; setWsDot(false, false); startPoll();
     }
   }, 5000);
 
@@ -1955,11 +1965,6 @@ function pushPriceHistory(prices, day, session) {
 /* ═══════════════════════════════════════════
    STATUS + SIDEBAR
 ═══════════════════════════════════════════ */
-async function pollStatus() {
-  const s = await apiFetch('/simulation/status');
-  if (s) handleStatus(s);
-}
-
 function handleStatus(s) {
   state = { ...state, ...s };
   updateSidebar();
@@ -2019,11 +2024,13 @@ async function simStop() {
   if (r) { toast('Simulation stopped', 'var(--yellow)'); pollStatus(); }
 }
 async function simRunDays(n) {
+  // Stop any running sim first, then configure & start
+  if (state.is_running) await apiPost('/simulation/stop');
   const cfg = await apiPost('/simulation/config', { num_days: n });
   if (!cfg) { toast('Config failed', 'var(--red)'); return; }
   const s = await apiPost('/simulation/start');
   if (s) toast(`Running ${n} days`, 'var(--lime)');
-  else toast('Already running — stop first', 'var(--yellow)');
+  else toast('Start failed', 'var(--red)');
   pollStatus();
 }
 
@@ -2033,7 +2040,7 @@ async function simReset() {
   if (r) {
     toast('Reset complete', 'var(--cyan)');
     stockHistory = {}; allStocks = {}; agents = []; halted = [];
-    state = { is_running: false, is_paused: false, day: 0, session: 0, total_days: 30, total_trades: 0, active_agents: 0 };
+    state = { is_running: false, is_paused: false, day: 0, session: 0, total_days: 0, total_trades: 0, active_agents: 0 };
     updateSidebar(); updateMetrics();
     clearChart('priceChart'); clearChart('sectorChart'); clearChart('stockChart');
     clearChart('biasChart'); clearChart('actionChart');
@@ -2101,7 +2108,6 @@ function toggleStockVis(sym, btn) {
           stockHistory[sym] = [{ label: '0.0', price: initPrice }];
         }
         refreshPriceChart();
-        }
       });
     }
   }
@@ -2530,8 +2536,8 @@ async function selectAgent(id) {
   if (an) {
     dc.innerHTML = [
       ['Sharpe Ratio', an.sharpe_ratio?.toFixed(3) ?? '—', 'var(--cyan)'],
-      ['Max Drawdown', an.max_drawdown != null ? fmtPct(an.max_drawdown * 100) : '—', 'var(--red)'],
-      ['Win Rate', an.win_rate != null ? fmtPct(an.win_rate * 100) : '—', 'var(--lime)'],
+      ['Max Drawdown', an.max_drawdown != null ? fmtPct(an.max_drawdown) : '—', 'var(--red)'],
+      ['Win Rate',     an.win_rate     != null ? fmtPct(an.win_rate)     : '—', 'var(--lime)'],
       ['Avg Trade $', an.avg_trade_size != null ? fmtMoney(an.avg_trade_size) : '—', 'var(--yellow)'],
       ['Total Trades', an.total_trades ?? '—', 'var(--white)'],
       ['Debt', fmtMoney(agent.debt || 0), agent.debt > 0 ? 'var(--red)' : 'var(--muted)'],
@@ -3140,6 +3146,12 @@ function startRefreshLoop() {
       loadEvents();
       loadForum();
       loadSnapshots();
+      // Refresh stock prices & price chart
+      const freshData = await apiFetch('/market/stocks');
+      if (freshData) {
+        allStocks = freshData;
+        await loadPriceHistories();
+      }
     }
     if (page === 'agents') {
       loadAgents();
@@ -3179,21 +3191,21 @@ init();
 const SECTOR_ORDER = ['Tech','Energy','Finance','Auto','Retail','Entertainment'];
 
 function heatmapColor(pct) {
-  // pct: -10 to +10 range clamped
+  // Neo-brutalism palette: cyan for gains, magenta/pink for losses, dark base
   const v = Math.max(-10, Math.min(10, pct));
   if (v >= 0) {
-    // 0 → dark, +10 → bright lime
+    // 0 → dark charcoal, +10 → bright cyan (#00f0ff)
     const t = v / 10;
-    const r = Math.round(20 * (1 - t));
-    const g = Math.round(60 + 195 * t);
-    const b = Math.round(20 * (1 - t));
+    const r = Math.round(18 * (1 - t));
+    const g = Math.round(24 + 216 * t);
+    const b = Math.round(28 + 227 * t);
     return `rgb(${r},${g},${b})`;
   } else {
-    // 0 → dark, -10 → bright red
+    // 0 → dark charcoal, -10 → hot magenta (#ff3399)
     const t = -v / 10;
-    const r = Math.round(80 + 175 * t);
-    const g = Math.round(20 * (1 - t));
-    const b = Math.round(20 * (1 - t));
+    const r = Math.round(28 + 227 * t);
+    const g = Math.round(24 * (1 - t * 0.6));
+    const b = Math.round(28 + 125 * t);
     return `rgb(${r},${g},${b})`;
   }
 }

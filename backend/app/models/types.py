@@ -215,7 +215,7 @@ class SimulationConfig(BaseModel):
     event_intensity: int = Field(default=5, ge=1, le=10)
     use_llm: bool = True
     enable_loans: bool = True
-    speed: float = 2.0
+    speed: float = Field(default=2.0, ge=0.1, le=30.0)
     seed: Optional[int] = None
 
 

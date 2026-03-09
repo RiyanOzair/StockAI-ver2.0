@@ -1,7 +1,8 @@
 """Chat endpoint — wraps the chatbot module."""
 import logging
 from fastapi import APIRouter
-from backend.app.state import chat_engine, _init_chat_engine, simulation, market_books, STOCKS
+import backend.app.state as state
+from backend.app.state import _init_chat_engine, STOCKS
 from backend.app.models.types import ChatRequest
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -21,13 +22,13 @@ async def chat(req: ChatRequest):
 
     # Update simulation context
     try:
-        prices = {s: (market_books[s].last_price or STOCKS[s].initial_price) for s in STOCKS}
+        prices = {s: (state.market_books[s].last_price or STOCKS[s].initial_price) for s in STOCKS}
         context = {
-            "day": simulation.day,
-            "session": simulation.session,
-            "is_running": simulation.is_running,
+            "day": state.simulation.day,
+            "session": state.simulation.session,
+            "is_running": state.simulation.is_running,
             "prices": {s: round(p, 2) for s, p in prices.items()},
-            "total_trades": simulation.total_trade_count,
+            "total_trades": state.simulation.total_trade_count,
         }
         engine.context_data = context
     except Exception:

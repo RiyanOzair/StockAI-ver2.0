@@ -143,7 +143,11 @@ def _build_world(config: Optional[dict] = None):
         agent_idx += 1
 
     # ── Simulation loop ──
+    # Preserve ws_broadcast so connected clients keep receiving updates after reset/config
+    old_broadcast = simulation.ws_broadcast if simulation is not None else None
     simulation = SimulationLoop(agents, market_books, stock_meta=STOCKS)
+    if old_broadcast:
+        simulation.ws_broadcast = old_broadcast
     if config:
         simulation.configure(cfg)
 
@@ -169,8 +173,9 @@ def _init_chat_engine():
 
         from chatbot.llm.groq_llm import GroqLLM
         from chatbot.core.chat_engine import ChatEngine
+        from backend.app.core.config import settings
 
-        llm = GroqLLM()
+        llm = GroqLLM(api_key=settings.GROQ_API_KEY or os.getenv("GROQ_API_KEY", ""))
         chat_engine = ChatEngine(
             llm=llm,
             memory_size=15,

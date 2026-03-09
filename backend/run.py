@@ -11,4 +11,6 @@ if _STOCKAI_ROOT not in sys.path:
 if __name__ == "__main__":
     # Change cwd to StockAI root for consistent path resolution
     os.chdir(_STOCKAI_ROOT)
-    uvicorn.run("backend.app.main:app", host="127.0.0.1", port=8000, reload=False)
+    host = os.getenv("HOST", "127.0.0.1")   # set HOST=0.0.0.0 in production / Docker
+    port = int(os.getenv("PORT", "8000"))
+    uvicorn.run("backend.app.main:app", host=host, port=port, reload=False)

@@ -75,9 +75,12 @@ class GroqProvider(LLMProvider):
                 return response.choices[0].message.content or ""
             except Exception as e:
                 logger.warning(f"Groq Attempt {attempt+1} failed: {e}")
+                # Don't retry rate limit errors — they won't clear within seconds
+                if "429" in str(e) or "rate_limit" in str(e).lower():
+                    raise
                 if attempt == retries - 1:
                     raise
-                time.sleep(1 * (attempt + 1)) # Exponential backoff
+                time.sleep(1 * (attempt + 1))
 
 class MockProvider(LLMProvider):
     def generate(self, prompt: str, system_message: str = "") -> str:

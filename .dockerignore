@@ -1,21 +1,27 @@
 # ══════════════════════════════════════════════════════════════════════════════
-# Docker Ignore File
+# Docker Ignore — StockAI v2.0
+# The image only needs: backend/, frontend/, requirements.txt
 # ══════════════════════════════════════════════════════════════════════════════
 
 # Git
 .git
 .gitignore
+.github/
 
-# Python
+# Secrets — supply at runtime with --env-file .env
+.env
+.env.*
+
+# Python byte-code / caches
 __pycache__
 *.py[cod]
 *$py.class
 *.so
-.Python
+
+# Virtual environments (never copy into image)
 venv/
 env/
 .venv/
-.env
 
 # IDE
 .vscode/
@@ -23,10 +29,30 @@ env/
 *.swp
 *.swo
 
-# Testing
+# Testing artefacts
+tests/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Runtime logs
+server_out.txt
+server_err.txt
+log/
+
+# Build outputs
+*.egg-info/
+dist/
+build/
+
+# Legacy / docs / scripts (not needed at runtime)
+legacy/
+docs/
+scripts/
+res/
+CHANGELOG.md
+README.md
+
 
 # Logs (except directory structure)
 log/*.log

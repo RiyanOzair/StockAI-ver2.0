@@ -4,7 +4,7 @@ import logging
 import asyncio
 from typing import Set
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from backend.app.state import simulation
+import backend.app.state as state
 
 router = APIRouter(tags=["websocket"])
 logger = logging.getLogger("api.ws")
@@ -33,8 +33,8 @@ async def websocket_endpoint(ws: WebSocket):
     _clients.add(ws)
     logger.info(f"WS client connected ({len(_clients)} total)")
 
-    # Wire broadcast into simulation loop
-    simulation.ws_broadcast = broadcast
+    # Wire broadcast into the CURRENT simulation loop
+    state.simulation.ws_broadcast = broadcast
 
     try:
         while True:

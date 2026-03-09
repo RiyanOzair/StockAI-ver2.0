@@ -1101,9 +1101,9 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
       <button class="ctrl-btn" id="btn-reset" title="Reset" onclick="simReset()">↺</button>
     </div>
     <div class="sidebar-quickrun">
-      <button class="ctrl-btn quickrun-btn" title="Config 5 days &amp; start" onclick="simRunDays(5)">5d</button>
-      <button class="ctrl-btn quickrun-btn" title="Config 10 days &amp; start" onclick="simRunDays(10)">10d</button>
-      <button class="ctrl-btn quickrun-btn" title="Config 30 days &amp; start" onclick="simRunDays(30)">30d</button>
+      <button class="ctrl-btn quickrun-btn" title="Run next 5 days" onclick="simRunDays(5)">5d</button>
+      <button class="ctrl-btn quickrun-btn" title="Run next 10 days" onclick="simRunDays(10)">10d</button>
+      <button class="ctrl-btn quickrun-btn" title="Run remaining days" onclick="simRunDays(30)">30d</button>
     </div>
     <div class="sidebar-speed">
       <label>Speed</label>
@@ -1752,6 +1752,7 @@ let _wsRetryCount = 0;
 let _wsRetryTimer = null;
 let _wsConnectTimer = null;  // timeout for stuck CONNECTING state
 let state = { is_running: false, is_paused: false, day: 0, session: 0, total_days: 30, total_trades: 0, active_agents: 0 };
+let configuredDays = 30; // ceiling: total days for this run, reset only on simReset
 let allStocks = {};      // sym → stock meta+price
 let stockHistory = {};   // sym → price array
 let agents = [];
@@ -2025,21 +2026,28 @@ async function simStop() {
   if (r) { toast('Simulation stopped', 'var(--yellow)'); pollStatus(); }
 }
 async function simRunDays(n) {
-  // Stop any running simulation first
-  await apiPost('/simulation/stop');
-  // Configure a fresh world with exactly n days
-  const cfg = await apiPost('/simulation/config', { num_days: n });
-  if (!cfg) { toast('Config failed', 'var(--red)'); return; }
-  // Reset frontend state
-  stockHistory = {}; allStocks = {}; agents = []; halted = [];
-  state = { is_running: false, is_paused: false, day: 0, session: 0, total_days: n, total_trades: 0, active_agents: 0 };
-  updateSidebar(); updateMetrics();
-  clearChart('priceChart'); clearChart('sectorChart'); clearChart('stockChart');
-  clearChart('biasChart'); clearChart('actionChart'); clearChart('raceChart');
-  document.getElementById('trade-feed').innerHTML = '';
-  document.getElementById('events-feed').innerHTML = '';
+  if (state.is_running) await apiPost('/simulation/stop');
+
+  // Get authoritative current position from backend
+  const live = await apiFetch('/simulation/status');
+  if (live) handleStatus(live);
+  const currentDay = live ? live.day : state.day;
+
+  // Check if we've hit the ceiling
+  if (currentDay >= configuredDays) {
+    toast(`✓ All ${configuredDays} days complete — reset to run again`, 'var(--cyan)');
+    return;
+  }
+
+  // Cap daysToRun so we never exceed the ceiling
+  const daysToRun = Math.min(n, configuredDays - currentDay);
+
+  // Extend total_days target without rebuilding the world
+  const ext = await apiPost('/simulation/extend', { additional_days: daysToRun });
+  if (!ext) { toast('Extend failed', 'var(--red)'); return; }
+
   const s = await apiPost('/simulation/start');
-  if (s) toast(`▶ Running ${n} day${n > 1 ? 's' : ''} from scratch`, 'var(--lime)');
+  if (s) toast(`▶ Day ${currentDay + 1}–${currentDay + daysToRun} of ${configuredDays}`, 'var(--lime)');
   else toast('Start failed', 'var(--red)');
   pollStatus();
 }
@@ -2048,9 +2056,15 @@ function handleComplete(d) {
   state.is_running = false;
   state.day = d.day;
   state.total_days = d.total_days;
+  // Don't override configuredDays — it's our ceiling, set only on reset
   updateSidebar();
   updateMetrics();
-  toast(`✓ Day ${d.day} of ${d.total_days} complete`, 'var(--cyan)');
+  const remaining = configuredDays - d.day;
+  if (remaining <= 0) {
+    toast(`✓ All ${configuredDays} days complete!`, 'var(--cyan)');
+  } else {
+    toast(`✓ Day ${d.day} done (${remaining} remaining)`, 'var(--cyan)');
+  }
 }
 
 async function simReset() {
@@ -2058,6 +2072,7 @@ async function simReset() {
   const r = await apiPost('/simulation/reset');
   if (r) {
     toast('Reset complete', 'var(--cyan)');
+    configuredDays = 30; // restore ceiling
     stockHistory = {}; allStocks = {}; agents = []; halted = [];
     state = { is_running: false, is_paused: false, day: 0, session: 0, total_days: 0, total_trades: 0, active_agents: 0 };
     updateSidebar(); updateMetrics();

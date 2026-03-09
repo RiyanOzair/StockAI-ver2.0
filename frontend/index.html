@@ -1988,7 +1988,7 @@ function updateSidebar() {
   document.getElementById('sb-session').textContent = sess;
   document.getElementById('sb-trades').textContent = state.total_trades || 0;
 
-  const pct = state.total_days ? (state.day / state.total_days * 100) : 0;
+  const pct = configuredDays ? (state.day / configuredDays * 100) : 0;
   document.getElementById('sb-progress').style.width = pct + '%';
 
   // Control button states
@@ -1998,7 +1998,7 @@ function updateSidebar() {
 
 function updateMetrics() {
   document.getElementById('m-day').textContent = state.day || '—';
-  document.getElementById('m-totaldays').textContent = `of ${state.total_days || '—'}`;
+  document.getElementById('m-totaldays').textContent = `of ${configuredDays}`;
   document.getElementById('m-trades').textContent = state.total_trades || 0;
   document.getElementById('m-agents').textContent = state.active_agents || 0;
   document.getElementById('m-halted').textContent = halted.length;
@@ -2025,7 +2025,7 @@ async function simStart() {
     toast('Simulation already running');
     return;
   }
-  // Run all remaining days to the ceiling
+  // Check authoritative state from backend
   const live = await apiFetch('/simulation/status');
   if (live) handleStatus(live);
   const currentDay = live ? live.day : state.day;
@@ -2033,7 +2033,14 @@ async function simStart() {
     toast(`✓ All ${configuredDays} days complete — reset to run again`, 'var(--cyan)');
     return;
   }
-  await simRunDays(configuredDays - currentDay);
+  // Run all remaining days to the configured ceiling
+  const remaining = configuredDays - currentDay;
+  const ext = await apiPost('/simulation/extend', { additional_days: remaining });
+  if (!ext) { toast('Extend failed', 'var(--red)'); return; }
+  const s = await apiPost('/simulation/start');
+  if (s) toast(`▶ Day ${currentDay + 1}–${configuredDays} of ${configuredDays}`, 'var(--lime)');
+  else toast('Start failed', 'var(--red)');
+  pollStatus();
 }
 async function simPause() {
   const r = await apiPost('/simulation/pause');
@@ -2051,16 +2058,11 @@ async function simRunDays(n) {
   if (live) handleStatus(live);
   const currentDay = live ? live.day : state.day;
 
-  // Extend the ceiling if this run would exceed it
-  const targetDay = currentDay + n;
-  if (targetDay > configuredDays) {
-    configuredDays = targetDay;
-  }
-
-  // Extend total_days target without rebuilding the world
+  // Tell the backend to run exactly n more days from current position
   const ext = await apiPost('/simulation/extend', { additional_days: n });
   if (!ext) { toast('Extend failed', 'var(--red)'); return; }
 
+  const targetDay = currentDay + n;
   const s = await apiPost('/simulation/start');
   if (s) toast(`▶ Day ${currentDay + 1}–${targetDay} of ${configuredDays}`, 'var(--lime)');
   else toast('Start failed', 'var(--red)');
@@ -3037,8 +3039,11 @@ async function applyConfig() {
   const seed       = seedVal ? parseInt(seedVal) : null;
 
   const r = await apiPost('/simulation/config', { num_agents, num_days, use_llm, enable_loans, seed });
-  if (r) toast('Config applied ✓', 'var(--lime)');
-  else toast('Failed to apply config', 'var(--red)');
+  if (r) {
+    configuredDays = num_days;
+    toast('Config applied ✓', 'var(--lime)');
+    updateMetrics();
+  } else toast('Failed to apply config', 'var(--red)');
 }
 
 async function injectEvent() {
@@ -3098,7 +3103,7 @@ function getTopStock() {
 }
 
 function buildChatContext() {
-  const parts = [`Day ${state.day || 0} of ${state.total_days || '?'}`];
+  const parts = [`Day ${state.day || 0} of ${configuredDays}`];
   parts.push(`${state.active_agents || 0} agents, ${state.total_trades || 0} trades`);
   if (halted.length) parts.push(`Halted: ${halted.join(', ')}`);
   const top = getTopStock();

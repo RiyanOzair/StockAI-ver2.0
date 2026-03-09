@@ -120,7 +120,9 @@ class PromptFactory:
             if bias_key in PromptFactory.BIAS_INJECTIONS:
                 text = PromptFactory.BIAS_INJECTIONS[bias_key]
                 if bias_key == "herding":
-                    text = text.format(dominant_action=market_state.get("dominant_trend", "trad"))
+                    sentiment = market_state.get("sentiment", "neutral")
+                    action_word = {"bullish": "buy", "bearish": "sell"}.get(sentiment, "trad")
+                    text = text.format(dominant_action=action_word)
                 bias_texts.append(f"*** BEHAVIORAL TRIGGER: {text} ***")
 
         parts.append(PromptFactory._build_action_block(

@@ -96,6 +96,8 @@ class SimulationLoop:
         self.total_days = 30
         self.sessions_per_day = 3
 
+        self._run_id = 0  # incremented each run to prevent stale cleanup
+
         self.speed = 2.0
         self.volatility = "Medium"
         self.event_intensity = 5
@@ -438,7 +440,7 @@ class SimulationLoop:
         for trade in trades:
             buyer = agent_map.get(trade.buyer_agent_id)
             seller = agent_map.get(trade.seller_agent_id)
-            cost = trade.price * trade.quantity
+            cost = round(trade.price * trade.quantity, 2)
 
             if buyer and buyer.wallet["cash"] >= cost:
                 buyer.wallet["cash"] -= cost
@@ -454,6 +456,8 @@ class SimulationLoop:
     # ──────────────── Main Loop ────────────────
 
     async def run_simulation(self, steps: Optional[int] = None):
+        self._run_id += 1
+        my_run_id = self._run_id
         self.is_running = True
         self.is_paused = False
         total_steps = steps or (self.total_days * self.sessions_per_day)
@@ -461,7 +465,7 @@ class SimulationLoop:
         start_step = self.day * self.sessions_per_day
 
         for step_i in range(start_step, total_steps):
-            if not self.is_running:
+            if not self.is_running or self._run_id != my_run_id:
                 break
             while self.is_paused:
                 await asyncio.sleep(0.5)
@@ -552,6 +556,9 @@ class SimulationLoop:
 
             await asyncio.sleep(self.speed)
 
+        # Only clean up if this is still the active run (prevents stale task from killing new run)
+        if self._run_id != my_run_id:
+            return
         self.is_running = False
         logger.info("Simulation complete!")
         # Notify all connected clients that this batch is done

@@ -39,10 +39,6 @@ async def start_simulation(background_tasks: BackgroundTasks):
     if sim.is_paused:
         sim.is_paused = False
         return {"message": "Simulation resumed"}
-    # Auto-reset if previous run completed
-    if sim.day >= sim.total_days and not sim.is_running:
-        state._build_world()
-        logger.info("Auto-reset after completed simulation")
     background_tasks.add_task(state.simulation.run_simulation)
     return {"message": "Simulation started", "agents": len(state.agents), "days": state.simulation.total_days}
 
@@ -83,8 +79,6 @@ async def update_config(cfg: SimulationConfig):
 async def extend_simulation(req: ExtendRequest):
     """Add more days to the current simulation without rebuilding world state."""
     sim = state.simulation
-    if sim.is_running:
-        raise HTTPException(400, "Stop simulation before extending")
     sim.total_days = sim.day + req.additional_days
     return {"message": f"Extended to {sim.total_days} days total", "total_days": sim.total_days}
 

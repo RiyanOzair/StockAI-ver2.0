@@ -388,7 +388,9 @@ class BehavioralAgent(BaseAgent):
                 return None
 
             if action == "buy" and price * qty > self.wallet["cash"]:
-                qty = max(1, int(self.wallet["cash"] / price))
+                qty = int(self.wallet["cash"] / price)
+                if qty <= 0:
+                    return None
             if action == "sell" and qty > self.wallet["holdings"].get(stock, 0):
                 qty = self.wallet["holdings"].get(stock, 0)
                 if qty <= 0:

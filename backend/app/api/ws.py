@@ -22,7 +22,8 @@ async def broadcast(data: dict):
     for ws in _clients:
         try:
             await ws.send_text(payload)
-        except Exception:
+        except Exception as e:
+            logger.warning(f"WS send failed, removing client: {e}")
             disconnected.add(ws)
     _clients -= disconnected
 

@@ -1,5 +1,6 @@
 import heapq
 import time
+import uuid
 from datetime import datetime
 from typing import List, Tuple, Optional
 from backend.app.models.types import Order, OrderSide, Trade, OrderStatus, MarketDepth
@@ -99,7 +100,7 @@ class OrderBook:
         maker.status = OrderStatus.FILLED if maker.filled_quantity >= maker.quantity else OrderStatus.PARTIALLY_FILLED
 
         trade = Trade(
-            trade_id=f"t_{int(time.time()*1000000)}",
+            trade_id=f"t_{int(time.time()*1000000)}_{uuid.uuid4().hex[:6]}",
             buy_order_id=taker.id if taker.side == OrderSide.BUY else maker.id,
             sell_order_id=taker.id if taker.side == OrderSide.SELL else maker.id,
             buyer_agent_id=taker.agent_id if taker.side == OrderSide.BUY else maker.agent_id,
@@ -115,17 +116,15 @@ class OrderBook:
         self.last_price = price
 
     def get_depth(self, level: int = 10):
-        # Snapshot of the book
-        # Note: In a real system, we would group by price here.
-        # Simple snapshot for now.
+        # Snapshot of the book sorted by best price first
         bids_snap = []
-        for p, t, s, o in sorted(self.bids):
-             qty = o.quantity - o.filled_quantity
-             if qty > 0:
-                 bids_snap.append(MarketDepth(price=-p, quantity=qty))
-        
+        for p, t, s, o in sorted(self.bids):  # smallest neg = highest price first
+            qty = o.quantity - o.filled_quantity
+            if qty > 0:
+                bids_snap.append(MarketDepth(price=-p, quantity=qty))
+
         asks_snap = []
-        for p, t, s, o in sorted(self.asks):
+        for p, t, s, o in sorted(self.asks):  # smallest price first
             qty = o.quantity - o.filled_quantity
             if qty > 0:
                 asks_snap.append(MarketDepth(price=p, quantity=qty))

@@ -1131,8 +1131,8 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
 }
 #tour-replay-btn {
   position: fixed;
-  bottom: 90px;
-  right: 20px;
+  bottom: 24px;
+  right: 90px;
   z-index: 8000;
   background: rgba(15,17,23,0.9);
   border: 1px solid var(--muted);
@@ -3706,48 +3706,48 @@ setInterval(watchAgentStatuses, 8000);
 ═══════════════════════════════════════════ */
 const TOUR_STEPS = [
   {
-    title: '👋 Welcome to StockAI',
+    title: 'Welcome to StockAI',
     text:  'A fully simulated stock market driven by AI agents. Prices move, events fire, agents trade — you control the clock. Let\'s take a quick tour!',
     target: null,
   },
   {
-    title: '▶ Start / Advance Days',
-    text:  'Click ▶ once to run exactly 1 day of trading. Each click advances the market by one day at the selected speed.',
+    title: 'Start / Advance Days',
+    text:  'Click the play button to run exactly 1 day of trading. Each click advances the market by one day at the selected speed.',
     target: '#btn-start',
   },
   {
-    title: '⚡ Quick-Run Buttons',
-    text:  'Press 5d, 10d or 30d to run multiple days hands-free. Days count up automatically — watch prices update live!',
+    title: 'Quick-Run Buttons',
+    text:  'Press 5d, 10d or 30d to run multiple days hands-free. Days count up one by one automatically — it may take a moment depending on the speed setting.',
     target: '.sidebar-quickrun',
   },
   {
-    title: '🚀 Speed Control',
-    text:  'Choose Slow, Normal, Fast or Turbo. Change speed at any time. Hit ⏸ to pause mid-run, ⏹ to stop, ↺ to reset.',
+    title: 'Speed Control',
+    text:  'Choose Slow, Normal, Fast or Turbo. Change speed at any time. Hit the pause button to pause mid-run, stop to cancel, or reset to start fresh.',
     target: '.sidebar-speed',
   },
   {
-    title: '📈 Live Price Chart',
+    title: 'Live Price Chart',
     text:  'Real-time stock prices plotted as they update. Toggle individual stocks on/off using the coloured name buttons above the chart.',
     target: '#priceChart',
   },
   {
-    title: '🔥 Market Heatmap',
-    text:  'Every stock colour-coded green (up) → red (down) vs. day-open price, grouped by sector. Hover any cell for details.',
+    title: 'Market Heatmap',
+    text:  'Every stock colour-coded green (up) to red (down) vs. day-open price, grouped by sector. Hover any cell for details.',
     target: '#heatmap-grid',
   },
   {
-    title: '🤖 AI Agents',
+    title: 'AI Agents',
     text:  'Click "Agents" in the sidebar to see all traders ranked by portfolio value. Each has a bias: momentum, contrarian, herding…',
     target: '[data-page="agents"]',
   },
   {
-    title: '💬 AI Market Advisor',
+    title: 'AI Market Advisor',
     text:  'The glowing AI button (bottom-right) opens a chat powered by a live LLM. Ask anything — prices, trends, which agent is winning.',
     target: '#chatbot-orb',
   },
   {
-    title: '🎉 You\'re all set!',
-    text:  'Hit ▶ to start the simulation. Press the ? button anytime to replay this tour. Good luck out there!',
+    title: 'You\'re all set!',
+    text:  'Hit the play button to start the simulation. Press the ? button anytime to replay this tour. Good luck out there!',
     target: null,
   },
 ];

@@ -150,5 +150,7 @@ async def inject_event(evt: EventInjection):
         affected_stocks=evt.affected_stocks,
     )
     state.simulation.events.append(event)
+    # FIX H3: Also queue for the simulation loop so agents see injected events in their market_state
+    state.simulation._injected_event_queue.append(event)
     logger.info(f"Event injected: {evt.title}")
     return {"message": "Event injected", "event_id": event.id}

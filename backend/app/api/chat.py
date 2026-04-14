@@ -39,8 +39,7 @@ _SYSTEM_PROMPT = (
     "Answer concisely (2-4 sentences). Be analytical, data-driven, and helpful."
 )
 
-# Rolling conversation history (last 10 turns)
-_history: list = []
+# FIX H2: History is now client-managed — no server-side global state for chat
 
 
 def _build_context_snippet() -> str:
@@ -70,13 +69,13 @@ def _strip_frontend_context(msg: str) -> str:
     return msg
 
 
-async def _call_groq(user_text: str, model: str | None = None) -> str:
+async def _call_groq(user_text: str, client_history: list[dict], model: str | None = None) -> str:
     if not _GROQ_LIB_OK or not _Groq:
         raise RuntimeError("groq library not available")
     client = _Groq(api_key=settings.GROQ_API_KEY)
     ctx = _build_context_snippet()
     full_user = f"{ctx}\n\nUSER: {user_text}"
-    msgs = [{"role": "system", "content": _SYSTEM_PROMPT}] + _history[-16:] + [{"role": "user", "content": full_user}]
+    msgs = [{"role": "system", "content": _SYSTEM_PROMPT}] + client_history[-16:] + [{"role": "user", "content": full_user}]
     model_name = model or settings.DEFAULT_MODEL_NAME or "llama-3.3-70b-versatile"
 
     def _sync_groq():
@@ -91,13 +90,13 @@ async def _call_groq(user_text: str, model: str | None = None) -> str:
     return await asyncio.wait_for(asyncio.to_thread(_sync_groq), timeout=25.0)
 
 
-async def _call_gemini(user_text: str) -> str:
+async def _call_gemini(user_text: str, client_history: list[dict]) -> str:
     if not _GEMINI_LIB_OK or not _genai:
         raise RuntimeError("google-genai library not available")
     client = _genai.Client(api_key=settings.GEMINI_API_KEY)
 
     history_text = ""
-    for turn in _history[-16:]:
+    for turn in client_history[-16:]:
         role = "User" if turn["role"] == "user" else "Assistant"
         history_text += f"{role}: {turn['content']}\n"
 
@@ -119,8 +118,6 @@ async def _call_gemini(user_text: str) -> str:
 
 @router.post("")
 async def chat(req: ChatRequest):
-    global _history
-
     user_text = _strip_frontend_context(req.message)
 
     answer = None
@@ -132,7 +129,7 @@ async def chat(req: ChatRequest):
         for groq_model in [settings.DEFAULT_MODEL_NAME or "llama-3.3-70b-versatile",
                             "llama-3.1-8b-instant"]:
             try:
-                answer = await _call_groq(user_text, model=groq_model)
+                answer = await _call_groq(user_text, req.history, model=groq_model)
                 if answer:
                     break
             except Exception as e:
@@ -143,7 +140,7 @@ async def chat(req: ChatRequest):
     # ── 2. Gemini fallback ───────────────────────────────────────────────────
     if not answer and _gemini_configured:
         try:
-            answer = await _call_gemini(user_text)
+            answer = await _call_gemini(user_text, req.history)
         except Exception as e:
             err = f"Gemini ({type(e).__name__}: {e})"
             logger.warning(err)
@@ -161,11 +158,5 @@ async def chat(req: ChatRequest):
             "confidence": "low",
             "suggested_followup": None,
         }
-
-    # Update history
-    _history.append({"role": "user", "content": user_text})
-    _history.append({"role": "assistant", "content": answer})
-    if len(_history) > 20:
-        _history = _history[-20:]
 
     return {"response": answer, "confidence": "high", "suggested_followup": None}

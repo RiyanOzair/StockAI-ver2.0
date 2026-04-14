@@ -149,10 +149,10 @@ class BaseAgent:
         if drawdown > self._max_drawdown:
             self._max_drawdown = drawdown
 
-        # Track session win-rate (PnL-improving sessions vs total sessions)
-        if self._pnl_history:
+        # FIX H7: Track win rate as sessions with positive portfolio return (value increased vs prior session)
+        if self._portfolio_history:
             self._sessions_count += 1
-            if self.pnl > self._pnl_history[-1]:
+            if self.total_value > self._portfolio_history[-1]:
                 self._profitable_sessions += 1
         self._pnl_history.append(self.pnl)
         self._portfolio_history.append(self.total_value)
@@ -231,8 +231,6 @@ class BaseAgent:
             "timestamp": __import__("datetime").datetime.now().isoformat(),
         }
         self.decision_log.append(entry)
-        if len(self.decision_log) > 200:
-            self.decision_log = self.decision_log[-200:]
 
     def _record_trade(self, qty: int):
         self.trade_count += 1
@@ -264,21 +262,23 @@ class BaseAgent:
 
     # ── Analytics ──
     def get_analytics(self) -> Dict:
-        # Sharpe ratio: mean daily return / std dev (annualized)
+        # FIX C3: Sharpe ratio now uses portfolio returns (not PnL diffs) and √1008 annualization (4 sessions/day)
         sharpe = 0.0
-        if len(self._pnl_history) > 2:
+        if len(self._portfolio_history) > 2:
             returns = []
-            for i in range(1, len(self._pnl_history)):
-                prev = self._pnl_history[i - 1] if self._pnl_history[i - 1] != 0 else 1
-                returns.append((self._pnl_history[i] - self._pnl_history[i - 1]) / abs(prev))
+            for i in range(1, len(self._portfolio_history)):
+                prev = self._portfolio_history[i - 1]
+                if prev > 0:
+                    returns.append((self._portfolio_history[i] - prev) / prev)
             mean_r = sum(returns) / len(returns) if returns else 0
             std_r = (sum((r - mean_r) ** 2 for r in returns) / len(returns)) ** 0.5 if returns else 1
-            sharpe = round((mean_r / std_r) * math.sqrt(252) if std_r > 0 else 0, 3)
+            sharpe = round((mean_r / std_r) * math.sqrt(1008) if std_r > 0 else 0, 3)
 
         return {
             "agent_id": str(self.id),
             "sharpe_ratio": sharpe,
             "max_drawdown": round(self._max_drawdown * 100, 2),
+            # FIX H7: Win rate = sessions with positive portfolio return / total sessions (standard per-period definition)
             "win_rate": round(self._profitable_sessions / self._sessions_count * 100, 1) if self._sessions_count else 0,
             "avg_trade_size": round(self._total_trade_qty / self.trade_count, 1) if self.trade_count else 0,
             "total_trades": self.trade_count,

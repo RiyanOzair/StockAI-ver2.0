@@ -3,10 +3,19 @@ import time
 import logging
 import json
 from typing import Any, Dict, Optional
-from groq import Groq
 from backend.app.core.config import settings
 
+# FIX C2: Lazy try/except so app doesn't crash at startup if groq is not installed
+try:
+    from groq import Groq
+    _groq_available = True
+except ImportError:
+    Groq = None  # type: ignore
+    _groq_available = False
+
 logger = logging.getLogger("llm.provider")
+if not _groq_available:
+    logger.warning("groq package is not installed — GroqProvider will be unavailable")
 
 class LLMProvider(abc.ABC):
     """
@@ -44,6 +53,8 @@ class OpenAIProvider(LLMProvider):
 
 class GroqProvider(LLMProvider):
     def __init__(self, api_key: str, model: str):
+        if not _groq_available:
+            raise RuntimeError("groq package not installed — use mock provider instead")
         self.client = Groq(api_key=api_key)
         self.model = model
         self._rate_limited_until = 0.0  # timestamp when rate limit expires

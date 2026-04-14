@@ -21,10 +21,11 @@ async def get_agents():
 
 
 @router.get("/{agent_id}/decisions")
-async def get_decisions(agent_id: str):
+async def get_decisions(agent_id: str, offset: int = 0, limit: int = 200):
     for a in state.agents:
         if str(a.id) == agent_id:
-            return {"agent_id": agent_id, "decisions": a.decision_log}
+            decisions = a.decision_log[offset : offset + limit] if offset or limit != 200 else a.decision_log
+            return {"agent_id": agent_id, "decisions": decisions}
     raise HTTPException(404, "Agent not found")
 
 

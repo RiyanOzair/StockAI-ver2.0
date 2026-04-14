@@ -261,6 +261,8 @@ class EventInjection(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
+    # FIX H2: History is now client-managed — no server-side global state for chat
+    history: List[Dict[str, str]] = Field(default_factory=list, max_length=20)
 
 
 # ═══════════════════════════════════════════════════════════════

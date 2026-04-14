@@ -82,10 +82,11 @@ def compute_agent_metrics(agent, simulation, current_prices: Dict[str, float], s
     benchmark_returns = compute_returns(bench_history)
     downside = [r for r in returns if r < 0]
 
-    volatility = _safe_std(returns) * math.sqrt(252) if returns else 0.0
+    # FIX H8: 1008 = 252 trading days × 4 sessions per day — matches per-session return frequency
+    volatility = _safe_std(returns) * math.sqrt(1008) if returns else 0.0
     sortino = 0.0
     if downside:
-        sortino = (_safe_mean(returns) / _safe_std(downside)) * math.sqrt(252) if _safe_std(downside) > 0 else 0.0
+        sortino = (_safe_mean(returns) / _safe_std(downside)) * math.sqrt(1008) if _safe_std(downside) > 0 else 0.0
 
     beta = 0.0
     if len(returns) > 1 and len(benchmark_returns) == len(returns):

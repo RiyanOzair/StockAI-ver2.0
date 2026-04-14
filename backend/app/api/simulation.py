@@ -1,11 +1,10 @@
-"""Simulation control endpoints."""
 import logging
+from typing import Optional, Dict, Any
 import backend.app.state as state
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Header
 from pydantic import BaseModel, Field
 from backend.app.models.types import SimulationConfig
 from backend.app.core.analytics import compute_market_analytics
-
 
 class ExtendRequest(BaseModel):
     additional_days: int = Field(..., gt=0, description="Must be at least 1")
@@ -13,15 +12,21 @@ class ExtendRequest(BaseModel):
 router = APIRouter(prefix="/simulation", tags=["simulation"])
 logger = logging.getLogger("api.simulation")
 
-
 @router.get("/status")
 async def get_status():
+    from backend.app.core.config import settings
     sim = state.simulation
     prices = {s: (state.market_books[s].last_price or state.STOCKS[s].initial_price) for s in state.STOCKS}
     analytics = compute_market_analytics(sim, prices, state.STOCKS)
+    
+    # Determine LLM mode
+    provider_type = settings.DEFAULT_MODEL_PROVIDER.lower()
+    llm_mode = "mock" if provider_type == "mock" or (not settings.GROQ_API_KEY and not settings.OPENAI_API_KEY) else "active"
+
     return {
         "is_running": sim.is_running,
         "is_paused": sim.is_paused,
+        "llm_mode": llm_mode,
         "day": sim.day,
         "session": sim.session,
         "session_phase": getattr(sim, "session_phase", "pre_open"),
@@ -49,21 +54,32 @@ async def get_status():
         "session_risk": analytics["session_risk"],
     }
 
+def _verify_session(x_session_id: Optional[str]):
+    if state.active_session_id and x_session_id and x_session_id != state.active_session_id:
+        if state.simulation.is_running:
+            raise HTTPException(409, f"Simulation session lock active (ID: {state.active_session_id[:8]}...). Only the session that started the run can modify it.")
 
 @router.post("/start")
-async def start_simulation(background_tasks: BackgroundTasks):
+async def start_simulation(background_tasks: BackgroundTasks, x_session_id: Optional[str] = Header(None)):
+    _verify_session(x_session_id)
     sim = state.simulation
     if sim.is_running and not sim.is_paused:
         return {"message": "Simulation already running"}
     if sim.is_paused:
         sim.is_paused = False
         return {"message": "Simulation resumed"}
+    
+    # If starting fresh, set the lock if not set
+    if not state.active_session_id:
+        state.active_session_id = x_session_id
+        
     background_tasks.add_task(state.simulation.run_simulation)
     return {"message": "Simulation started", "agents": len(state.agents), "days": state.simulation.total_days}
 
 
 @router.post("/pause")
-async def pause_simulation():
+async def pause_simulation(x_session_id: Optional[str] = Header(None)):
+    _verify_session(x_session_id)
     sim = state.simulation
     if not sim.is_running:
         return {"message": "Simulation not running"}
@@ -72,17 +88,22 @@ async def pause_simulation():
 
 
 @router.post("/stop")
-async def stop_simulation():
+async def stop_simulation(x_session_id: Optional[str] = Header(None)):
+    _verify_session(x_session_id)
     state.simulation._run_stop_reason = "stopped"
     state.simulation.is_running = False
     state.simulation.is_paused = False
+    # Clear session lock on stop
+    state.active_session_id = None
     return {"message": "Simulation stopped"}
 
 
 @router.post("/reset")
-async def reset_simulation():
+async def reset_simulation(x_session_id: Optional[str] = Header(None)):
+    _verify_session(x_session_id)
     state.simulation.is_running = False
     state.simulation.is_paused = False
+    state.active_session_id = None
     state._build_world()
     return {"message": "Simulation reset"}
 

@@ -1,127 +1,566 @@
+<!--
+  WORKSPACE REDESIGN NOTE
+  Replaced the old vertically cramped workspace with a horizontal neo-brutalist orchestration surface.
+  Existing research APIs are preserved, while new agent mix, event injection, explainability, and chat UI are layered on top.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>StockAI Research Workspace</title>
+  <title>STOCKAI WORKSPACE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet" />
   <style>
-    :root{--bg:#0a0a0f;--panel:#12121a;--panel2:#181825;--panel3:#101018;--text:#f8f8ff;--muted:#8a8da8;--line:#27273a;--lime:#b8ff3b;--cyan:#63f5ff;--magenta:#ff5dde;--yellow:#ffd84d;--red:#ff6b6b;--shadow:8px 8px 0 #000;--mono:ui-monospace,SFMono-Regular,Menlo,monospace;--sans:Inter,Segoe UI,Arial,sans-serif}
-    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#151528 0,#0a0a0f 55%);color:var(--text);font-family:var(--sans)}a{color:inherit;text-decoration:none}
-    .shell{max-width:1360px;margin:0 auto;padding:28px 18px 60px}.topbar,.hero,.panel,.toast{border:2px solid var(--line);background:var(--panel);box-shadow:var(--shadow)}
-    .topbar{display:flex;gap:12px;justify-content:space-between;align-items:center;padding:14px 16px;margin-bottom:18px;flex-wrap:wrap}.brand{font-weight:900;letter-spacing:.08em;text-transform:uppercase}.brand span{color:var(--lime)}.nav{display:flex;gap:10px;flex-wrap:wrap}
-    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border:2px solid var(--text);font-weight:800;text-transform:uppercase;letter-spacing:.06em;background:#000;cursor:pointer}.btn.primary{background:var(--lime);color:#000;border-color:#000}.btn.alt{border-color:var(--cyan);color:var(--cyan)}.btn.warn{border-color:var(--yellow);color:var(--yellow)}.btn.magenta{border-color:var(--magenta);color:var(--magenta)}
-    .hero{padding:26px 22px;margin-bottom:18px;background:linear-gradient(135deg,#141424 0,#0f0f17 100%)}.eyebrow{font:700 11px var(--mono);color:var(--cyan);letter-spacing:.18em;text-transform:uppercase}h1{margin:10px 0 12px;font-size:clamp(32px,5vw,60px);line-height:.95;text-transform:uppercase}.hero p{max-width:900px;color:#d5d7e8;font-size:16px;line-height:1.6}
-    .hero-grid,.grid,.meta,.kpi-row,.control-grid,.field-grid,.pulse-grid,.list,.action-list,.event-stream{display:grid;gap:18px}.hero-grid{grid-template-columns:2fr 1fr;margin-top:20px}.grid.two{grid-template-columns:1.25fr .95fr}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.control-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.pulse-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.meta{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi-row{grid-template-columns:repeat(4,minmax(0,1fr))}.field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
-    .statpack{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.stat,.mini-card,.item,.event,.control-card,.field,.toast,.action-item{border:2px solid var(--line);background:var(--panel2)}.stat,.mini-card,.item,.event,.control-card,.field,.action-item{padding:12px}
-    .stat .k,.mini-card .label,.pill,.compare th,.field label,.action-item .intent{font:700 11px var(--mono);text-transform:uppercase}.stat .k,.mini-card .label,.compare th,.field label{color:var(--muted)}.stat .v{font-weight:900;font-size:24px;margin-top:6px}.mini-card .value{margin-top:6px;font-weight:800}.item .title,.action-item .title{font-weight:900}.item .sub,.event .body,.control-card p,.footer-note,.inline-note,.action-item .detail{margin-top:6px;color:#d6d8e7;font-size:13px;line-height:1.5}
-    .panel{padding:18px}.section-head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:14px;flex-wrap:wrap}.section-head h2{margin:0;font-size:22px;text-transform:uppercase}.section-head p{margin:0;color:var(--muted)}.pill{display:inline-flex;padding:4px 8px;border:2px solid currentColor}.pill.live{color:var(--lime)}.pill.info{color:var(--cyan)}
-    .event-stream{max-height:460px;overflow:auto}.event .type{color:var(--cyan)}.compare{width:100%;border-collapse:collapse}.compare th,.compare td{padding:10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}.empty{padding:18px;border:2px dashed var(--line);color:var(--muted);text-align:center}.control-card{background:linear-gradient(180deg,#181825 0,#11111a 100%)}.control-card h3{margin:0 0 10px;font-size:16px;text-transform:uppercase}
-    .field{background:var(--panel3)}.field input,.field select,.field textarea{width:100%;border:2px solid var(--line);background:#090910;color:var(--text);padding:10px;font:inherit}.field textarea{min-height:84px;resize:vertical}.field.full{grid-column:1/-1}.action-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-    .toast-wrap{position:fixed;right:18px;bottom:18px;display:grid;gap:10px;z-index:9999}.toast.good{border-color:var(--lime);color:var(--lime)}.toast.bad{border-color:var(--red);color:var(--red)}.toast.info{border-color:var(--cyan);color:var(--cyan)}
-    @media (max-width:1240px){.control-grid,.pulse-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:1080px){.hero-grid,.grid.two,.grid.three,.control-grid,.meta,.kpi-row,.field-grid,.pulse-grid{grid-template-columns:1fr}.statpack{grid-template-columns:1fr 1fr}}@media (max-width:640px){.statpack{grid-template-columns:1fr}}
+    :root{--bg:#0a0a0a;--panel:#111;--panel2:#151515;--line:#2a2a2a;--text:#f2f2f2;--muted:#a8a8a8;--green:#b8ff57;--cyan:#00e5ff;--pink:#ff2d78;--amber:#f5c842;--mono:"JetBrains Mono",monospace;--sans:"Space Grotesk",sans-serif}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-width:1280px;background:var(--bg);color:var(--text);font-family:var(--sans)}a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}
+    .shell{max-width:1600px;margin:0 auto;padding:24px 24px 120px}.topbar,.hero,.section,.tool,.sticky,.chat-drawer{border:2px solid var(--line);background:var(--panel)}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 20px}.brand{font:800 22px var(--mono);text-transform:uppercase}.brand span{color:var(--green)}.nav{display:flex;gap:12px;flex-wrap:wrap}
+    .btn,.nav a,.chat-fab,.pill{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 14px;border:2px solid var(--line);background:var(--panel2);color:var(--text);font:700 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
+    .btn:hover,.nav a:hover,.chat-fab:hover{border-color:var(--cyan);color:var(--cyan)}.btn.primary{background:var(--green);color:#000;border-color:var(--green)}.btn.primary:hover{color:#000}.btn.pink{color:var(--pink);border-color:var(--pink)}.btn.amber{color:var(--amber);border-color:var(--amber)}
+    .hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(360px,.85fr);gap:18px;margin-top:18px;padding:28px}.eyebrow,.label,.mini{font:700 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+    h1,.section-title,.tool-title{margin:10px 0 0;font-family:var(--mono);text-transform:uppercase;letter-spacing:-.05em}.hero h1{font-size:40px;line-height:.95}.section-title{font-size:28px}.tool-title{font-size:22px;line-height:1}
+    .copy{color:#cacaca;line-height:1.7;font-size:15px}.hero-side{border:2px solid var(--line);background:var(--panel2);padding:20px;display:grid;gap:12px}.hero-points{display:grid;gap:10px}.hero-points div{border:2px solid var(--line);padding:14px;font-size:14px;line-height:1.6}
+    .stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-top:22px}.stat{border:2px solid var(--line);background:var(--panel2);padding:16px}.stat strong{display:block;margin-top:10px;font:800 24px var(--mono);text-transform:uppercase}
+    .sticky{position:sticky;top:0;z-index:20;border-color:var(--cyan);display:flex;justify-content:space-between;align-items:center;gap:16px;padding:14px 18px;margin-top:18px}.sticky-left,.sticky-right{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .pill{min-height:30px;padding:0 10px;border-color:currentColor;background:transparent;color:var(--green);font-size:11px}.pill.cyan{color:var(--cyan)}.pill.pink{color:var(--pink)}.pill.amber{color:var(--amber)}.pill.muted{color:var(--muted)}
+    .section{padding:24px;margin-top:24px}.section-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;margin-bottom:18px}.overview{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}.card{border:2px solid var(--line);background:var(--panel2);padding:20px}.card strong{display:block;margin-top:10px;font:800 20px var(--mono);text-transform:uppercase}
+    .tools{display:grid;gap:18px;margin-top:24px}.tool{display:grid;grid-template-columns:320px minmax(0,1fr)}.tool-meta,.tool-body{padding:22px}.tool-meta{border-right:2px solid var(--line);background:#0f0f0f;display:grid;align-content:space-between;gap:16px;border-left:2px solid var(--green)}.tool-meta.cyan{border-left-color:var(--cyan)}.tool-meta.pink{border-left-color:var(--pink)}.tool-meta.amber{border-left-color:var(--amber)}
+    .tool-body{display:grid;gap:16px}.grid2,.grid3{display:grid;gap:16px}.grid2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .field{display:flex;flex-direction:column;gap:8px}.field.full{grid-column:1/-1}input,select,textarea{width:100%;min-height:40px;padding:9px 12px;border:2px solid var(--line);background:#0d0d0d;color:var(--text);font:13px var(--mono)}textarea{min-height:92px;resize:vertical}input:focus,select:focus,textarea:focus{outline:none;border-color:var(--cyan)}
+    .actions{display:flex;gap:12px;flex-wrap:wrap}.note{font-size:13px;color:var(--muted);line-height:1.6}.mix-preview{height:40px;border:2px solid var(--line);display:grid;grid-template-columns:var(--llm,35%) var(--rule,45%) var(--strategy,20%);overflow:hidden}.seg{display:flex;align-items:center;justify-content:center;font:700 11px var(--mono);color:#000}.seg.llm{background:var(--cyan)}.seg.rule{background:var(--amber)}.seg.strategy{background:var(--green)}
+    .slider{display:grid;grid-template-columns:140px 1fr 72px;gap:12px;align-items:center}input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--green)}
+    .split{display:grid;grid-template-columns:1.05fr .95fr;gap:24px;margin-top:24px}.list{display:grid;gap:12px}.item{border:2px solid var(--line);background:var(--panel2);padding:16px}.item-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:8px}.item strong{font:700 13px var(--mono);text-transform:uppercase}.bar{height:10px;border:2px solid var(--line);background:#0d0d0d;overflow:hidden;margin-top:8px}.fill{height:100%;background:var(--green);width:0}
+    details.tape{margin-top:24px;border:2px solid var(--line);background:var(--panel)}details.tape>summary{list-style:none;cursor:pointer;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;font:700 14px var(--mono);text-transform:uppercase}details.tape>summary::-webkit-details-marker{display:none}.tape-body{padding:0 20px 20px;display:grid;gap:12px}.stream-note{padding:0 20px 18px;color:var(--muted);font:11px var(--mono);letter-spacing:.08em;text-transform:uppercase}
+    .chat-fab{position:fixed;right:18px;bottom:18px;z-index:30;min-width:60px;height:58px;border-color:var(--green);color:var(--green)}.chat-drawer{position:fixed;right:18px;bottom:86px;width:380px;height:520px;z-index:29;display:none;grid-template-rows:auto 1fr auto}.chat-drawer.open{display:grid}.chat-head,.chat-send{padding:14px;border-bottom:2px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px;font:700 12px var(--mono);text-transform:uppercase}.chat-send{border-top:2px solid var(--line);border-bottom:0;display:grid;grid-template-columns:1fr auto}.chat-log{padding:14px;overflow:auto;display:grid;gap:10px;align-content:start}.msg{border:2px solid var(--line);padding:12px;background:var(--panel2);font-size:13px;line-height:1.65}.msg.user{border-color:var(--cyan)}.msg.bot{border-color:var(--green)}.low{display:inline-flex;margin-top:8px;padding:0 8px;min-height:28px;align-items:center;border:2px solid var(--amber);color:var(--amber);font:700 11px var(--mono);text-transform:uppercase}
+    .empty{border:2px dashed var(--line);padding:18px;color:var(--muted);font:12px var(--mono);text-transform:uppercase}
+    @media (max-width:1440px){.hero,.split{grid-template-columns:1fr}.overview{grid-template-columns:repeat(3,minmax(0,1fr))}}
+    @media (max-width:1320px){.tool{grid-template-columns:280px minmax(0,1fr)}.grid3{grid-template-columns:repeat(2,minmax(0,1fr))}.chat-drawer{width:340px}}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:9999;background:var(--panel);color:var(--text);font:700 13px var(--mono);text-transform:uppercase;padding:14px 24px;border:2px solid var(--line);transition:all .2s ease;box-shadow:0 10px 30px rgba(0,0,0,.5)}.toast-visible{transform:translate(-50%,0);opacity:1}.toast-success{border-color:var(--green)}.toast-error{border-color:var(--pink)}.toast-warning{border-color:var(--amber)}
+    :focus-visible{outline:2px solid var(--cyan);outline-offset:2px}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
   </style>
 </head>
 <body>
   <div class="shell">
-    <div class="topbar"><div class="brand">Stock<span>AI</span> Research Workspace</div><div class="nav"><a class="btn" href="/">Landing</a><a class="btn primary" href="/app">Run Console</a><a class="btn alt" href="/live-market">Live Market</a></div></div>
-    <section class="hero">
-      <div class="eyebrow">Local-first research platform</div>
-      <h1>Calibrate. Simulate. Compare. Train.</h1>
-      <p>StockAI treats the simulator as a persistent research environment: a hybrid synthetic US equities market, seeded datasets and scenarios, strategy SDK bots, deterministic evaluation runs, and an event tape that explains what the market kernel is doing phase by phase.</p>
-      <div class="hero-grid">
-        <div class="statpack">
-          <div class="stat"><div class="k">Active Run</div><div class="v" id="heroRun">--</div></div>
-          <div class="stat"><div class="k">Session Phase</div><div class="v" id="heroPhase">--</div></div>
-          <div class="stat"><div class="k">Training Mode</div><div class="v" id="heroTraining">--</div></div>
-          <div class="stat"><div class="k">Latency / Slippage</div><div class="v" id="heroExecution">--</div></div>
-        </div>
-        <div class="panel" style="padding:16px">
-          <div class="section-head" style="margin-bottom:8px"><h2>Workspace Actions</h2></div>
-          <div class="list">
-            <a class="btn primary" href="/app">Open Simulation Console</a>
-            <a class="btn alt" href="/live-market">Open Reality Layer</a>
-            <button class="btn" id="refreshBtn" type="button">Refresh Workspace</button>
-            <button class="btn warn" id="exportRunBtn" type="button">Export Active Run</button>
-          </div>
-          <div class="footer-note">This page is the orchestration layer: stage scenarios, launch runs, forge bots, benchmark them, and export evidence bundles.</div>
-        </div>
+    <header class="topbar">
+      <div class="brand">STOCK<span>AI</span> WORKSPACE</div>
+      <div class="nav">
+        <a href="/">LANDING</a>
+        <a href="/app">SIMULATION CONSOLE</a>
+        <a href="/live-market">US EQUITIES</a>
       </div>
+    </header>
+
+    <section class="hero">
+      <div>
+        <div class="eyebrow">RESEARCH MODE + BOT DEPLOYMENT MODE</div>
+        <h1>CALIBRATE, STRESS, BENCHMARK, PROMOTE.</h1>
+        <p class="copy">This workspace is the orchestration layer on top of StockAI’s research core. Configure the synthetic US equities market, shape agent populations, inject scenarios, inspect agent reasoning, compare experiments, and identify which bots are ready to graduate into the US EQUITIES surface.</p>
+        <div id="heroStats" class="stats"></div>
+      </div>
+      <aside class="hero-side">
+        <div>
+          <div class="eyebrow">WORKSPACE PURPOSE</div>
+          <div class="hero-points">
+            <div>RESEARCH MODE: STUDY LLM AGENT BEHAVIOR UNDER CONTROLLED WHAT-IF SCENARIOS.</div>
+            <div>BOT DEPLOYMENT MODE: RANK THE STRATEGIES THAT LOOK READY FOR LIVE US EQUITIES MONITORING.</div>
+            <div>THE BACKEND RESEARCH STORE, SIMULATOR, SSE, WS, AND API CONTRACTS REMAIN UNCHANGED.</div>
+          </div>
+        </div>
+        <div id="heroRunBadge" class="pill cyan">LOADING WORKSPACE</div>
+      </aside>
     </section>
-    <div class="grid two" style="margin-bottom:18px">
-      <section class="panel"><div class="section-head"><div><h2>Research Pulse</h2><p>Platform readiness, throughput, and experiment momentum.</p></div></div><div class="pulse-grid" id="pulseGrid"></div></section>
-      <section class="panel"><div class="section-head"><div><h2>Next Best Moves</h2><p>The shortest path from calibrated market to exportable evidence.</p></div></div><div class="action-list" id="nextActions"></div></section>
+
+    <div class="sticky">
+      <div class="sticky-left">
+        <span class="mini">WORKSPACE ACTIONS</span>
+        <span id="workspaceMode" class="pill">SYNCING</span>
+      </div>
+      <div class="sticky-right">
+        <a class="btn" href="/app">OPEN SIMULATION CONSOLE</a>
+        <a class="btn" href="/live-market">OPEN US EQUITIES</a>
+        <button id="refreshBtn" class="btn amber" type="button">REFRESH WORKSPACE</button>
+        <button id="exportRunBtn" class="btn pink" type="button">EXPORT ACTIVE RUN</button>
+      </div>
     </div>
-    <section class="panel" style="margin-bottom:18px">
-      <div class="section-head"><div><h2>Control Deck</h2><p>High-value workflows for researchers and bot builders.</p></div></div>
-      <div class="control-grid" id="controlDeck"></div>
+
+    <section class="section">
+      <div class="section-head">
+        <div><div class="eyebrow">ACTIVE WORKSPACE STATE</div><div class="section-title">RUN OVERVIEW</div></div>
+        <div id="runOverviewStatus" class="pill muted">NO ACTIVE RUN</div>
+      </div>
+      <div id="overviewGrid" class="overview"></div>
     </section>
-    <div class="grid two">
-      <section class="panel"><div class="section-head"><div><h2>Active Run</h2><p>Current market kernel, scenario, and execution assumptions.</p></div><span class="pill live" id="runBadge">READY</span></div><div class="meta" id="runMeta"></div></section>
-      <section class="panel"><div class="section-head"><div><h2>Kernel KPIs</h2><p>State explanation for researchers and bot builders.</p></div></div><div class="kpi-row" id="kpis"></div></section>
-    </div>
-    <div class="grid two" style="margin-top:18px">
-      <section class="panel"><div class="section-head"><div><h2>Run Event Tape</h2><p>Run-scoped market, order, and fill events.</p></div><span class="pill info" id="eventCount">0 events</span></div><div class="event-stream" id="eventStream"></div></section>
-      <section class="panel"><div class="section-head"><div><h2>Research Registry</h2><p>Datasets, scenarios, and experiments available locally.</p></div></div><div class="grid three"><div><div class="eyebrow">Datasets</div><div class="list" id="datasets"></div></div><div><div class="eyebrow">Scenarios</div><div class="list" id="scenarios"></div></div><div><div class="eyebrow">Experiments</div><div class="list" id="experiments"></div></div></div></section>
-    </div>
-    <div class="grid two" style="margin-top:18px">
-      <section class="panel"><div class="section-head"><div><h2>Agent Lab</h2><p>Strategy SDK and benchmark definitions available for evaluation.</p></div></div><div class="grid two"><div><div class="eyebrow">Bots</div><div class="list" id="bots"></div></div><div><div class="eyebrow">Populations</div><div class="list" id="populations"></div></div></div></section>
-      <section class="panel">
-        <div class="section-head"><div><h2>Experiment Compare</h2><p>Evaluation outputs and background jobs.</p></div></div>
-        <table class="compare"><thead><tr><th>Leaderboard</th><th>Bot</th><th>Avg PnL</th><th>Avg Sharpe</th></tr></thead><tbody id="leaderboard"></tbody></table>
-        <div style="height:14px"></div>
-        <table class="compare"><thead><tr><th>Evaluation</th><th>Status</th><th>Avg PnL</th><th>Avg Sharpe</th></tr></thead><tbody id="evaluations"></tbody></table>
-        <div style="height:14px"></div>
-        <table class="compare"><thead><tr><th>Job</th><th>Status</th><th>Type</th><th>Updated</th></tr></thead><tbody id="jobs"></tbody></table>
+
+    <section class="tools">
+      <article class="tool">
+        <div class="tool-meta">
+          <div><div class="tool-title">RUN LAUNCHER</div><p class="copy">Launch the next simulation run using the current dataset, scenario, experiment, and population context.</p></div>
+          <div id="runLauncherStatus" class="pill">NO ACTIVE RUN</div>
+        </div>
+        <div class="tool-body">
+          <div id="launcher-stages">
+            <!-- Stage 1: Core -->
+            <div class="launcher-stage" id="stage-1">
+              <div class="eyebrow" style="margin-bottom:12px;color:var(--cyan)">STAGE 1 OF 4: CORE SETTINGS</div>
+              <div class="grid3">
+                <div class="field"><label for="runName">RUN NAME</label><input id="runName" value="HYBRID RESEARCH RUN" /></div>
+                <div class="field"><label for="runDays">DAYS</label><input id="runDays" type="number" min="1" max="30" value="4" /></div>
+                <div class="field"><label for="runSeed">SEED</label><input id="runSeed" type="number" min="1" value="42" /></div>
+              </div>
+            </div>
+            
+            <!-- Stage 2: Context -->
+            <div class="launcher-stage" id="stage-2" style="display:none">
+              <div class="eyebrow" style="margin-bottom:12px;color:var(--cyan)">STAGE 2 OF 4: CONTEXT</div>
+              <div class="grid2">
+                <div class="field"><label for="runDataset">DATASET</label><select id="runDataset"></select></div>
+                <div class="field"><label for="runScenario">SCENARIO</label><select id="runScenario"></select></div>
+              </div>
+            </div>
+            
+            <!-- Stage 3: Population -->
+            <div class="launcher-stage" id="stage-3" style="display:none">
+              <div class="eyebrow" style="margin-bottom:12px;color:var(--cyan)">STAGE 3 OF 4: POPULATION</div>
+              <div class="grid2">
+                <div class="field"><label for="runExperiment">EXPERIMENT</label><select id="runExperiment"></select></div>
+                <div class="field"><label for="runPopulation">POPULATION</label><select id="runPopulation"></select></div>
+              </div>
+            </div>
+
+            <!-- Stage 4: Rules -->
+            <div class="launcher-stage" id="stage-4" style="display:none">
+              <div class="eyebrow" style="margin-bottom:12px;color:var(--cyan)">STAGE 4 OF 4: RULES</div>
+              <div class="grid2">
+                <div class="field"><label for="runMode">TRAINING MODE</label><select id="runMode"><option value="hybrid">HYBRID</option><option value="deterministic">DETERMINISTIC</option></select></div>
+                <div class="field"><label for="runLLM">LLM AGENTS</label><select id="runLLM"><option value="true">ENABLED</option><option value="false">DISABLED</option></select></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="actions" style="margin-top:16px;justify-content:space-between">
+            <div style="display:flex;gap:12px">
+              <button id="btn-stage-back" class="btn" type="button" style="display:none" onclick="launcherStep(-1)">← BACK</button>
+              <button id="btn-stage-next" class="btn primary" type="button" onclick="launcherStep(1)">NEXT →</button>
+            </div>
+            <div id="launcher-actions" style="display:none;gap:12px">
+              <button id="launchRunBtn" class="btn primary" type="button">LAUNCH RUN</button>
+              <button id="launchRunStartBtn" class="btn" type="button">LAUNCH + START</button>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="tool">
+        <div class="tool-meta cyan">
+          <div><div class="tool-title">AGENT CONFIGURATION</div><p class="copy">Control the total agent count and the mix between LLM agents, rule-based baselines, and strategy bots.</p></div>
+          <div id="mixStatus" class="pill cyan">MIX LOADING</div>
+        </div>
+        <div class="tool-body">
+          <div class="grid2">
+            <div class="field"><label for="runAgents">TOTAL AGENTS</label><input id="runAgents" type="number" min="2" max="100" value="10" oninput="normalizeMix()" /></div>
+            <div class="field"><label>MIX PREVIEW</label><div id="mixPreview" class="mix-preview"><div class="seg llm">LLM</div><div class="seg rule">RULE</div><div class="seg strategy">STRATEGY</div></div></div>
+          </div>
+          <div class="slider"><label class="mini" for="mixLlm">LLM AGENTS</label><input id="mixLlm" type="range" min="0" max="100" value="35" oninput="normalizeMix()" /><strong id="mixLlmValue">35%</strong></div>
+          <div class="slider"><label class="mini" for="mixRule">RULE-BASED</label><input id="mixRule" type="range" min="0" max="100" value="45" oninput="normalizeMix()" /><strong id="mixRuleValue">45%</strong></div>
+          <div class="slider"><label class="mini" for="mixStrategy">STRATEGY BOTS</label><input id="mixStrategy" type="range" min="0" max="100" value="20" oninput="normalizeMix()" /><strong id="mixStrategyValue">20%</strong></div>
+          <div id="mixNote" class="note">THE MIX IS NORMALIZED TO 100% BEFORE RUN LAUNCH.</div>
+        </div>
+      </article>
+
+      <article class="tool">
+        <div class="tool-meta pink">
+          <div><div class="tool-title">BOT FORGE</div><p class="copy">Register a strategy bot definition and optionally attach it to the active simulation.</p></div>
+          <div id="botStatus" class="pill pink">0 BOTS REGISTERED</div>
+        </div>
+        <div class="tool-body">
+          <div class="grid3">
+            <div class="field"><label for="botName">BOT NAME</label><input id="botName" value="RESEARCH MEAN REVERSION" /></div>
+            <div class="field"><label for="botStrategy">STRATEGY</label><select id="botStrategy"><option value="mean_reversion">MEAN REVERSION</option><option value="benchmark_vwap">VWAP BENCHMARK</option></select></div>
+            <div class="field"><label for="botAttach">ATTACH TO ACTIVE SIM</label><select id="botAttach"><option value="false">NO</option><option value="true">YES</option></select></div>
+            <div class="field full"><label for="botDesc">DESCRIPTION</label><input id="botDesc" value="WORKSPACE-CREATED PYTHON SDK BOT." /></div>
+            <div class="field full"><label for="botConfig">CONFIG JSON</label><textarea id="botConfig">{"lookback":5,"z_entry":1.2,"z_exit":0.4}</textarea></div>
+          </div>
+          <div class="actions"><button id="createBotBtn" class="btn pink" type="button">CREATE BOT</button></div>
+        </div>
+      </article>
+
+      <article class="tool">
+        <div class="tool-meta amber">
+          <div><div class="tool-title">CALIBRATION PULSE</div><p class="copy">Update the active dataset calibration profile using bounded returns, spreads, and liquidity references.</p></div>
+          <div id="calStatus" class="pill amber">NO CALIBRATION DATA</div>
+        </div>
+        <div class="tool-body">
+          <div class="grid3">
+            <div class="field"><label for="calDataset">DATASET</label><select id="calDataset"></select></div>
+            <div class="field"><label for="calReturns">RETURNS</label><input id="calReturns" value="0.01,0.015,0.02,0.03" /></div>
+            <div class="field"><label for="calSpreads">SPREADS (BPS)</label><input id="calSpreads" value="4,6,9,12" /></div>
+            <div class="field full"><label for="calVolumes">VOLUMES (MILLIONS)</label><input id="calVolumes" value="12,18,24,31" /></div>
+          </div>
+          <div class="actions"><button id="calibrateBtn" class="btn amber" type="button">CALIBRATE DATASET</button></div>
+        </div>
+      </article>
+
+      <article class="tool">
+        <div class="tool-meta cyan">
+          <div><div class="tool-title">SCENARIO BUILDER</div><p class="copy">Package reusable regime and shock assumptions so experiments can be replayed consistently.</p></div>
+          <div id="scenarioStatus" class="pill cyan">0 SCENARIOS</div>
+        </div>
+        <div class="tool-body">
+          <div class="grid3">
+            <div class="field"><label for="scenarioName">SCENARIO NAME</label><input id="scenarioName" value="LIQUIDITY STRESS DRILL" /></div>
+            <div class="field"><label for="scenarioVersion">VERSION</label><input id="scenarioVersion" value="1.0" /></div>
+            <div class="field"><label for="scenarioRegime">REGIME</label><select id="scenarioRegime"><option value="stress">STRESS</option><option value="momentum">MOMENTUM</option><option value="balanced">BALANCED</option></select></div>
+            <div class="field full"><label for="scenarioDesc">DESCRIPTION</label><input id="scenarioDesc" value="THIN-LIQUIDITY STRESS TEST WITH ELEVATED VOLATILITY AND SPILLOVER RISK." /></div>
+          </div>
+          <div class="actions"><button id="createScenarioBtn" class="btn" type="button">CREATE SCENARIO</button></div>
+        </div>
+      </article>
+      <article class="tool">
+        <div class="tool-meta">
+          <div><div class="tool-title">EXPERIMENT PACKAGER</div><p class="copy">Bind datasets, scenarios, and populations into a research program that runs and evaluations can roll up into.</p></div>
+          <div id="experimentStatus" class="pill">0 EXPERIMENTS</div>
+        </div>
+        <div class="tool-body">
+          <div class="grid3">
+            <div class="field"><label for="experimentName">EXPERIMENT NAME</label><input id="experimentName" value="LIQUIDITY STRESS PROGRAM" /></div>
+            <div class="field"><label for="expScenario">SCENARIO</label><select id="expScenario"></select></div>
+            <div class="field"><label for="expDataset">DATASET</label><select id="expDataset"></select></div>
+            <div class="field"><label for="expPopulation">POPULATION</label><select id="expPopulation"></select></div>
+            <div class="field full"><label for="experimentDesc">DESCRIPTION</label><input id="experimentDesc" value="COMPARES BASELINE AND STRESS-READY BOTS ACROSS CALIBRATED MARKET STATES." /></div>
+          </div>
+          <div class="actions"><button id="createExperimentBtn" class="btn primary" type="button">CREATE EXPERIMENT</button></div>
+        </div>
+      </article>
+
+      <article class="tool">
+        <div class="tool-meta pink">
+          <div><div class="tool-title">EVALUATION BENCH</div><p class="copy">Benchmark registered bots across multiple seeds and collect aggregate PNL, SHARPE, and drawdown outputs.</p></div>
+          <div id="evaluationStatus" class="pill pink">0 COMPLETED EVALUATIONS</div>
+        </div>
+        <div class="tool-body">
+          <div class="grid3">
+            <div class="field"><label for="evalBot">BOT</label><select id="evalBot"></select></div>
+            <div class="field"><label for="evalDays">DAYS</label><input id="evalDays" type="number" min="1" max="10" value="2" /></div>
+            <div class="field"><label for="evalAsync">RUN MODE</label><select id="evalAsync"><option value="false">WAIT FOR RESULT</option><option value="true">QUEUE JOB</option></select></div>
+            <div class="field full"><label for="evalSeeds">SEEDS</label><input id="evalSeeds" value="11,19,23" /></div>
+          </div>
+          <div class="actions"><button id="runEvalBtn" class="btn pink" type="button">RUN EVALUATION</button></div>
+        </div>
+      </article>
+
+      <article class="tool">
+        <div class="tool-meta red">
+          <div><div class="tool-title">RESEARCH STORE PURGE</div><p class="copy">Clear all events, notebooks, and inactive runs from the SQLite database to prevent infinite storage bloat.</p></div>
+          <div id="purgeStatus" class="pill red">IDLE</div>
+        </div>
+        <div class="tool-body">
+          <div class="grid2">
+            <div class="field"><label>PREVIEW (EXCLUDES ACTIVE RUN)</label><div id="purgePreview" style="color:var(--muted);font-size:12px;margin-top:8px;">CLICK 'PREVIEW PURGE' TO CHECK DB SIZES.</div></div>
+            <div class="field actions"><button id="previewPurgeBtn" class="btn" style="margin-right:12px" type="button">PREVIEW PURGE</button><button id="executePurgeBtn" class="btn red" type="button" disabled>CONFIRM & DELETE</button></div>
+          </div>
+        </div>
+      </article>
+      <article class="tool">
+        <div class="tool-meta blue">
+          <div><div class="tool-title">AGENT NOTEBOOKS</div><p class="copy">Review qualitative research entries and agent observations from the current simulation run.</p></div>
+          <div id="notebookStatus" class="pill blue">0 ENTRIES</div>
+        </div>
+        <div class="tool-body">
+          <div class="feed" id="notebookFeed" style="max-height:300px;overflow-y:auto;background:var(--bg-lighter,#0a0a0a);padding:12px;border:1px solid #222;">
+            <div class="empty">NO NOTEBOOKS LOADED / WAIT FOR ACTIVE RUN</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="tool">
+        <div class="tool-meta amber">
+          <div><div class="tool-title">EVENT INJECTION</div><p class="copy">Define a custom shock and send it through the existing event injection endpoint. Target day is recorded in the description without changing backend contracts.</p></div>
+          <div id="eventStatus" class="pill amber">READY TO INJECT</div>
+        </div>
+        <div class="tool-body">
+          <div class="grid3">
+            <div class="field"><label for="evtType">EVENT TYPE</label><select id="evtType" onchange="updateEventPreview()"><option value="earnings shock">EARNINGS SHOCK</option><option value="liquidity crisis">LIQUIDITY CRISIS</option><option value="macro announcement">MACRO ANNOUNCEMENT</option><option value="sector rotation">SECTOR ROTATION</option><option value="regulatory action">REGULATORY ACTION</option></select></div>
+            <div class="field"><label for="evtSector">AFFECTED SECTOR</label><select id="evtSector" onchange="updateEventPreview()"><option value="ALL">ALL</option></select></div>
+            <div class="field"><label for="evtDay">TARGET DAY</label><input id="evtDay" type="number" min="1" max="20" value="4" oninput="updateEventPreview()" /></div>
+            <div class="field"><label for="evtMagnitude">MAGNITUDE</label><input id="evtMagnitude" type="range" min="1" max="3" value="2" oninput="updateEventPreview(); magnitude()" /></div>
+            <div class="field"><label for="evtSeverity">SEVERITY</label><input id="evtSeverity" value="MODERATE" readonly /></div>
+            <div class="field full"><label for="evtDesc">PLAIN-ENGLISH DESCRIPTION</label><textarea id="evtDesc">LIQUIDITY THINS MID-RUN AND EXECUTION COSTS WIDEN ACROSS THE TARGET SECTOR.</textarea></div>
+          </div>
+          
+          <div class="field full" style="margin-top:16px;margin-bottom:16px;">
+            <label>TIMELINE PREVIEW (20 TICKS)</label>
+            <div id="eventTimeline" style="display:flex;height:32px;background:#0d0d0d;border:2px solid var(--line);position:relative;">
+              <!-- Javascript will generate 20 segments and overlay the blip here -->
+            </div>
+          </div>
+
+          <div class="actions"><button id="injectEventBtn" class="btn amber" type="button">INJECT EVENT</button></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="split">
+      <section class="section">
+        <div class="section-head">
+          <div><div class="eyebrow">AGENT REASONING</div><div class="section-title">EXPLAINABILITY FEED</div></div>
+          <div id="explainabilityStatus" class="pill cyan">0 ENTRIES</div>
+        </div>
+        <div id="explainabilityFeed" class="list"></div>
       </section>
+      <section class="section">
+        <div class="section-head">
+          <div><div class="eyebrow">REGISTRY SNAPSHOT</div><div class="section-title">LOCAL RESEARCH INVENTORY</div></div>
+          <div id="registryStatus" class="pill muted">SYNCING</div>
+        </div>
+        <div id="registryGrid" class="list"></div>
+      </section>
+    </section>
+
+    <details id="eventTapePanel" class="tape">
+      <summary><span>RUN EVENT TAPE</span><span id="eventTapeStatus" class="pill muted">0 EVENTS</span></summary>
+      <div class="stream-note">EXPAND THIS PANEL TO OPEN THE LIVE RUN EVENT STREAM.</div>
+      <div id="eventTape" class="tape-body"></div>
+    </details>
+  </div>
+
+  <button id="chatFab" class="chat-fab" type="button">CHAT</button>
+  <aside id="chatDrawer" class="chat-drawer">
+    <div class="chat-head"><span>MARKET RESEARCH ASSISTANT</span><button id="chatClose" class="btn" type="button">CLOSE</button></div>
+    <div id="chatLog" class="chat-log"></div>
+    <div class="chat-send"><input id="chatInput" type="text" placeholder="ASK ABOUT REGIME, RUN STATS, OR BOT PERFORMANCE" /><button id="chatSend" class="btn primary" type="button">SEND</button></div>
+  </aside>
+
+  <script>
+    const $=id=>document.getElementById(id);
+    const app={summary:null,status:null,run:null,events:[],cursor:0,stocks:{},decisions:[],chatOpen:false,eventStream:null,hydrated:false};
+    const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const fmt=(v,d=2)=>Number.isFinite(Number(v))?Number(v).toFixed(d):'--';
+    const ago=v=>{if(!v)return'UNKNOWN';const t=new Date(v);if(Number.isNaN(t.getTime()))return'UNKNOWN';const diff=Math.max(0,Date.now()-t.getTime()),days=Math.floor(diff/86400000),hours=Math.floor(diff/3600000);if(days>0)return`${days} DAY${days===1?'':'S'} AGO`;if(hours>0)return`${hours} HOUR${hours===1?'':'S'} AGO`;return'JUST NOW';};
+    function showToast(msg,type='success'){let el=$('toastContainer');if(!el){el=document.createElement('div');el.id='toastContainer';document.body.appendChild(el)}el.textContent=msg;el.className=`toast toast-visible toast-${type}`;setTimeout(()=>el.classList.remove('toast-visible'),3000)}
+    const sessionID = sessionStorage.getItem('stockai_session_id') || (Date.now() + '-' + Math.random().toString(36).slice(2, 11));
+    sessionStorage.setItem('stockai_session_id', sessionID);
+
+    async function api(path,options = {}){
+      options.headers = options.headers || {};
+      options.headers['X-Session-ID'] = sessionID;
+      const r=await fetch(path,options);
+      if(!r.ok){
+        const txt = await r.text();
+        if (r.status === 409) showToast('CONFLICT: ANOTHERSESSION IS LOCKING THIS SIMULATION', 'error');
+        throw new Error(txt||path);
+      }
+      return r.json();
+    }
+    const post=async(path,body)=>{try{const res=await api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});if(path!=='/chat')showToast('SUCCESS: '+path.split('/')[1].toUpperCase().replace(/S$/,'')+' PROCESSED','success');return res}catch(e){if(path!=='/chat' && !e.message.includes('409'))showToast(`ERROR: ${e.message}`,'error');throw e}};
+    function setOptions(id,items,key,label,preferred){const el=$(id);if(!items.length){el.innerHTML='<option value="">NONE AVAILABLE</option>';return}const prev=el.value;el.innerHTML=items.map(i=>`<option value="${esc(i[key])}">${esc(label(i))}</option>`).join('');const vals=items.map(i=>String(i[key]));el.value=vals.includes(String(prev))?prev:(vals.includes(String(preferred))?String(preferred):vals[0])}
+    function normalizeMix(){const raw=[+$('mixLlm').value,+$('mixRule').value,+$('mixStrategy').value],sum=raw.reduce((a,b)=>a+b,0)||1;const norm=raw.map(v=>Math.round(v/sum*100));norm[2]+=100-norm.reduce((a,b)=>a+b,0);$('mixLlmValue').textContent=`${norm[0]}%`;$('mixRuleValue').textContent=`${norm[1]}%`;$('mixStrategyValue').textContent=`${norm[2]}%`;$('mixPreview').style.setProperty('--llm',`${norm[0]}%`);$('mixPreview').style.setProperty('--rule',`${norm[1]}%`);$('mixPreview').style.setProperty('--strategy',`${norm[2]}%`);$('mixStatus').textContent=`${$('runAgents').value||0} AGENTS / ${norm.join('-')}`;$('mixNote').textContent=`LLM ${norm[0]}% · RULE ${norm[1]}% · STRATEGY ${norm[2]}%`;return{llm:norm[0]/100,rule:norm[1]/100,strategy:norm[2]/100}}
+    function magnitude(){const map={1:{label:'MILD',severity:'LOW',impact:2.5},2:{label:'MODERATE',severity:'MEDIUM',impact:6},3:{label:'SEVERE',severity:'HIGH',impact:12}},m=map[+$('evtMagnitude').value]||map[2];$('evtSeverity').value=m.label;return m}
+    function hydrateRunForm(){const cfg=app.run?.config_snapshot||{};if(app.hydrated||!Object.keys(cfg).length)return;$('runName').value=app.run?.name||$('runName').value;$('runDays').value=cfg.num_days||$('runDays').value;$('runSeed').value=cfg.seed||$('runSeed').value;$('runAgents').value=cfg.num_agents||$('runAgents').value;$('runMode').value=cfg.training_mode||$('runMode').value;$('runLLM').value=String(cfg.use_llm ?? ($('runLLM').value==='true'));if(cfg.agent_mix){$('mixLlm').value=Math.round((cfg.agent_mix.llm||0)*100);$('mixRule').value=Math.round((cfg.agent_mix.rule||0)*100);$('mixStrategy').value=Math.round((cfg.agent_mix.strategy||0)*100)}app.hydrated=true}
+    function renderHero(){const s=app.status,c=app.summary?.counts||{};const stats=[['ACTIVE RUN',s?.run_id||'NONE'],['SESSION PHASE',s?.session_phase||'IDLE'],['TRAINING MODE',(s?.training_mode||'HYBRID').toUpperCase()],['COMPLETED EVALUATIONS',String(c.completed_evaluations||0)]];$('heroStats').innerHTML=stats.map(([k,v])=>`<div class="stat"><div class="mini">${esc(k)}</div><strong>${esc(v)}</strong></div>`).join('');$('heroRunBadge').textContent=s?.is_running?'ACTIVE RUN LIVE':(s?.run_id?'RUN CONFIGURED':'NO ACTIVE RUN');$('workspaceMode').textContent=app.summary?.workflow?.evaluation_ready?'RESEARCH + DEPLOYMENT READY':'RESEARCH MODE'}
+    function renderOverview(){const s=app.status,r=app.run;const rows=[['RUN ID',s?.run_id||'NONE'],['REGIME',s?.regime||'N/A'],['BENCHMARK RETURN',`${s?.benchmark?.return_pct>=0?'+':''}${fmt(s?.benchmark?.return_pct)}%`],['TOTAL TRADES',String(s?.total_trades||0)],['LATENCY / SLIPPAGE',`${s?.latency_ms||0}MS / ${fmt(s?.slippage_bps)} BPS`],['DATASET',s?.dataset_version||r?.dataset_id||'N/A'],['SCENARIO',s?.scenario_id||r?.scenario_id||'N/A'],['EXPERIMENT',s?.experiment_id||r?.experiment_id||'N/A'],['SENTIMENT',String(s?.market_sentiment||'NEUTRAL').toUpperCase()],['SESSION RISK',String(s?.session_risk||'NORMAL').toUpperCase()]];$('runOverviewStatus').textContent=s?.run_id?`RUN ${s?.is_running?'LIVE':'READY'} · ${s.run_id}`:'NO ACTIVE RUN';$('overviewGrid').innerHTML=rows.map(([k,v])=>`<div class="card"><div class="mini">${esc(k)}</div><strong>${esc(v)}</strong></div>`).join('')}
+    function renderRegistry(){const s=app.summary,c=s?.counts||{},blocks=[['DATASETS',s?.datasets||[],i=>`${i.name} / ${i.version||'V1'}`],['SCENARIOS',s?.scenarios||[],i=>`${i.name} / ${i.version||'V1'}`],['EXPERIMENTS',s?.experiments||[],i=>i.name],['BOTS',s?.bots||[],i=>`${i.name} / ${i.strategy_id||i.bot_type}`],['POPULATIONS',s?.populations||[],i=>i.name],['JOBS',s?.jobs||[],i=>`${i.job_type} / ${i.status}`]];$('registryStatus').textContent=`${c.datasets||0} DATASETS / ${c.bots||0} BOTS / ${c.jobs||0} JOBS`;$('registryGrid').innerHTML=blocks.map(([title,items,label])=>`<div class="item"><div class="mini">${esc(title)}</div><div class="list" style="margin-top:12px">${items.length?items.slice(0,4).map(i=>`<div class="copy">${esc(label(i))}</div>`).join(''):'<div class="empty">NOTHING REGISTERED</div>'}</div></div>`).join('')}
+    async function loadStocks(){app.stocks=await api('/market/stocks');const sectors=['ALL',...new Set(Object.values(app.stocks).map(v=>v.sector).filter(Boolean))];$('evtSector').innerHTML=sectors.map(s=>`<option value="${esc(s)}">${esc(s.toUpperCase())}</option>`).join('')}
+    async function loadExplainability(){const agents=await api('/agents');const top=agents.slice(0,8);const payloads=await Promise.all(top.map(a=>api(`/agents/${a.id}/decisions`).catch(()=>({decisions:[]}))));const entries=[];payloads.forEach((p,i)=>{(p.decisions||[]).forEach(d=>entries.push({agent:top[i].name,kind:top[i].agent_kind,action:d.action,stock:d.stock,reasoning:d.reasoning,conviction:+(d?.memo?.conviction||0),timestamp:d.timestamp}))});entries.sort((a,b)=>new Date(b.timestamp||0)-new Date(a.timestamp||0));app.decisions=entries.slice(0,16);$('explainabilityStatus').textContent=`${app.decisions.length} ENTRIES`;$('explainabilityFeed').innerHTML=app.decisions.length?app.decisions.map(d=>`<div class="item"><div class="item-top"><div><strong>${esc(d.agent)} · ${esc(String(d.action||'hold').toUpperCase())}${d.stock?` · ${esc(d.stock)}`:''}</strong><div class="copy">${esc(d.kind||'agent')} · ${esc(ago(d.timestamp))}</div></div><div class="pill cyan">${Math.max(0,Math.min(100,d.conviction||0))}% CONFIDENCE</div></div><div class="copy">${esc(d.reasoning||'NO REASONING RECORDED')}</div><div class="bar"><div class="fill" style="width:${Math.max(0,Math.min(100,d.conviction||0))}%"></div></div></div>`).join(''):'<div class="empty">NO DECISION LOGS AVAILABLE YET</div>'}
+    function renderEvents(){const rows=app.events.slice(-80).slice().reverse();$('eventTapeStatus').textContent=`${app.events.length} EVENTS`;$('eventTape').innerHTML=rows.length?rows.map(e=>`<div class="item"><div class="item-top"><strong>${esc(e.event_type||'EVENT')}</strong><div class="pill muted">#${esc(e.sequence)}</div></div><div class="copy">PHASE: ${esc(String(e.phase||'N/A').toUpperCase())} · ${esc(ago(e.created_at))}</div><div class="copy">${esc(JSON.stringify(e.payload||{}))}</div></div>`).join(''):'<div class="empty">NO EVENTS RECORDED YET</div>'}
+    function ingestEvents(rows){(rows||[]).forEach(e=>{app.events.push(e);app.cursor=Math.max(app.cursor,+e.sequence||0)});app.events=app.events.slice(-80);renderEvents()}
+    function closeEventStream(){if(app.eventStream){app.eventStream.close();app.eventStream=null}}
+    function openEventStream(runId){closeEventStream();if(!runId)return;const stream=new EventSource(`/runs/${runId}/stream?after_sequence=${app.cursor}`);app.eventStream=stream;stream.onmessage=e=>{try{ingestEvents([JSON.parse(e.data)])}catch{}};stream.onerror=()=>{$('eventTapeStatus').textContent=`${app.events.length} EVENTS · STREAM IDLE`}}
+    async function refreshEvents(runId){if(!runId){closeEventStream();app.events=[];app.cursor=0;renderEvents();return}const rows=await api(`/runs/${runId}/events?after_sequence=${app.cursor}`);ingestEvents(rows);if($('eventTapePanel').open)openEventStream(runId)}
+    async function loadWorkspace(){app.summary=await api('/workspace/summary');app.status=app.summary.status;app.run=app.summary.active_run;renderHero();renderOverview();renderRegistry();$('runLauncherStatus').textContent=app.status?.run_id?`${app.status?.is_running?'RUNNING':'CONFIGURED'} · DAY ${app.status.day||0}`:'NO ACTIVE RUN';$('botStatus').textContent=`${app.summary?.counts?.bots||0} BOTS REGISTERED`;$('scenarioStatus').textContent=`${app.summary?.counts?.scenarios||0} SCENARIOS`;$('experimentStatus').textContent=`${app.summary?.counts?.experiments||0} EXPERIMENTS`;$('evaluationStatus').textContent=`${app.summary?.counts?.completed_evaluations||0} COMPLETED EVALUATIONS`;$('calStatus').textContent=app.summary?.datasets?.[0]?.updated_at?`LAST UPDATED: ${ago(app.summary.datasets[0].updated_at)}`:'NO CALIBRATION DATA';setOptions('runDataset',app.summary.datasets||[],'id',i=>`${i.name} / ${i.version||'V1'}`,app.status?.dataset_version||app.run?.dataset_id);setOptions('runScenario',app.summary.scenarios||[],'id',i=>`${i.name} / ${i.version||'V1'}`,app.status?.scenario_id||app.run?.scenario_id);setOptions('runExperiment',app.summary.experiments||[],'id',i=>i.name,app.status?.experiment_id||app.run?.experiment_id);setOptions('runPopulation',app.summary.populations||[],'id',i=>i.name,app.run?.agent_population_id||app.status?.agent_population_id);setOptions('calDataset',app.summary.datasets||[],'id',i=>`${i.name} / ${i.version||'V1'}`,app.status?.dataset_version||app.run?.dataset_id);setOptions('expScenario',app.summary.scenarios||[],'id',i=>i.name,app.status?.scenario_id||app.run?.scenario_id);setOptions('expDataset',app.summary.datasets||[],'id',i=>i.name,app.status?.dataset_version||app.run?.dataset_id);setOptions('expPopulation',app.summary.populations||[],'id',i=>i.name,app.run?.agent_population_id||app.status?.agent_population_id);setOptions('evalBot',app.summary.bots||[],'id',i=>`${i.name} / ${i.strategy_id||i.bot_type}`,'');hydrateRunForm();await refreshEvents(app.status?.run_id);await loadExplainability();await loadNotebooks();normalizeMix();$('exportRunBtn').disabled=!app.status?.run_id;
+      let mb = document.getElementById('mockBanner');
+      if (!mb) {
+        mb = document.createElement('div');
+        mb.id = 'mockBanner';
+        mb.style.cssText = 'display:none;position:fixed;top:0;left:0;right:0;background:var(--red,#f87171);color:#000;text-align:center;padding:8px;font:700 12px var(--mono);z-index:10000;border-bottom:2px solid #000;';
+        mb.textContent = '⚠️ LLM MODE: MOCK (API KEYS MISSING) — RESEARCH RESULTS WILL REFLECT HARDCODED DEMO LOGIC ⚠️';
+        document.body.prepend(mb);
+      }
+      mb.style.display = (app.status?.llm_mode === 'mock') ? 'block' : 'none';
+    }
+    async function launchRun(autostart){const mix=normalizeMix();closeEventStream();await post('/runs',{name:$('runName').value.trim()||'WORKSPACE RUN',autostart,config:{num_agents:+$('runAgents').value||10,num_days:+$('runDays').value||4,seed:+$('runSeed').value||42,use_llm:$('runLLM').value==='true',speed:autostart?0.5:0.1,training_mode:$('runMode').value,dataset_version:$('runDataset').value,scenario_id:$('runScenario').value,experiment_id:$('runExperiment').value,agent_population_id:$('runPopulation').value,agent_mix:mix,latency_ms:$('runMode').value==='deterministic'?80:120,slippage_bps:$('runMode').value==='deterministic'?4:6}});app.hydrated=false;await loadWorkspace()}
+    async function createBot(){await post('/bots',{name:$('botName').value.trim()||'WORKSPACE BOT',bot_type:'strategy',strategy_id:$('botStrategy').value,description:$('botDesc').value.trim(),config:JSON.parse($('botConfig').value||'{}'),attach_to_active_simulation:$('botAttach').value==='true'});await loadWorkspace()}
+    async function calibrate(){await post('/datasets/calibrate',{dataset_id:$('calDataset').value,returns:$('calReturns').value.split(',').map(v=>+v.trim()).filter(Number.isFinite),spreads_bps:$('calSpreads').value.split(',').map(v=>+v.trim()).filter(Number.isFinite),volumes_millions:$('calVolumes').value.split(',').map(v=>+v.trim()).filter(Number.isFinite),event_frequency:1});await loadWorkspace()}
+    async function createScenario(){const presets={stress:{regime_overrides:{market_regime:'risk_off',liquidity_regime:'thin'},shock_profile:{volatility_spike:1.35,spillover_bias:.9},config_overrides:{liquidity_regime:'thin',slippage_bps:10,training_mode:'deterministic'}},momentum:{regime_overrides:{market_regime:'trend',liquidity_regime:'core'},shock_profile:{volatility_spike:.9,spillover_bias:.35},config_overrides:{liquidity_regime:'core',slippage_bps:4.5,training_mode:'hybrid'}},balanced:{regime_overrides:{market_regime:'balanced',liquidity_regime:'core'},shock_profile:{volatility_spike:1,spillover_bias:.5},config_overrides:{liquidity_regime:'core',slippage_bps:6,training_mode:'hybrid'}}};const p=presets[$('scenarioRegime').value];await post('/scenarios',{name:$('scenarioName').value.trim()||'WORKSPACE SCENARIO',description:$('scenarioDesc').value.trim(),version:$('scenarioVersion').value.trim()||'1.0',regime_overrides:p.regime_overrides,shock_profile:p.shock_profile,config_overrides:p.config_overrides});await loadWorkspace()}
+async function createExperiment(){await post('/experiments',{name:$('experimentName').value.trim()||'WORKSPACE EXPERIMENT',description:$('experimentDesc').value.trim(),scenario_id:$('expScenario').value,dataset_id:$('expDataset').value,agent_population_id:$('expPopulation').value,config_snapshot:{training_mode:$('runMode').value,latency_ms:$('runMode').value==='deterministic'?80:120,slippage_bps:$('runMode').value==='deterministic'?4:6}});await loadWorkspace()}
+    async function runEvaluation(){await post('/evaluations',{name:`WORKSPACE EVAL ${new Date().toISOString().slice(11,19)}`,bot_id:$('evalBot').value,scenario_id:$('runScenario').value||app.status?.scenario_id,dataset_id:$('runDataset').value||app.status?.dataset_version,seeds:$('evalSeeds').value.split(',').map(v=>+v.trim()).filter(v=>Number.isInteger(v)&&v>0),num_days:+$('evalDays').value||2,run_async:$('evalAsync').value==='true'});await loadWorkspace()}
+    async function injectEvent(){const m=magnitude(),sector=$('evtSector').value,affected=sector==='ALL'?[]:Object.entries(app.stocks).filter(([,meta])=>meta.sector===sector).map(([symbol])=>symbol),title=`${$('evtType').value.toUpperCase()} · DAY ${$('evtDay').value}`,description=`${$('evtDesc').value.trim()} TARGET DAY: ${$('evtDay').value}. SECTOR: ${sector}.`;await post('/data/event',{title,description,severity:m.severity,impact_pct:m.impact,affected_stocks:affected});$('eventStatus').textContent=`LAST INJECTED: ${title}`;await refreshEvents(app.status?.run_id)}
+    async function exportRun(){if(!app.status?.run_id)return;const bundle=await api(`/runs/${app.status.run_id}/export`),blob=new Blob([JSON.stringify(bundle,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${app.status.run_id}.json`;a.click();URL.revokeObjectURL(url)}
+    function addMsg(role,text,confidence){const n=document.createElement('div');n.className=`msg ${role}`;n.innerHTML=`<div>${esc(text)}</div>${confidence&&confidence!=='high'?'<div class="low">LOW CONFIDENCE</div>':''}`;$('chatLog').appendChild(n);$('chatLog').scrollTop=$('chatLog').scrollHeight}
+    function getChatHistory(){try{return JSON.parse(sessionStorage.getItem('chatHistory')||'[]')}catch{return []}}
+    async function sendChat(){const message=$('chatInput').value.trim();if(!message)return;$('chatInput').value='';addMsg('user',message);const h=getChatHistory();h.push({role:'user',content:message});try{const res=await post('/chat',{message,history:h.slice(-16)});addMsg('bot',res.response||'NO RESPONSE',res.confidence);h.push({role:'assistant',content:res.response});sessionStorage.setItem('chatHistory',JSON.stringify(h.slice(-20)))}catch(err){addMsg('bot',`CHAT UNAVAILABLE: ${err.message}`,'low')}}
+    
+    async function previewPurge() {
+      const p = await api('/data/purge/preview');
+      $('purgePreview').innerHTML = `<strong>${p.events_count}</strong> EVENTS / <strong>${p.notebooks_count}</strong> NOTEBOOKS ACROSS <strong>${p.runs_affected_count}</strong> OLD RUN(S).`;
+      if(p.runs_affected_count > 0) $('executePurgeBtn').disabled = false;
+      else $('executePurgeBtn').disabled = true;
+    }
+    async function executePurge() {
+      if(!confirm("Are you sure you want to delete all inactive runs, events, and notebooks? This cannot be undone.")) return;
+      const res = await post('/data/purge/execute', {});
+      $('purgePreview').innerHTML = `<strong style="color:var(--lime)">PURGED</strong>: ${res.purged_events} EVENTS, ${res.purged_notebooks} NOTEBOOKS, ${res.purged_runs} RUNS.`;
+      $('executePurgeBtn').disabled = true;
+    }
+    async function loadNotebooks() {
+      if(!app.status?.run_id){
+         $('notebookStatus').textContent = '0 ENTRIES';
+         $('notebookFeed').innerHTML = '<div class="empty">NO NOTEBOOKS LOADED / WAIT FOR ACTIVE RUN</div>';
+         return;
+      }
+      const data = await api(`/data/notebooks?run_id=${app.status.run_id}`);
+      $('notebookStatus').textContent = `${data.length} ENTRIES`;
+      $('notebookFeed').innerHTML = data.length ? data.map(d=>`<div class="item" style="border-bottom:1px solid #333;padding-bottom:8px;margin-bottom:8px"><div style="font-size:11px;color:var(--cyan);margin-bottom:4px"><strong>${esc(d.agent_id)}</strong> · DAY ${d.day} SESS ${d.session} · ${esc(d.entry_type.toUpperCase())}</div><div class="copy">${esc(d.content)}</div></div>`).join('') : '<div class="empty">NOTEBOOKS REQUIRE LLM AGENTS. CURRENT RUN MAY BE IN MOCK MODE OR NO NOTEBOOKS GENERATED YET.</div>';
+    }
+
+    /* FEATURE 5: STEPPED RUN LAUNCHER */
+    let runStage = 1;
+    function launcherStep(dir) {
+      runStage = Math.max(1, Math.min(4, runStage + dir));
+      for(let i=1; i<=4; i++) {
+        $(`stage-${i}`).style.display = (i === runStage) ? 'block' : 'none';
+      }
+      $('btn-stage-back').style.display = (runStage > 1) ? 'inline-flex' : 'none';
+      
+      if (runStage === 4) {
+        $('btn-stage-next').style.display = 'none';
+        $('launcher-actions').style.display = 'inline-flex';
+      } else {
+        $('btn-stage-next').style.display = 'inline-flex';
+        $('launcher-actions').style.display = 'none';
+      }
+    }
+
+    /* FEATURE 11: EVENT TIMELINE PREVIEW */
+    function updateEventPreview() {
+      const day = +$('evtDay').value || 1;
+      const mag = +$('evtMagnitude').value || 2;
+      const t = $('eventTimeline');
+      
+      let html = '';
+      for(let i=1; i<=20; i++) {
+        const isTarget = (i === day);
+        const isMajor = (i % 5 === 0 || i === 1);
+        let bg = 'transparent';
+        if(isTarget) {
+          bg = mag === 3 ? 'var(--pink)' : (mag === 2 ? 'var(--amber)' : 'var(--cyan)');
+        }
+        const showLabel = isTarget || isMajor;
+        const labelColor = isTarget ? bg : 'var(--muted)';
+        const labelFont = isTarget ? '700 11px var(--mono)' : '400 11px var(--mono)';
+        const labelOpacity = isTarget ? '1' : '0.5';
+
+        html += `<div style="flex:1;border-right:1px solid #222;position:relative;background:${bg}">
+          ${showLabel ? `<div style="position:absolute;top:40px;left:50%;transform:translateX(-50%);font:${labelFont};color:${labelColor};opacity:${labelOpacity};white-space:nowrap">DAY ${i}</div>` : ''}
+        </div>`;
+      }
+      t.innerHTML = html;
+    }
+
+    /* FEATURE 6: COLLAPSIBLE TOOLS */
+    function setupCollapsibleTools() {
+      document.querySelectorAll('.tool').forEach((tool, index) => {
+        const meta = tool.querySelector('.tool-meta');
+        const body = tool.querySelector('.tool-body');
+        const id = 'tool-collapsed-' + index;
+        
+        if(localStorage.getItem(id) === 'true') {
+          body.style.display = 'none';
+          meta.style.opacity = '0.7';
+        }
+        
+        meta.style.cursor = 'pointer';
+        meta.addEventListener('click', () => {
+          if(body.style.display === 'none') {
+            body.style.display = 'grid';
+            meta.style.opacity = '1';
+            localStorage.setItem(id, 'false');
+          } else {
+            body.style.display = 'none';
+            meta.style.opacity = '0.7';
+            localStorage.setItem(id, 'true');
+          }
+        });
+      });
+    }
+
+    setupCollapsibleTools();
+    updateEventPreview();
+
+    function toggleChat(force){app.chatOpen=typeof force==='boolean'?force:!app.chatOpen;$('chatDrawer').classList.toggle('open',app.chatOpen)}
+    function bind(){ $('refreshBtn').addEventListener('click',loadWorkspace);$('exportRunBtn').addEventListener('click',exportRun);$('launchRunBtn').addEventListener('click',()=>launchRun(false));$('launchRunStartBtn').addEventListener('click',()=>launchRun(true));$('createBotBtn').addEventListener('click',createBot);$('calibrateBtn').addEventListener('click',calibrate);$('createScenarioBtn').addEventListener('click',createScenario);$('createExperimentBtn').addEventListener('click',createExperiment);$('runEvalBtn').addEventListener('click',runEvaluation);$('injectEventBtn').addEventListener('click',injectEvent);$('previewPurgeBtn').addEventListener('click',previewPurge);$('executePurgeBtn').addEventListener('click',executePurge);$('mixLlm').addEventListener('input',normalizeMix);$('mixRule').addEventListener('input',normalizeMix);$('mixStrategy').addEventListener('input',normalizeMix);$('runAgents').addEventListener('input',normalizeMix);$('evtMagnitude').addEventListener('input',magnitude);$('chatFab').addEventListener('click',()=>toggleChat());$('chatClose').addEventListener('click',()=>toggleChat(false));$('chatSend').addEventListener('click',sendChat);$('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});$('eventTapePanel').addEventListener('toggle',()=>{if(!$('eventTapePanel').open){closeEventStream();return}if(app.status?.run_id)openEventStream(app.status.run_id)})}
+    async function init(){bind();magnitude();renderEvents();addMsg('bot','ASK ABOUT THE CURRENT REGIME, ACTIVE RUN STATS, AGENT DECISIONS, OR WHICH BOTS LOOK READY FOR THE US EQUITIES SURFACE.');await loadStocks();await loadWorkspace();setInterval(()=>loadWorkspace().catch(()=>{}),8000)}
+    init().catch(err=>{$('overviewGrid').innerHTML=`<div class="empty">WORKSPACE LOAD FAILED: ${esc(err.message)}</div>`})
+  </script>
+  
+  <!-- KBD SHORTCUTS OVERLAY -->
+  <div id="kbdMap" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;border:3px solid #2a2a2a;padding:24px;z-index:9999;font-family:var(--mono, 'JetBrains Mono', monospace);box-shadow:0 10px 30px rgba(0,0,0,.8);color:#e8e8e8;">
+    <div style="font-size:12px;color:gray;margin-bottom:12px;letter-spacing:1px">KEYBOARD SHORTCUTS</div>
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:12px 24px;font-size:13px;align-items:center;">
+      <strong style="color:var(--cyan,#00e5cc)">G + S</strong> <span>SIMULATION CONSOLE</span>
+      <strong style="color:var(--cyan,#00e5cc)">G + W</strong> <span>WORKSPACE</span>
+      <strong style="color:var(--cyan,#00e5cc)">G + L</strong> <span>LIVE MARKET</span>
+      <strong style="color:var(--cyan,#00e5cc)">G + H</strong> <span>LANDING PAGE</span>
+      <strong style="color:var(--cyan,#00e5cc)">/</strong> <span>OPEN CHAT</span>
+      <strong style="color:var(--cyan,#00e5cc)">ESC</strong> <span>CLOSE CHAT / INPUTS</span>
     </div>
   </div>
-  <div class="toast-wrap" id="toastWrap"></div>
   <script>
-    const $=(id)=>document.getElementById(id);
-    const fmt=(value,digits=2)=>value==null?'--':Number(value).toFixed(digits);
-    const esc=(value)=>String(value??'').replace(/[&<>"]/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[char]));
-    let workspaceState={summary:null,status:null,run:null,datasets:[],scenarios:[],experiments:[],bots:[],populations:[],evaluations:[],jobs:[],events:[],eventCursor:0};
-    let refreshTimer=null;
-    let pollFailureCount=0;
+  /* FEATURE 12: KEYBOARD SHORTCUTS */
+  document.addEventListener('DOMContentLoaded', () => {
+    const kbd = document.getElementById('kbdMap');
+    let qTimer = null;
+    let gPressed = false;
+    
+    document.addEventListener('keydown', e => {
+      if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+        if(e.key === 'Escape' && app.chatOpen) {
+          e.preventDefault();
+          toggleChat(false);
+          e.target.blur();
+        }
+        return;
+      }
+      
+      if(e.key === '?') {
+        if(!qTimer) {
+          qTimer = setTimeout(() => { if(kbd) kbd.style.display = 'block'; }, 500);
+        }
+      }
+      if(e.key.toLowerCase() === 'g') {
+        gPressed = true;
+        setTimeout(() => { gPressed = false; }, 1000);
+      }
+      if(gPressed) {
+        const char = e.key.toLowerCase();
+        if(char === 's') window.location.href = '/app';
+        if(char === 'w') window.location.href = '/workspace';
+        if(char === 'l') window.location.href = '/live-market';
+        if(char === 'h') window.location.href = '/';
+      }
+      if(e.key === '/') {
+        e.preventDefault();
+        if (!app.chatOpen) toggleChat(true);
+        setTimeout(() => {
+          const inp = document.getElementById('chatInput');
+          if(inp) inp.focus();
+        }, 100);
+      }
+      if(e.key === 'Escape') {
+        if (app.chatOpen) toggleChat(false);
+      }
+    });
 
-    const CONTROL_HTML=`
-      <div class="control-card"><h3>Run Launcher</h3><p>Spin up a new research run with deterministic or hybrid agent populations and attach it to the active simulator.</p><div class="field-grid"><div class="field"><label for="runName">Run Name</label><input id="runName" value="Deterministic Research Run" /></div><div class="field"><label for="runDays">Days</label><input id="runDays" type="number" min="1" max="30" value="4" /></div><div class="field"><label for="runSeed">Seed</label><input id="runSeed" type="number" min="1" value="42" /></div><div class="field"><label for="runAgents">Agents</label><input id="runAgents" type="number" min="2" max="40" value="8" /></div><div class="field"><label for="runDataset">Dataset</label><select id="runDataset"></select></div><div class="field"><label for="runScenario">Scenario</label><select id="runScenario"></select></div><div class="field"><label for="runExperiment">Experiment</label><select id="runExperiment"></select></div><div class="field"><label for="runPopulation">Population</label><select id="runPopulation"></select></div><div class="field"><label for="runMode">Training Mode</label><select id="runMode"><option value="deterministic">Deterministic</option><option value="hybrid">Hybrid</option></select></div><div class="field"><label for="runLLM">LLM Agents</label><select id="runLLM"><option value="false">Disabled</option><option value="true">Enabled</option></select></div></div><div class="action-row"><button class="btn primary" id="launchRunBtn" type="button">Launch Run</button><button class="btn" id="launchRunStartBtn" type="button">Launch + Start</button></div><div class="inline-note">Deterministic launches default to benchmark and strategy agents for repeatability.</div></div>
-      <div class="control-card"><h3>Bot Forge</h3><p>Create a strategy bot definition and optionally inject it into the active run for immediate observation.</p><div class="field-grid"><div class="field"><label for="botName">Bot Name</label><input id="botName" value="Research Mean Reversion" /></div><div class="field"><label for="botStrategy">Strategy</label><select id="botStrategy"><option value="mean_reversion">Mean Reversion</option><option value="benchmark_vwap">VWAP Benchmark</option></select></div><div class="field full"><label for="botDesc">Description</label><input id="botDesc" value="Workspace-created Python SDK bot." /></div><div class="field full"><label for="botConfig">Config JSON</label><textarea id="botConfig">{"lookback":5,"z_entry":1.2,"z_exit":0.4}</textarea></div><div class="field"><label for="botAttach">Attach To Active Simulator</label><select id="botAttach"><option value="true">Yes</option><option value="false">No</option></select></div></div><div class="action-row"><button class="btn magenta" id="createBotBtn" type="button">Create Bot</button></div></div>
-      <div class="control-card"><h3>Evaluation Bench</h3><p>Run a quick benchmark sweep across multiple seeds and surface aggregate PnL, Sharpe, and drawdown.</p><div class="field-grid"><div class="field"><label for="evalBot">Bot</label><select id="evalBot"></select></div><div class="field"><label for="evalDays">Days</label><input id="evalDays" type="number" min="1" max="10" value="2" /></div><div class="field full"><label for="evalSeeds">Seeds</label><input id="evalSeeds" value="11,19,23" /></div><div class="field"><label for="evalAsync">Run Mode</label><select id="evalAsync"><option value="false">Wait For Result</option><option value="true">Queue Background Job</option></select></div></div><div class="action-row"><button class="btn alt" id="runEvalBtn" type="button">Run Evaluation</button></div></div>
-      <div class="control-card"><h3>Calibration Pulse</h3><p>Rebound the active dataset's priors using bounded reference assumptions for returns, spreads, and liquidity.</p><div class="field-grid"><div class="field"><label for="calDataset">Dataset</label><select id="calDataset"></select></div><div class="field full"><label for="calReturns">Returns</label><input id="calReturns" value="0.01,0.015,0.02,0.03" /></div><div class="field full"><label for="calSpreads">Spreads (bps)</label><input id="calSpreads" value="4,6,9,12" /></div><div class="field full"><label for="calVolumes">Volumes (millions)</label><input id="calVolumes" value="12,18,24,31" /></div></div><div class="action-row"><button class="btn warn" id="calibrateBtn" type="button">Calibrate Dataset</button></div></div>
-      <div class="control-card"><h3>Scenario Builder</h3><p>Define a reusable market regime package so runs share the same macro assumptions and shock profile.</p><div class="field-grid"><div class="field"><label for="scenarioName">Scenario Name</label><input id="scenarioName" value="Stress Liquidity Drill" /></div><div class="field"><label for="scenarioVersion">Version</label><input id="scenarioVersion" value="1.0" /></div><div class="field"><label for="scenarioRegime">Regime</label><select id="scenarioRegime"><option value="stress">Stress</option><option value="momentum">Momentum</option><option value="balanced">Balanced</option></select></div><div class="field full"><label for="scenarioDesc">Description</label><input id="scenarioDesc" value="Thin-liquidity stress test with elevated volatility and spillover risk." /></div></div><div class="action-row"><button class="btn" id="createScenarioBtn" type="button">Create Scenario</button></div></div>
-      <div class="control-card"><h3>Experiment Packager</h3><p>Bind a scenario, dataset, and population into a named experiment so runs and evaluations roll up cleanly.</p><div class="field-grid"><div class="field"><label for="experimentName">Experiment Name</label><input id="experimentName" value="Liquidity Stress Program" /></div><div class="field"><label for="expScenario">Scenario</label><select id="expScenario"></select></div><div class="field"><label for="expDataset">Dataset</label><select id="expDataset"></select></div><div class="field"><label for="expPopulation">Population</label><select id="expPopulation"></select></div><div class="field full"><label for="experimentDesc">Description</label><input id="experimentDesc" value="Compares baseline and stress-ready bots across calibrated market states." /></div></div><div class="action-row"><button class="btn alt" id="createExperimentBtn" type="button">Create Experiment</button></div></div>`;
-
-    function renderControlDeck(){ $('controlDeck').innerHTML=CONTROL_HTML; }
-    async function api(path,options){ const res=await fetch(path,options); if(!res.ok){ const text=await res.text(); throw new Error(text||path); } return res.json(); }
-    function apiPost(path,body){ return api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}); }
-    function notify(message,kind='info'){ const node=document.createElement('div'); node.className=`toast ${kind}`; node.textContent=message; $('toastWrap').appendChild(node); setTimeout(()=>node.remove(),4200); }
-    function parseCsvNumbers(value){ return String(value||'').split(',').map((part)=>Number(part.trim())).filter((num)=>Number.isFinite(num)); }
-    function parseJson(value,fallback){ try{return JSON.parse(value);}catch{return fallback;} }
-    function parseJsonStrict(value){ return JSON.parse(value); }
-    async function runWithButton(buttonId,fn){ const button=$(buttonId); if(button) button.disabled=true; try{return await fn();} finally{ if(button) button.disabled=false; } }
-    function card(item,subtitle){ return `<div class="item"><div class="title">${esc(item.name||item.id||'Untitled')}</div><div class="sub">${subtitle}</div></div>`; }
-    function renderList(id,items,mapFn){ $(id).innerHTML=items.length?items.map(mapFn).join(''):`<div class="empty">Nothing here yet.</div>`; }
-    function setSelectOptions(id,items,getValue,getLabel,emptyLabel,preferredValue=''){ const select=$(id); const currentValue=select.value; if(!items.length){ select.innerHTML=`<option value="">${esc(emptyLabel)}</option>`; return; } select.innerHTML=items.map((item)=>`<option value="${esc(getValue(item))}">${esc(getLabel(item))}</option>`).join(''); const available=items.map((item)=>String(getValue(item))); const nextValue=available.includes(String(currentValue))?String(currentValue):available.includes(String(preferredValue))?String(preferredValue):available[0]; select.value=nextValue; }
-    function syncControls(){ const {status,run,datasets,scenarios,experiments,bots,populations}=workspaceState; setSelectOptions('evalBot',bots,(bot)=>bot.id,(bot)=>`${bot.name} / ${bot.strategy_id||bot.bot_type}`,'No bots yet'); setSelectOptions('calDataset',datasets,(dataset)=>dataset.id,(dataset)=>`${dataset.name} / ${dataset.version||'v1'}`,'No datasets',status?.dataset_version); setSelectOptions('runDataset',datasets,(dataset)=>dataset.id,(dataset)=>`${dataset.name} / ${dataset.version||'v1'}`,'No datasets',status?.dataset_version); setSelectOptions('runScenario',scenarios,(scenario)=>scenario.id,(scenario)=>`${scenario.name} / ${scenario.version||'v1'}`,'No scenarios',status?.scenario_id); setSelectOptions('runExperiment',experiments,(experiment)=>experiment.id,(experiment)=>experiment.name,'No experiments',status?.experiment_id); setSelectOptions('runPopulation',populations,(population)=>population.id,(population)=>population.name,'No populations',run?.agent_population_id||status?.agent_population_id); setSelectOptions('expScenario',scenarios,(scenario)=>scenario.id,(scenario)=>`${scenario.name} / ${scenario.version||'v1'}`,'No scenarios',status?.scenario_id); setSelectOptions('expDataset',datasets,(dataset)=>dataset.id,(dataset)=>`${dataset.name} / ${dataset.version||'v1'}`,'No datasets',status?.dataset_version); setSelectOptions('expPopulation',populations,(population)=>population.id,(population)=>population.name,'No populations',run?.agent_population_id||status?.agent_population_id); }
-    function renderKeyMeta(meta){ const entries=[['Run ID',meta.run_id||meta.id||'--'],['Dataset',meta.dataset_version||meta.dataset_id||'--'],['Scenario',meta.scenario_id||'--'],['Experiment',meta.experiment_id||'--'],['Session',meta.day!=null?`Day ${meta.day} / S${meta.session} / ${meta.session_phase||'phase'}`:'--'],['Execution',meta.latency_ms!=null?`${meta.latency_ms}ms / ${fmt(meta.slippage_bps)}bps`:'--']]; $('runMeta').innerHTML=entries.map(([label,value])=>`<div class="mini-card"><div class="label">${esc(label)}</div><div class="value">${esc(value)}</div></div>`).join(''); }
-    function renderKpis(status){ const items=[['Regime',status.regime||'--'],['Sentiment',status.market_sentiment||'--'],['Benchmark',`${status.benchmark?.return_pct>=0?'+':''}${fmt(status.benchmark?.return_pct)}%`],['Risk',status.session_risk||'--']]; $('kpis').innerHTML=items.map(([label,value])=>`<div class="mini-card"><div class="label">${esc(label)}</div><div class="value">${esc(value)}</div></div>`).join(''); }
-    function renderPulse(summary){ const latestEval=summary.latest_completed_evaluation; const latestJob=summary.latest_job; const items=[['Registry',`${summary.counts.datasets} datasets / ${summary.counts.scenarios} scenarios`],['Bot Lab',`${summary.counts.bots} bots / ${summary.counts.populations} populations`],['Evaluation Lead',latestEval?`${fmt(latestEval.metrics?.avg_sharpe_ratio,2)} Sharpe`:'Awaiting first benchmark'],['Run State',summary.status.run_id?`${summary.status.is_running?'Live':'Configured'} / ${summary.status.session_phase||'phase'}`:'No active run'],['Jobs',summary.counts.queued_jobs?`${summary.counts.queued_jobs} running`:'Queue clear'],['Last Job',latestJob?`${latestJob.job_type} / ${latestJob.status}`:'No background work']]; $('pulseGrid').innerHTML=items.map(([label,value])=>`<div class="mini-card"><div class="label">${esc(label)}</div><div class="value">${esc(value)}</div></div>`).join(''); }
-    function renderNextActions(actions){ $('nextActions').innerHTML=actions.length?actions.map((action)=>`<div class="action-item"><div class="title">${esc(action.title)}</div><div class="detail">${esc(action.detail)}</div><div class="intent">${esc(action.intent)}</div></div>`).join(''):`<div class="empty">Workspace is fully staged. Launch a run or export a bundle when ready.</div>`; }
-    function renderEvents(events){ $('eventCount').textContent=`${events.length} events`; $('eventStream').innerHTML=events.length?events.slice(-22).reverse().map((evt)=>`<div class="event"><div class="type">${esc(evt.event_type||'event')} / #${esc(evt.sequence)}</div><div class="body"><strong>${esc(evt.payload?.title||evt.payload?.symbol||evt.payload?.order_id||evt.payload?.trade_id||evt.event_type)}</strong><br>${esc(JSON.stringify(evt.payload))}</div></div>`).join(''):`<div class="empty">Run events will appear here once the simulator starts producing activity.</div>`; }
-    function renderTables(){ const {summary,evaluations,jobs}=workspaceState; const leaderboard=summary?.leaderboard||[]; $('leaderboard').innerHTML=leaderboard.length?leaderboard.map((item)=>`<tr><td>${esc(item.name)}</td><td>${esc(item.bot_id)}</td><td>${fmt(item.metrics?.avg_pnl)}</td><td>${fmt(item.metrics?.avg_sharpe_ratio,3)}</td></tr>`).join(''):`<tr><td colspan="4" class="empty">No completed evaluations yet.</td></tr>`; $('evaluations').innerHTML=evaluations.length?evaluations.map((item)=>`<tr><td>${esc(item.name)}</td><td>${esc(item.status)}</td><td>${fmt(item.metrics?.avg_pnl)}</td><td>${fmt(item.metrics?.avg_sharpe_ratio,3)}</td></tr>`).join(''):`<tr><td colspan="4" class="empty">No evaluations yet.</td></tr>`; $('jobs').innerHTML=jobs.length?jobs.map((item)=>`<tr><td>${esc(item.id)}</td><td>${esc(item.status)}</td><td>${esc(item.job_type)}</td><td>${esc(item.updated_at||'--')}</td></tr>`).join(''):`<tr><td colspan="4" class="empty">No jobs queued.</td></tr>`; }
-    async function refreshEvents(runId){ if(!runId){ workspaceState.events=[]; workspaceState.eventCursor=0; renderEvents([]); return; } try{ const rows=await api(`/runs/${runId}/events?after_sequence=${workspaceState.eventCursor}`); if(rows.length){ rows.forEach((evt)=>{ workspaceState.events.push(evt); workspaceState.eventCursor=Math.max(workspaceState.eventCursor,evt.sequence||0); }); if(workspaceState.events.length>180) workspaceState.events=workspaceState.events.slice(-180); } renderEvents(workspaceState.events); }catch{ notify('Run events temporarily unavailable.','info'); } }
-    async function loadWorkspace(){ const summary=await api('/workspace/summary'); const {status,active_run:activeRun,datasets,scenarios,experiments,bots,populations,evaluations,jobs}=summary; const runChanged=workspaceState.status?.run_id!==status.run_id; if(runChanged){ workspaceState.events=[]; workspaceState.eventCursor=0; } workspaceState={...workspaceState,summary,status,run:activeRun,datasets,scenarios,experiments,bots,populations,evaluations,jobs}; $('heroRun').textContent=status.run_id||'--'; $('heroPhase').textContent=status.session_phase||'--'; $('heroTraining').textContent=(status.training_mode||'hybrid').toUpperCase(); $('heroExecution').textContent=`${status.latency_ms||0}ms / ${fmt(status.slippage_bps)}bps`; $('runBadge').textContent=status.is_running?'RUNNING':(status.is_paused?'PAUSED':'READY'); $('runBadge').className=`pill ${status.is_running?'live':'info'}`; renderKeyMeta({...status,...(activeRun||{})}); renderKpis(status); renderPulse(summary); renderNextActions(summary.next_actions||[]); renderList('datasets',datasets,(item)=>card(item,`${item.version||'v1'} / ${item.metadata?.market_scope||'dataset'}`)); renderList('scenarios',scenarios,(item)=>card(item,`${item.version||'v1'} / ${item.description||'scenario'}`)); renderList('experiments',experiments,(item)=>card(item,`${item.scenario_id||'scenario'} / ${item.dataset_id||'dataset'}`)); renderList('bots',bots,(item)=>card(item,`${item.bot_type||'bot'} / ${item.strategy_id||'custom'}`)); renderList('populations',populations,(item)=>card(item,JSON.stringify(item.composition||{}))); renderTables(); syncControls(); await refreshEvents(status.run_id); }
-    function requireRegistrySelections(ids){ return ids.every(Boolean); }
-    async function launchRun(autostart){ const buttonId=autostart?'launchRunStartBtn':'launchRunBtn'; return runWithButton(buttonId,async()=>{ const mode=$('runMode').value; const useLlm=$('runLLM').value==='true'; const datasetId=$('runDataset').value; const scenarioId=$('runScenario').value; const experimentId=$('runExperiment').value; const populationId=$('runPopulation').value; if(!requireRegistrySelections([datasetId,scenarioId,experimentId,populationId])){ notify('Select a dataset, scenario, experiment, and population first.','bad'); return; } const payload={name:$('runName').value.trim()||'Research Run',autostart,config:{num_agents:Number($('runAgents').value)||8,num_days:Number($('runDays').value)||4,seed:Number($('runSeed').value)||42,use_llm:useLlm,speed:autostart?0.5:0.1,training_mode:mode,dataset_version:datasetId,scenario_id:scenarioId,experiment_id:experimentId,agent_population_id:populationId,agent_mix:mode==='deterministic'?{llm:0.0,rule:0.75,strategy:0.25}:{llm:0.35,rule:0.45,strategy:0.2},latency_ms:mode==='deterministic'?80:120,slippage_bps:mode==='deterministic'?4.0:6.0}}; await apiPost('/runs',payload); notify(autostart?'Run launched and started.':'Run launched.','good'); await loadWorkspace(); }); }
-    async function createBot(){ return runWithButton('createBotBtn',async()=>{ let config={}; try{ config=parseJsonStrict($('botConfig').value||'{}'); }catch{ notify('Bot config must be valid JSON.','bad'); return; } const payload={name:$('botName').value.trim()||'Workspace Bot',bot_type:'strategy',strategy_id:$('botStrategy').value,description:$('botDesc').value.trim(),config,attach_to_active_simulation:$('botAttach').value==='true'}; const response=await apiPost('/bots',payload); notify(response.attached_agent_id?'Bot created and attached to active simulator.':'Bot created.','good'); await loadWorkspace(); }); }
-    async function createScenario(){ return runWithButton('createScenarioBtn',async()=>{ const regime=$('scenarioRegime').value; const presets={stress:{regime_overrides:{market_regime:'risk_off',liquidity_regime:'thin'},shock_profile:{volatility_spike:1.35,spillover_bias:0.9},config_overrides:{liquidity_regime:'thin',slippage_bps:10,training_mode:'deterministic'}},momentum:{regime_overrides:{market_regime:'trend',liquidity_regime:'tight'},shock_profile:{volatility_spike:0.9,spillover_bias:0.35},config_overrides:{liquidity_regime:'core',slippage_bps:4.5,training_mode:'hybrid'}},balanced:{regime_overrides:{market_regime:'balanced',liquidity_regime:'core'},shock_profile:{volatility_spike:1.0,spillover_bias:0.5},config_overrides:{liquidity_regime:'core',slippage_bps:6,training_mode:'hybrid'}}}; await apiPost('/scenarios',{name:$('scenarioName').value.trim()||'Workspace Scenario',description:$('scenarioDesc').value.trim(),version:$('scenarioVersion').value.trim()||'1.0',...presets[regime]}); notify('Scenario created.','good'); await loadWorkspace(); }); }
-    async function createExperiment(){ return runWithButton('createExperimentBtn',async()=>{ const scenarioId=$('expScenario').value; const datasetId=$('expDataset').value; const populationId=$('expPopulation').value; if(!requireRegistrySelections([scenarioId,datasetId,populationId])){ notify('Create or select the scenario, dataset, and population first.','bad'); return; } await apiPost('/experiments',{name:$('experimentName').value.trim()||'Workspace Experiment',description:$('experimentDesc').value.trim(),scenario_id:scenarioId,dataset_id:datasetId,agent_population_id:populationId,config_snapshot:{training_mode:$('runMode').value,latency_ms:$('runMode').value==='deterministic'?80:120,slippage_bps:$('runMode').value==='deterministic'?4.0:6.0}}); notify('Experiment created.','good'); await loadWorkspace(); }); }
-    async function runEvaluation(){ return runWithButton('runEvalBtn',async()=>{ const botId=$('evalBot').value; const datasetId=$('runDataset').value||workspaceState.status?.dataset_version; const scenarioId=$('runScenario').value||workspaceState.status?.scenario_id; if(!botId){ notify('Create a bot first before evaluating.','bad'); return; } const seeds=parseCsvNumbers($('evalSeeds').value).filter((seed)=>Number.isInteger(seed)&&seed>0); const uniqueSeeds=[...new Set(seeds)]; if(!uniqueSeeds.length){ notify('Provide at least one positive integer seed.','bad'); return; } const payload={name:`Workspace Eval ${new Date().toISOString().slice(11,19)}`,bot_id:botId,dataset_id:datasetId,scenario_id:scenarioId,seeds:uniqueSeeds,num_days:Number($('evalDays').value)||2,run_async:$('evalAsync').value==='true'}; const response=await apiPost('/evaluations',payload); notify(payload.run_async?'Evaluation queued as a background job.':`Evaluation completed. Avg PnL ${fmt(response.metrics?.avg_pnl)}`,payload.run_async?'info':'good'); await loadWorkspace(); }); }
-    async function calibrateDataset(){ return runWithButton('calibrateBtn',async()=>{ const datasetId=$('calDataset').value; if(!datasetId){ notify('No dataset available to calibrate.','bad'); return; } await apiPost('/datasets/calibrate',{dataset_id:datasetId,returns:parseCsvNumbers($('calReturns').value),spreads_bps:parseCsvNumbers($('calSpreads').value),volumes_millions:parseCsvNumbers($('calVolumes').value),event_frequency:1.0}); notify('Dataset calibration updated.','good'); await loadWorkspace(); }); }
-    async function exportActiveRun(){ const runId=workspaceState.status?.run_id; if(!runId){ notify('No active run to export.','bad'); return; } const bundle=await api(`/runs/${runId}/export`); const blob=new Blob([JSON.stringify(bundle,null,2)],{type:'application/json'}); const url=URL.createObjectURL(blob); const anchor=document.createElement('a'); anchor.href=url; anchor.download=`${runId}.json`; anchor.click(); URL.revokeObjectURL(url); notify('Active run bundle exported.','good'); }
-    function bindActions(){ $('refreshBtn').addEventListener('click',loadWorkspace); $('exportRunBtn').addEventListener('click',exportActiveRun); $('launchRunBtn').addEventListener('click',()=>launchRun(false)); $('launchRunStartBtn').addEventListener('click',()=>launchRun(true)); $('createBotBtn').addEventListener('click',createBot); $('createScenarioBtn').addEventListener('click',createScenario); $('createExperimentBtn').addEventListener('click',createExperiment); $('runEvalBtn').addEventListener('click',runEvaluation); $('calibrateBtn').addEventListener('click',calibrateDataset); }
-    renderControlDeck(); bindActions(); loadWorkspace().catch((error)=>notify(`Workspace load failed: ${error.message}`,'bad')); clearInterval(refreshTimer); refreshTimer=setInterval(()=>{ loadWorkspace().then(()=>{ pollFailureCount=0; }).catch(()=>{ pollFailureCount+=1; if(pollFailureCount%3===0) notify('Workspace auto-refresh is failing. Check API/server health.','bad'); }); },7000);
+    document.addEventListener('keyup', e => {
+      if(e.key === '?') {
+        clearTimeout(qTimer);
+        qTimer = null;
+        if(kbd) kbd.style.display = 'none';
+      }
+    });
+  });
   </script>
 </body>
 </html>
+

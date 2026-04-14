@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Set
 from backend.app.agents.behavioral_agent import BaseAgent
 from backend.app.agents.strategy_agent import StrategyAgent
 from backend.app.core.analytics import compute_index_level, compute_market_analytics, compute_sector_indices
+from backend.app.core.live_market import live_market_service
 from backend.app.core.research_store import ResearchStore
 from backend.app.models.research import RunEventRecord
 from backend.app.models.types import DaySnapshot, FinancialReport, ForumMessage, LOAN_TERMS, Loan, MarketEvent, Order, OrderSide, REPORT_DAYS
@@ -90,6 +91,7 @@ class SimulationLoop:
         self.latency_ms = 120
         self.slippage_bps = 6.0
         self.training_mode = "hybrid"
+        self.real_world_sync = False
         self.config_snapshot_label: Optional[str] = None
         self.notes: Dict[str, str] = {}
         self.all_trades = []
@@ -108,6 +110,7 @@ class SimulationLoop:
         self.calibration_profile: Dict = {}
         self._event_sequence = 0
         self._pending_orders: List[Dict] = []
+        self._injected_event_queue: List[MarketEvent] = []  # FIX H3: Queue for events injected via API
         self._session_open: Dict[str, float] = {}
         self._run_stop_reason = "completed"
         self.base_prices = {s: getattr(m, "initial_price", 100.0) for s, m in stock_meta.items()}
@@ -164,6 +167,7 @@ class SimulationLoop:
         self.latency_ms = int(cfg.get("latency_ms", self.latency_ms))
         self.slippage_bps = float(cfg.get("slippage_bps", self.slippage_bps))
         self.training_mode = cfg.get("training_mode", self.training_mode)
+        self.real_world_sync = cfg.get("real_world_sync", self.real_world_sync)
         self.config_snapshot_label = cfg.get("config_snapshot_label", self.config_snapshot_label)
         self.notes = dict(cfg.get("notes") or {})
         self._load_calibration_profile()
@@ -185,7 +189,11 @@ class SimulationLoop:
 
     def _roll_regime(self, day: int):
         if day == 1 or (day - 1) % 6 == 0:
-            self.current_regime = random.choice(list(REGIME_LIBRARY.keys()))
+            # FIX C4: Use calibrated regime_transition_bias weights instead of equal-probability random.choice
+            regimes = list(REGIME_LIBRARY.keys())
+            bias = self.calibration_profile.get("regime_transition_bias", {})
+            weights = [bias.get(r, 1.0) for r in regimes]
+            self.current_regime = random.choices(regimes, weights=weights, k=1)[0]
             self.current_regime_profile = REGIME_LIBRARY[self.current_regime]
             self.liquidity_regime = self.current_regime_profile.get("liquidity_regime", self.liquidity_regime)
             entry = {"day": day, "regime": self.current_regime, "headline": self.current_regime_profile["headline"]}
@@ -250,12 +258,15 @@ class SimulationLoop:
         for sector in SECTOR_NAMES:
             regime_bias = self.current_regime_profile.get("sector_bias", {}).get(sector, 0.0) * self.regime_sensitivity
             raw[sector] = random.gauss(0, 1) + sector_impacts.get(sector, 0.0) * 18 + regime_bias
+        # FIX C5: Use calibrated sector_correlation when available, fallback to hardcoded SECTOR_CORR
+        cal_corr = self.calibration_profile.get("sector_correlation", {})
         blended = {}
         for sector in SECTOR_NAMES:
             val = raw[sector]
             for other in SECTOR_NAMES:
                 if other != sector:
-                    val += raw[other] * _corr(sector, other) * 0.25
+                    corr_value = cal_corr.get(sector, {}).get(other, _corr(sector, other))
+                    val += raw[other] * corr_value * 0.25
             blended[sector] = val
         return blended
 
@@ -275,6 +286,52 @@ class SimulationLoop:
             new_price = round(max(1.0, current * (1 + drift + noise)), 2)
             book.update_price(new_price, self.day, self.session)
             self.price_history.setdefault(symbol, []).append({"time": utcnow().isoformat(), "price": new_price, "day": self.day, "session": self.session, "phase": self.session_phase})
+
+    async def _sync_real_world_prices(self):
+        """Fetch real-world prices and inject them into the simulation order books."""
+        try:
+            snapshot = await live_market_service.get_snapshot()
+            watchlist = {item["symbol"]: item["price"] for item in snapshot.get("watchlist", [])}
+            movers = snapshot.get("major_movers", {})
+            for mlist in movers.values():
+                for item in mlist:
+                    watchlist[item["symbol"]] = item["price"]
+
+            applied_count = 0
+            for symbol, book in self.order_books.items():
+                if symbol in watchlist:
+                    real_price = watchlist[symbol]
+                    book.update_price(real_price, self.day, self.session)
+                    self.price_history.setdefault(symbol, []).append({
+                        "time": utcnow().isoformat(),
+                        "price": real_price,
+                        "day": self.day,
+                        "session": self.session,
+                        "phase": self.session_phase,
+                        "source": "real_world"
+                    })
+                    applied_count += 1
+                else:
+                    # FIX H6: Prevent flatline for symbols absent from Yahoo Finance by substituting synthetic walk
+                    import random
+                    drift = self.current_regime_profile.get("base_drift", 0.0)
+                    vol = self.current_regime_profile.get("volatility", 0.01)
+                    move = random.gauss(drift, vol) / (252 * 4) ** 0.5  # Approximate session volatility slice
+                    last_price = book.last_price or self.base_prices.get(symbol, 100.0)
+                    new_price = max(0.01, last_price * (1 + move))
+                    book.update_price(new_price, self.day, self.session)
+                    self.price_history.setdefault(symbol, []).append({
+                        "time": utcnow().isoformat(),
+                        "price": new_price,
+                        "day": self.day,
+                        "session": self.session,
+                        "phase": self.session_phase,
+                        "source": "synthetic_fallback"
+                    })
+            if applied_count > 0:
+                self._emit_run_event("real_world_sync", {"symbols_synced": applied_count})
+        except Exception as exc:
+            logger.warning("Real-world sync failed: %s", exc)
 
     def _check_circuit_breakers(self) -> List[MarketEvent]:
         events = []
@@ -449,6 +506,10 @@ class SimulationLoop:
             self._emit_run_event("fill", {"trade_id": trade.trade_id, "symbol": trade.stock_symbol, "price": trade.price, "quantity": trade.quantity, "buyer_agent_id": trade.buyer_agent_id, "seller_agent_id": trade.seller_agent_id, "aggressing_side": aggressing_side.value})
 
     async def run_simulation(self, steps: Optional[int] = None):
+        # FIX C1: Seed RNG at simulation start so runs are deterministic when a seed is configured
+        run_seed = (self.active_run or {}).get("config_snapshot", {}).get("seed")
+        if run_seed is not None:
+            random.seed(run_seed)
         self._run_id += 1
         my_run_id = self._run_id
         self.is_running = True
@@ -484,9 +545,26 @@ class SimulationLoop:
                         day_events = self._generate_events(self.day)
                         self.events.extend(day_events)
                         self._process_loans(self.day)
+                        # FIX H5: Early termination — all agents bankrupt. Prevents silent empty simulation output.
+                        if len(self.agents) > 0 and all(getattr(a, "status", None) == "bankrupt" for a in self.agents):
+                            msg = "All agents are bankrupt. Simulation ending early."
+                            self._emit_run_event("all_agents_bankrupt", {"day": self.day, "message": msg})
+                            self._run_stop_reason = "all_agents_bankrupt"
+                            self.is_running = False
+                            break
                         report_data = self._generate_financial_reports(self.day)
-                    sector_impacts = self._event_impact_by_sector(day_events)
-                    self._apply_correlated_walk(self._generate_sector_drifts(sector_impacts))
+                    # FIX H3: Drain injected events so agents see them in their market_state for this session
+                    while self._injected_event_queue:
+                        injected = self._injected_event_queue.pop(0)
+                        day_events.append(injected)
+                        if injected not in self.events:
+                            self.events.append(injected)
+                    
+                    if self.real_world_sync:
+                        await self._sync_real_world_prices()
+                    else:
+                        sector_impacts = self._event_impact_by_sector(day_events)
+                        self._apply_correlated_walk(self._generate_sector_drifts(sector_impacts))
                     cb_events = self._check_circuit_breakers()
                     if cb_events:
                         self.events.extend(cb_events)

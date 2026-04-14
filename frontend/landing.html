@@ -775,15 +775,19 @@ footer {
   </h1>
   <div class="hero-version">VERSION 2.0</div>
   <p class="hero-sub">
-    A <strong>fully autonomous stock market simulator</strong> powered by large language models.
-    Watch AI agents trade, react to news, form opinions, and compete — in real time. Now paired with a
-    <strong>persistent research workspace</strong> for datasets, scenarios, bots, and experiment comparison.
+    A <strong>synthetic US equities research platform</strong> for studying LLM agent behavior under controlled market conditions. 
+    Calibrate datasets, inject scenarios, benchmark strategies, and then promote the strongest bots into a 
+    <strong>US EQUITIES deployment surface</strong> for live-market monitoring.
   </p>
   <div class="hero-buttons">
-    <a class="btn-secondary" href="/workspace">Research Workspace</a>
-    <a class="btn-secondary" href="/live-market">Live Market Intelligence</a>
-    <a class="btn-primary" href="/app">▶ Launch Simulator</a>
-    <a class="btn-secondary" href="#features">Explore Features</a>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;width:100%">
+      <a class="btn-secondary" href="/workspace">OPEN RESEARCH WORKSPACE</a>
+      <a class="btn-secondary" href="/live-market">OPEN US EQUITIES</a>
+      <a class="btn-primary" href="/app">OPEN SIMULATOR</a>
+    </div>
+    <div style="display:flex;justify-content:center;width:100%;margin-top:16px">
+      <a class="btn-secondary" href="#features">VIEW PLATFORM CAPABILITIES</a>
+    </div>
   </div>
 
   <!-- mini candlestick preview -->
@@ -844,11 +848,16 @@ footer {
           <div class="surface-title">Tracked Tape Preview</div>
           <div class="surface-live">LIVE</div>
         </div>
-        <div class="surface-list">
+        <div class="surface-list" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="surface-row">
             <strong>S&P 500</strong>
             <span>SPY</span>
             <span class="surface-positive">+0.84%</span>
+          </div>
+          <div class="surface-row">
+            <strong>Nasdaq 100</strong>
+            <span>QQQ</span>
+            <span class="surface-positive">+1.12%</span>
           </div>
           <div class="surface-row">
             <strong>Technology</strong>
@@ -856,9 +865,29 @@ footer {
             <span class="surface-positive">+1.42%</span>
           </div>
           <div class="surface-row">
+            <strong>Energy</strong>
+            <span>XLE</span>
+            <span class="surface-negative">-0.45%</span>
+          </div>
+          <div class="surface-row">
+            <strong>Financials</strong>
+            <span>XLF</span>
+            <span class="surface-positive">+0.32%</span>
+          </div>
+          <div class="surface-row">
+            <strong>Small Cap</strong>
+            <span>IWM</span>
+            <span class="surface-negative">-0.18%</span>
+          </div>
+          <div class="surface-row">
             <strong>Volatility</strong>
             <span>VIX</span>
             <span class="surface-negative">+2.11%</span>
+          </div>
+          <div class="surface-row">
+            <strong>10Y Yield</strong>
+            <span>^TNX</span>
+            <span class="surface-positive">+0.08%</span>
           </div>
         </div>
       </div>

@@ -25,7 +25,7 @@
   --orange:   #f97316;
   --red:      #f87171;
   --white:    #F0F0F0;
-  --muted:    #666;
+  --muted:    #a8a8a8;
   --card-shadow: 4px 4px 0px rgba(74,222,128,0.4);
   --card-shadow-m: 4px 4px 0px rgba(232,121,160,0.4);
   --card-shadow-c: 4px 4px 0px rgba(56,189,248,0.4);
@@ -45,6 +45,8 @@ html, body {
   font-size: 14px;
   overflow: hidden;
 }
+
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 
 /* ═══════════════════════════════════════════
    LAYOUT
@@ -133,6 +135,7 @@ html, body {
   font-weight: 600;
   color: var(--muted);
   text-decoration: none;
+  text-transform: uppercase;
   border-left: 3px solid transparent;
   transition: all 0.12s;
   cursor: pointer;
@@ -199,9 +202,10 @@ html, body {
   font-family: var(--mono);
   font-size: 22px;
   font-weight: 800;
+  text-transform: uppercase;
   letter-spacing: -0.5px;
 }
-.page-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.page-sub { font-size: 12px; color: var(--muted); margin-top: 2px; text-transform: uppercase; }
 
 .page-content { padding: 0 24px 40px; }
 
@@ -1225,12 +1229,17 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
         <span class="nav-icon">≡</span> Settings
       </a>
     </nav>
-    <nav class="sidebar-nav" style="margin-top:-10px">
-      <a class="nav-link" href="/workspace">
-        <span class="nav-icon">▣</span> Workspace
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);margin-bottom:8px;padding-left:14px;">
+      <span style="font-family:var(--mono);font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:1px;font-weight:700;">Other Pages</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-link" href="/workspace" target="_blank" style="display:flex;justify-content:space-between;align-items:center;">
+        <span><span class="nav-icon">▣</span> Workspace</span>
+        <span style="font-size:10px;opacity:0.6;margin-right:8px;">↗</span>
       </a>
-      <a class="nav-link" href="/live-market">
-        <span class="nav-icon">◌</span> Live Market
+      <a class="nav-link" href="/live-market" target="_blank" style="display:flex;justify-content:space-between;align-items:center;">
+        <span><span class="nav-icon">◌</span> Live Market</span>
+        <span style="font-size:10px;opacity:0.6;margin-right:8px;">↗</span>
       </a>
     </nav>
 
@@ -2066,13 +2075,21 @@ function toast(msg, color = 'var(--lime)') {
 /* ═══════════════════════════════════════════
    API HELPERS
 ═══════════════════════════════════════════ */
+const sessionID = sessionStorage.getItem('stockai_session_id') || (Date.now() + '-' + Math.random().toString(36).slice(2, 11));
+sessionStorage.setItem('stockai_session_id', sessionID);
+
 async function apiFetch(path, opts = {}) {
   try {
+    opts.headers = opts.headers || {};
+    opts.headers['X-Session-ID'] = sessionID;
     const r = await fetch(API + path, opts);
     if (!r.ok) throw new Error(await r.text());
     return await r.json();
   } catch (e) {
     console.warn('API error', path, e.message);
+    if (e.message.includes('Simulation session lock active')) {
+      toast('CONFLICT: Another research session is controlling the simulation.', 'var(--red)');
+    }
     return null;
   }
 }
@@ -2250,6 +2267,18 @@ function handleStatus(s) {
   }
   state = { ...state, ...s };
   marketAnalytics = s.market_analytics || marketAnalytics;
+
+  // FEATURE 1: Mock-Mode Banner
+  let mb = document.getElementById('mockBanner');
+  if (!mb) {
+    mb = document.createElement('div');
+    mb.id = 'mockBanner';
+    mb.style.cssText = 'display:none;position:fixed;top:0;left:0;right:0;background:var(--red,#f87171);color:#000;text-align:center;padding:8px;font:700 12px var(--mono);z-index:10000;border-bottom:2px solid #000;';
+    mb.textContent = '⚠️ LLM MODE: MOCK (API KEYS MISSING) — RESEARCH RESULTS WILL REFLECT HARDCODED DEMO LOGIC ⚠️';
+    document.body.prepend(mb);
+  }
+  mb.style.display = (state.llm_mode === 'mock') ? 'block' : 'none';
+
   updateSidebar();
   updateMetrics();
   renderRunContext();
@@ -2853,7 +2882,7 @@ function renderStocksTable() {
       <td><strong style="color:var(--cyan)">${sym}</strong></td>
       <td>${escHtml(s.name)}</td>
       <td><span style="color:var(--muted)">${s.sector || '—'}</span></td>
-      <td style="color:var(--white);font-weight:700">${fmtMoney(s.price)}</td>
+      <td style="color:var(--white);font-weight:700" data-price-sym="${sym}">${fmtMoney(s.price)}</td>
       <td class="${change >= 0 ? 'pos' : 'neg'}">${change >= 0 ? '+' : ''}${fmtMoney(change)}</td>
       <td class="${changePct >= 0 ? 'pos' : 'neg'}">${changePct >= 0 ? '+' : ''}${changePct.toFixed(2)}%</td>
       <td style="color:var(--muted)">${s.volatility ? s.volatility.toFixed(3) : '—'}</td>
@@ -3525,6 +3554,40 @@ async function loadExplainability() {
   }
 
   document.getElementById('expl-count').textContent = `(${_explDecisions.length} total)`;
+  
+  // ── Update Bias Distribution Chart for this agent ──
+  const agentBiases = {};
+  _explDecisions.forEach(d => {
+    (d.biases || []).forEach(b => {
+      agentBiases[b] = (agentBiases[b] || 0) + 1;
+    });
+  });
+  
+  const biasEmpty = document.getElementById('biasChart-empty');
+  if (Object.keys(agentBiases).length) {
+    biasEmpty.style.display = 'none';
+    clearChart('biasChart');
+    const ctx = document.getElementById('biasChart').getContext('2d');
+    chartInstances.biasChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: Object.keys(agentBiases).map(k => k.replace(/_/g, ' ')),
+        datasets: [{ label: 'Count', data: Object.values(agentBiases), backgroundColor: 'rgba(232,121,160,0.75)', borderWidth: 0, borderRadius: 3 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#888', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: '#181818' } },
+          y: { ticks: { color: '#ccc', font: { family: 'JetBrains Mono', size: 10 } }, grid: { color: '#181818' } }
+        }
+      }
+    });
+  } else {
+    biasEmpty.style.display = '';
+    clearChart('biasChart');
+  }
+
   renderTimeline();
 }
 
@@ -3842,7 +3905,7 @@ function renderHeatmap() {
         <div class="hmap-em">${s.emoji || ''}</div>
         <div class="hmap-sym">${s.name.split(' ')[0]}</div>
         <div class="hmap-pct">${chgPct >= 0 ? '+' : ''}${chgPct.toFixed(1)}%</div>
-        <div class="hmap-price">${fmtMoney(s.price)}</div>
+        <div class="hmap-price" data-price-sym="${sym}">${fmtMoney(s.price)}</div>
       </div>`;
     }).join('');
     return `<div class="heatmap-sector">
@@ -4493,3 +4556,224 @@ function renderComparePanel() {
 </script>
 </body>
 </html>
+<style>
+/* ═══════════════════════════════════════════
+   FEATURE 7: PRICE FLASHES
+═══════════════════════════════════════════ */
+.flash-price-up { background-color: rgba(74,222,128,0.4) !important; transition: none !important; }
+.flash-price-down { background-color: rgba(248,113,113,0.4) !important; transition: none !important; }
+.flash-transition { transition: background-color 0.3s ease-out !important; }
+
+/* ═══════════════════════════════════════════
+   FEATURE 8: REGIME BANNER
+═══════════════════════════════════════════ */
+#regime-banner {
+  position: fixed;
+  top: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg2);
+  border: 3px solid var(--cyan);
+  border-radius: 2px;
+  padding: 12px 24px;
+  box-shadow: 6px 6px 0 rgba(56,189,248,0.4);
+  font-family: var(--mono);
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--white);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+#regime-banner.show { top: 20px; }
+.regime-icon { font-size: 20px; }
+</style>
+<script>
+/* ═══════════════════════════════════════════
+   FEATURE 7 & 8: LIVE TICK INTERCEPT
+═══════════════════════════════════════════ */
+const _f7_oldPrices = new Map();
+let _f8_lastRegime = null;
+
+// We intercept handleTick without modifying the core function structure
+const _base_handleTick = handleTick;
+handleTick = function(d) {
+  _base_handleTick(d);
+
+  // FEATURE 8: Regime Banner
+  if (d.regime && d.regime !== _f8_lastRegime) {
+    if (_f8_lastRegime !== null) { 
+      showRegimeBanner(d.regime);
+    }
+    _f8_lastRegime = d.regime;
+  }
+
+  // FEATURE 7: Flash Prices
+  if (d.prices) {
+    for (const [sym, price] of Object.entries(d.prices)) {
+      const oldPrice = _f7_oldPrices.get(sym);
+      if (oldPrice !== undefined && price !== oldPrice) {
+        const cls = price > oldPrice ? 'flash-price-up' : 'flash-price-down';
+        
+        // Find tracking elements and apply flash
+        const els = document.querySelectorAll(`[data-price-sym="${sym}"]`);
+        els.forEach(el => {
+          el.textContent = fmtMoney(price); // ensure text is updated instantly
+          el.classList.remove('flash-price-up', 'flash-price-down', 'flash-transition');
+          void el.offsetWidth; // trigger reflow
+          el.classList.add(cls);
+          setTimeout(() => {
+            el.classList.add('flash-transition');
+            el.classList.remove(cls);
+          }, 50);
+        });
+      }
+      _f7_oldPrices.set(sym, price);
+    }
+  }
+};
+
+function showRegimeBanner(newRegime) {
+  let banner = document.getElementById('regime-banner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'regime-banner';
+    document.body.appendChild(banner);
+  }
+  
+  const formatted = newRegime.replace(/_/g, ' ').toUpperCase();
+  const icon = newRegime.includes('bull') ? '🐂' : newRegime.includes('bear') ? '🐻' : newRegime.includes('crash') ? '📉' : '⚡';
+  
+  banner.innerHTML = `<span class="regime-icon">${icon}</span> REGIME SHIFT DETECTED: <span style="color:var(--cyan)">${formatted}</span>`;
+  
+  // Slide down
+  banner.classList.add('show');
+  
+  // Auto-dismiss
+  setTimeout(() => {
+    banner.classList.remove('show');
+  }, 4000);
+}
+</script>
+
+<!-- KBD SHORTCUTS OVERLAY -->
+<div id="kbdMap" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;border:3px solid #2a2a2a;padding:24px;z-index:10000;font-family:var(--mono, 'JetBrains Mono', monospace);box-shadow:0 10px 30px rgba(0,0,0,.8);color:#e8e8e8;">
+  <div style="font-size:12px;color:gray;margin-bottom:12px;letter-spacing:1px">KEYBOARD SHORTCUTS</div>
+  <div style="display:grid;grid-template-columns:auto 1fr;gap:12px 24px;font-size:13px;align-items:center;">
+    <strong style="color:var(--cyan,#00e5cc)">G + S</strong> <span>SIMULATION CONSOLE</span>
+    <strong style="color:var(--cyan,#00e5cc)">G + W</strong> <span>WORKSPACE</span>
+    <strong style="color:var(--cyan,#00e5cc)">G + L</strong> <span>LIVE MARKET</span>
+    <strong style="color:var(--cyan,#00e5cc)">G + H</strong> <span>LANDING PAGE</span>
+    <strong style="color:var(--cyan,#00e5cc)">/</strong> <span>OPEN CHAT</span>
+    <strong style="color:var(--cyan,#00e5cc)">ESC</strong> <span>CLOSE CHAT / INPUTS</span>
+  </div>
+</div>
+<style>
+/* FEATURE 9 FORCE DRAWER WIDTH */
+#chatbot-panel {
+  width: 350px !important;
+  right: 24px !important;
+  bottom: 86px !important;
+  position: fixed !important;
+}
+</style>
+<script>
+/* ═══════════════════════════════════════════
+   FEATURE 9: SESSION STORAGE CHAT OVERRIDE
+═══════════════════════════════════════════ */
+sendChat = async function() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  appendMsg('user', msg);
+  const ctx = buildChatContext();
+  
+  let hist = [];
+  try { hist = JSON.parse(sessionStorage.getItem('chatHistory') || '[]'); } catch(e){}
+  hist.push({role: 'user', content: msg});
+  sessionStorage.setItem('chatHistory', JSON.stringify(hist.slice(-20)));
+
+  const r = await apiPost('/chat', { message: msg + ' ' + ctx, history: hist });
+  if (r) {
+    const followups = Array.isArray(r.suggested_followup)
+      ? r.suggested_followup
+      : (r.suggested_followup ? [r.suggested_followup] : []);
+    appendMsg('bot', r.response || 'NO RESPONSE', followups);
+    
+    // Write bot back to history
+    hist.push({role: 'assistant', content: r.response});
+    sessionStorage.setItem('chatHistory', JSON.stringify(hist.slice(-20)));
+  } else {
+    appendMsg('bot', 'Sorry, I could not reach the assistant right now.');
+  }
+};
+
+setTimeout(() => {
+  let hist = [];
+  try { hist = JSON.parse(sessionStorage.getItem('chatHistory') || '[]'); } catch(e){}
+  if (hist.length > 0) {
+    const container = document.getElementById('chat-messages');
+    if(container) container.innerHTML = '';
+    hist.forEach(h => {
+      appendMsg(h.role === 'user' ? 'user' : 'bot', h.content || '', []);
+    });
+  }
+}, 500);
+
+/* ═══════════════════════════════════════════
+   FEATURE 12: KEYBOARD SHORTCUTS
+═══════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  const kbd = document.getElementById('kbdMap');
+  let qTimer = null;
+  let gPressed = false;
+  
+  document.addEventListener('keydown', e => {
+    if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+      if(e.key === 'Escape' && chatOpen) {
+        e.preventDefault();
+        toggleChat();
+        e.target.blur();
+      }
+      return;
+    }
+    
+    if(e.key === '?') {
+      if(!qTimer) {
+        qTimer = setTimeout(() => { if(kbd) kbd.style.display = 'block'; }, 500);
+      }
+    }
+    if(e.key.toLowerCase() === 'g') {
+      gPressed = true;
+      setTimeout(() => { gPressed = false; }, 1000);
+    }
+    if(gPressed) {
+      const char = e.key.toLowerCase();
+      if(char === 's') window.location.href = '/app';
+      if(char === 'w') window.location.href = '/workspace';
+      if(char === 'l') window.location.href = '/live-market';
+      if(char === 'h') window.location.href = '/';
+    }
+    if(e.key === '/') {
+      e.preventDefault();
+      if (!chatOpen) toggleChat();
+      setTimeout(() => {
+        const inp = document.getElementById('chat-input');
+        if(inp) inp.focus();
+      }, 100);
+    }
+  });
+
+  document.addEventListener('keyup', e => {
+    if(e.key === '?') {
+      clearTimeout(qTimer);
+      qTimer = null;
+      if(kbd) kbd.style.display = 'none';
+    }
+  });
+});
+</script>

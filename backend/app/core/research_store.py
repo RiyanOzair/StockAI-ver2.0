@@ -145,8 +145,49 @@ class ResearchStore:
                     created_at TEXT NOT NULL,
                     updated_at TEXT NOT NULL
                 );
+                CREATE TABLE IF NOT EXISTS agent_notebooks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    run_id TEXT NOT NULL,
+                    agent_id TEXT NOT NULL,
+                    day INTEGER NOT NULL,
+                    session INTEGER NOT NULL,
+                    entry_type TEXT NOT NULL, -- thesis, review, research
+                    content TEXT NOT NULL,
+                    payload_json TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_agent_notebooks_run_agent
+                    ON agent_notebooks(run_id, agent_id);
                 """
             )
+
+    def save_notebook_entry(self, run_id: str, agent_id: str, day: int, session: int, entry_type: str, content: str, payload_json: Dict[str, Any] = None) -> Dict[str, Any]:
+        now = utcnow_iso()
+        payload = payload_json or {}
+        with self._lock, self._connect() as conn:
+            conn.execute(
+                """
+                INSERT INTO agent_notebooks (run_id, agent_id, day, session, entry_type, content, payload_json, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (run_id, agent_id, day, session, entry_type, content, self._serialize(payload), now),
+            )
+        return {"run_id": run_id, "agent_id": agent_id, "day": day, "session": session, "entry_type": entry_type, "content": content, "created_at": now}
+
+    def list_notebook_entries(self, run_id: str, agent_id: Optional[str] = None, limit: int = 50) -> list[Dict[str, Any]]:
+        with self._lock, self._connect() as conn:
+            if agent_id:
+                rows = conn.execute(
+                    "SELECT * FROM agent_notebooks WHERE run_id = ? AND agent_id = ? ORDER BY id DESC LIMIT ?",
+                    (run_id, agent_id, limit),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM agent_notebooks WHERE run_id = ? ORDER BY id DESC LIMIT ?",
+                    (run_id, limit),
+                ).fetchall()
+        return [dict(row) for row in rows]
+
 
     def _serialize(self, data: Dict[str, Any]) -> str:
         return json.dumps(data, default=str)
@@ -538,6 +579,48 @@ class ResearchStore:
                 (job.id, job.job_type, job.status, self._serialize(payload), self._serialize(result), created_at, now),
             )
         return self.get_record("jobs", job.id) or {}
+
+    def get_purge_preview(self, active_run_id: Optional[str]) -> Dict[str, Any]:
+        with self._lock, self._connect() as conn:
+            # We want to identify runs that are NOT the active run
+            # And count how many run_events and agent_notebooks belong to them
+            if active_run_id:
+                events_count = conn.execute("SELECT COUNT(*) FROM run_events WHERE run_id != ?", (active_run_id,)).fetchone()[0]
+                notebooks_count = conn.execute("SELECT COUNT(*) FROM agent_notebooks WHERE run_id != ?", (active_run_id,)).fetchone()[0]
+                runs_affected = [row[0] for row in conn.execute("SELECT DISTINCT id FROM runs WHERE id != ?", (active_run_id,)).fetchall()]
+            else:
+                events_count = conn.execute("SELECT COUNT(*) FROM run_events").fetchone()[0]
+                notebooks_count = conn.execute("SELECT COUNT(*) FROM agent_notebooks").fetchone()[0]
+                runs_affected = [row[0] for row in conn.execute("SELECT id FROM runs").fetchall()]
+                
+        return {
+            "events_count": events_count,
+            "notebooks_count": notebooks_count,
+            "runs_affected_count": len(runs_affected),
+            "runs_affected": runs_affected
+        }
+
+    def execute_purge(self, active_run_id: Optional[str]) -> Dict[str, Any]:
+        preview = self.get_purge_preview(active_run_id)
+        if not preview["runs_affected"]:
+            return {"status": "ok", "purged_events": 0, "purged_notebooks": 0, "purged_runs": 0}
+            
+        with self._lock, self._connect() as conn:
+            if active_run_id:
+                conn.execute("DELETE FROM run_events WHERE run_id != ?", (active_run_id,))
+                conn.execute("DELETE FROM agent_notebooks WHERE run_id != ?", (active_run_id,))
+                conn.execute("DELETE FROM runs WHERE id != ?", (active_run_id,))
+            else:
+                conn.execute("DELETE FROM run_events")
+                conn.execute("DELETE FROM agent_notebooks")
+                conn.execute("DELETE FROM runs")
+                
+        return {
+            "status": "ok", 
+            "purged_events": preview["events_count"], 
+            "purged_notebooks": preview["notebooks_count"], 
+            "purged_runs": preview["runs_affected_count"]
+        }
 
     def update_job(self, job_id: str, *, status: Optional[str] = None, result: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
         record = self.get_record("jobs", job_id)

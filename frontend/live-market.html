@@ -1,9 +1,14 @@
+<!--
+  LIVE MARKET COPY UPDATE NOTE
+  Preserved the existing layout and data flow while reframing this page as the bot deployment side of StockAI.
+  Updated only user-facing copy so the page reads as the US equities surface for strategies trained inside the research core.
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>StockAI — Live Market Intelligence</title>
+<title>StockAI - US Equities Deployment Layer</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23c8f04a' rx='7'/%3E%3Cpolyline points='4,24 10,14 16,18 22,8 28,12' fill='none' stroke='%23000' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='28' cy='12' r='2.2' fill='%23000'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,7 +22,7 @@
   --surface-2: #141414;
   --border: #232323;
   --text: #ececec;
-  --muted: #777;
+  --muted: #a8a8a8;
   --lime: #c8f04a;
   --cyan: #00d9c0;
   --magenta: #e040c8;
@@ -28,6 +33,8 @@
 }
 
 html { scroll-behavior: smooth; }
+
+:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 
 body {
   background:
@@ -284,7 +291,7 @@ main {
 .op-card {
   background: var(--surface);
   border: 2px solid var(--border);
-  padding: 18px;
+  padding: 20px;
 }
 
 .snapshot-label,
@@ -679,6 +686,11 @@ main {
   }
   .watch-top { grid-template-columns: 1fr; }
 }
+
+.pulse-anim-green { animation: pGreen 2s 2; }
+.pulse-anim-red { animation: pRed 2s 2; }
+@keyframes pGreen { 0% { box-shadow: 0 0 0 0 rgba(0, 229, 204, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0, 229, 204, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 229, 204, 0); } }
+@keyframes pRed { 0% { box-shadow: 0 0 0 0 rgba(228, 53, 75, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(228, 53, 75, 0); } 100% { box-shadow: 0 0 0 0 rgba(228, 53, 75, 0); } }
 </style>
 </head>
 <body>
@@ -693,28 +705,28 @@ main {
         </svg>
         StockAI
       </a>
-      <div class="nav-chip">Real-Market Intelligence Layer</div>
+      <div class="nav-chip">US EQUITIES DEPLOYMENT LAYER</div>
     </div>
     <div class="nav-right">
-      <a class="nav-btn" href="/">Home</a>
-      <a class="nav-btn" href="/app">Open Simulator</a>
-      <button class="nav-btn" id="refresh-btn" type="button">Refresh Tape</button>
+      <a class="nav-btn" href="/">HOME</a>
+      <a class="nav-btn" href="/workspace">WORKSPACE</a>
+      <a class="nav-btn" href="/app">OPEN SIMULATOR</a>
+      <button class="nav-btn" id="refresh-btn" type="button">REFRESH TAPE</button>
     </div>
   </nav>
 
   <main>
     <section class="hero-grid">
       <div class="panel magenta reveal">
-        <div class="eyebrow">Live Market Layer</div>
-        <h1 class="hero-title">STOCK<span>AI</span> reads the real tape.</h1>
+        <div class="eyebrow">US EQUITIES LAYER</div>
+        <h1 class="hero-title">STOCK<span>AI</span> tracks the deployment tape.</h1>
         <p class="hero-copy">
           This screen pulls in <strong>free real-world market data</strong>, then frames it against StockAI's
-          simulator regime so you can compare live conditions, tracked momentum, and the synthetic market
-          running inside the app.
+          simulator regime so you can compare live conditions, tracked momentum, and the bot ideas that were trained inside the research core.
         </p>
         <div class="hero-actions">
-          <a class="hero-btn primary" href="/app">Launch Simulator</a>
-          <a class="hero-btn" href="#watchlist">Jump to Watchlist</a>
+          <a class="hero-btn primary" href="/app">OPEN SIMULATOR</a>
+          <a class="hero-btn" href="#watchlist">JUMP TO WATCHLIST</a>
         </div>
         <div class="hero-meta" id="hero-meta">
           <div class="loading">Loading market snapshot...</div>
@@ -722,10 +734,10 @@ main {
       </div>
 
       <div class="panel cyan reveal">
-        <div class="eyebrow">AI Market Brief</div>
+        <div class="eyebrow">BOT DEPLOYMENT BRIEF</div>
         <h2 id="brief-headline" class="section-title" style="font-size:32px;margin-bottom:14px;">Preparing the brief...</h2>
         <p id="brief-summary" class="summary-note">
-          StockAI is pulling real-market data and aligning it with the active simulator state.
+          StockAI is pulling real-market data and aligning it with the active simulator state so trained bots can be reviewed against the live tape.
         </p>
         <div class="alert-stack" id="alert-stack"></div>
         <div class="footnote" id="provider-note"></div>
@@ -736,9 +748,9 @@ main {
       <div class="section-head">
         <div>
           <div class="eyebrow">Market Snapshot</div>
-          <h2 class="section-title">Headline tape, instantly readable.</h2>
+          <h2 class="section-title">Deployment tape, instantly readable.</h2>
         </div>
-        <p class="section-copy">Free live or near-live proxies let StockAI track the broad market pulse, volatility pressure, and sector leadership without paid feeds.</p>
+        <p class="section-copy">Free live or near-live proxies let StockAI track broad market pulse, volatility pressure, and sector leadership while deployment candidates are monitored against the same backdrop.</p>
       </div>
       <div class="snapshot-grid" id="snapshot-grid"></div>
     </section>
@@ -746,15 +758,15 @@ main {
     <section class="section intel-grid">
       <div class="panel reveal">
         <div class="eyebrow">Simulator Alignment</div>
-        <h2 class="section-title" style="font-size:32px;">Real conditions vs. the StockAI world state.</h2>
+        <h2 class="section-title" style="font-size:32px;">Real conditions vs. the research-trained world state.</h2>
         <div class="compare-list" id="comparison-list"></div>
         <div class="sim-stats" id="sim-stats"></div>
       </div>
 
       <div class="panel yellow reveal">
         <div class="eyebrow">Tracked Movers</div>
-        <h2 class="section-title" style="font-size:32px;">Where the pressure is building.</h2>
-        <p class="section-copy" style="margin-top:10px;">StockAI tracks a focused equity universe to surface actionable leaders and laggards without pretending to cover the entire exchange.</p>
+        <h2 class="section-title" style="font-size:32px;">Where deployment pressure is building.</h2>
+        <p class="section-copy" style="margin-top:10px;">StockAI tracks a focused equity universe to surface actionable leaders and laggards for bot monitoring without pretending to cover the entire exchange.</p>
         <div class="movers-grid" id="movers-grid" style="margin-top:18px;"></div>
       </div>
     </section>
@@ -763,9 +775,9 @@ main {
       <div class="section-head">
         <div>
           <div class="eyebrow">Sector Pulse</div>
-          <h2 class="section-title">ETF-based heat from the real market.</h2>
+          <h2 class="section-title">ETF-based heat for the deployment surface.</h2>
         </div>
-        <p class="section-copy">Sector cards act as the macro rhythm section for the page, showing which pockets are accelerating, constructive, mixed, or under pressure.</p>
+        <p class="section-copy">Sector cards act as the macro rhythm section for the page, showing which pockets are accelerating, constructive, mixed, or under pressure while bots are evaluated against live conditions.</p>
       </div>
       <div class="sector-grid" id="sector-grid"></div>
     </section>
@@ -774,7 +786,7 @@ main {
       <div class="section-head">
         <div>
           <div class="eyebrow">Watchlist Cards</div>
-          <h2 class="section-title">Mini charts for the names traders actually scan.</h2>
+          <h2 class="section-title">Mini charts for the names deployed bots actually scan.</h2>
         </div>
         <p class="section-copy">Each card includes a compact sparkline, intraday range, and freshness stamp so the watchlist remains useful even when upstream data gets patchy.</p>
       </div>
@@ -785,7 +797,7 @@ main {
       <div class="section-head">
         <div>
           <div class="eyebrow">Opportunities & Risks</div>
-          <h2 class="section-title">Practical readouts, not dashboard filler.</h2>
+          <h2 class="section-title">Practical readouts for live bot decisions.</h2>
         </div>
       </div>
       <div class="op-grid" id="op-grid"></div>
@@ -923,8 +935,8 @@ function renderSnapshot(data) {
     <article class="snapshot-card reveal">
       <div class="snapshot-label">${escapeHtml(card.label)}</div>
       <div class="snapshot-value">${card.kind === "volatility" ? fmtNumber(card.price) : fmtMoney(card.price)}</div>
-      <div class="delta ${deltaClass(card.change_pct)}">${fmtPct(card.change_pct)} · ${fmtSignedNumber(card.change)}</div>
-      <div class="small-note">${escapeHtml(formatTimestamp(card.market_time))} · ${escapeHtml(card.exchange || "Market")}</div>
+      <div class="delta ${deltaClass(card.change_pct)}">${fmtPct(card.change_pct)} &middot; ${fmtSignedNumber(card.change)}</div>
+      <div class="small-note">${escapeHtml(formatTimestamp(card.market_time))} &middot; ${escapeHtml(card.exchange || "Market")}</div>
     </article>
   `).join("");
 }
@@ -938,9 +950,21 @@ function renderComparison(data) {
     ? comparison.map((item) => `<div class="compare-item">${escapeHtml(item)}</div>`).join("")
     : `<div class="empty-state">Simulator comparison will appear once the market brief is ready.</div>`;
 
+  const spy = (data.market_snapshot || []).find(c => c.label.includes('S&P') || c.label.includes('Market'));
+  const realReturn = spy ? spy.change_pct : null;
+  const simReturn = sim.benchmark_return_pct || 0;
+  let pulseClass = '';
+  
+  if (realReturn !== null && realReturn !== 0) {
+    const div = Math.abs((simReturn - realReturn) / realReturn);
+    if (div > 0.10) {
+      pulseClass = simReturn > realReturn ? 'pulse-anim-green' : 'pulse-anim-red';
+    }
+  }
+
   const simCards = [
     { label: "Simulator Regime", value: (sim.regime || "n/a").replaceAll("_", " ") },
-    { label: "Benchmark Return", value: fmtPct(sim.benchmark_return_pct || 0) },
+    { label: "Benchmark Return", value: fmtPct(sim.benchmark_return_pct || 0), class: pulseClass },
     { label: "Breadth", value: `${fmtNumber(sim.breadth_ratio || 0, 1)}%` },
     { label: "Trades", value: `${sim.total_trades ?? 0}` },
     { label: "Sentiment", value: `${sim.market_sentiment ?? "n/a"}` },
@@ -948,7 +972,7 @@ function renderComparison(data) {
   ];
 
   els.simStats.innerHTML = simCards.map((card) => `
-    <div class="sim-stat">
+    <div class="sim-stat ${card.class || ''}">
       <div class="sim-stat-label">${escapeHtml(card.label)}</div>
       <div class="sim-stat-value">${escapeHtml(card.value)}</div>
     </div>
@@ -992,7 +1016,7 @@ function renderMoverColumn(title, items, accentLabel) {
         ${rest.map((item) => `
           <div class="row">
             <div class="row-name">
-              <strong>${escapeHtml(item.symbol)} · ${escapeHtml(item.name)}</strong>
+              <strong>${escapeHtml(item.symbol)} &middot; ${escapeHtml(item.name)}</strong>
               <span class="row-sub">${escapeHtml(formatTimestamp(item.market_time))}</span>
             </div>
             <div>${fmtMoney(item.price)}</div>
@@ -1085,7 +1109,7 @@ function renderSectors(data) {
       </div>
       <div>
         <div class="delta ${deltaClass(sector.change_pct)}">${escapeHtml(sector.momentum)}</div>
-        <div class="small-note">${escapeHtml(sector.symbol)} · ${fmtMoney(sector.price)}</div>
+        <div class="small-note">${escapeHtml(sector.symbol)} &middot; ${fmtMoney(sector.price)}</div>
       </div>
     </article>
   `).join("");
@@ -1104,7 +1128,7 @@ function renderWatchlist(data) {
         <div class="watch-symbol">${escapeHtml(card.symbol)}</div>
         <div>
           <div style="font-weight:700;">${escapeHtml(card.name)}</div>
-          <div class="small-note">${escapeHtml(card.exchange || "Market")} · ${escapeHtml(formatTimestamp(card.market_time))}</div>
+          <div class="small-note">${escapeHtml(card.exchange || "Market")} &middot; ${escapeHtml(formatTimestamp(card.market_time))}</div>
         </div>
         <div class="delta ${deltaClass(card.change_pct)}">${fmtPct(card.change_pct)}</div>
       </div>
@@ -1145,7 +1169,7 @@ function renderOpportunities(data) {
 function renderBrief(data) {
   const brief = data.ai_brief || {};
   els.briefHeadline.textContent = brief.headline || "Market brief unavailable";
-  els.briefSummary.textContent = brief.summary || "The AI market brief will populate once StockAI has enough usable live data.";
+  els.briefSummary.textContent = brief.summary || "The BOT DEPLOYMENT BRIEF will populate once StockAI has enough usable live data.";
   els.providerNote.textContent = data.provider_note || "";
   els.scopeNote.textContent = data.tracked_scope_note || "";
 }
@@ -1193,7 +1217,7 @@ async function loadSnapshot(forceRefresh = false) {
   } finally {
     isLoading = false;
     els.refreshBtn.disabled = false;
-    els.refreshBtn.textContent = "Refresh Tape";
+    els.refreshBtn.textContent = "REFRESH TAPE";
   }
 }
 
@@ -1202,5 +1226,177 @@ els.refreshBtn.addEventListener("click", () => loadSnapshot(true));
 loadSnapshot(false);
 setInterval(() => loadSnapshot(false), 120000);
 </script>
+<!-- KBD SHORTCUTS OVERLAY -->
+<div id="kbdMap" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;border:3px solid #2a2a2a;padding:24px;z-index:9999;font-family:var(--mono, monospace);box-shadow:0 10px 30px rgba(0,0,0,.8);color:#e8e8e8;">
+  <div style="font-size:12px;color:gray;margin-bottom:12px;letter-spacing:1px">KEYBOARD SHORTCUTS</div>
+  <div style="display:grid;grid-template-columns:auto 1fr;gap:12px 24px;font-size:13px;align-items:center;">
+    <strong style="color:var(--cyan,#00e5cc)">G + S</strong> <span>SIMULATION CONSOLE</span>
+    <strong style="color:var(--cyan,#00e5cc)">G + W</strong> <span>WORKSPACE</span>
+    <strong style="color:var(--cyan,#00e5cc)">G + L</strong> <span>LIVE MARKET</span>
+    <strong style="color:var(--cyan,#00e5cc)">G + H</strong> <span>LANDING PAGE</span>
+    <strong style="color:var(--cyan,#00e5cc)">/</strong> <span>OPEN CHAT</span>
+    <strong style="color:var(--cyan,#00e5cc)">ESC</strong> <span>CLOSE CHAT</span>
+  </div>
+</div>
+
+<!-- CHAT DRAWER -->
+<button id="chatFabBtn" style="position:fixed;right:24px;bottom:24px;width:48px;height:48px;background:#111;border:2px solid #ff2d78;color:#ff2d78;cursor:pointer;z-index:9998;display:flex;align-items:center;justify-content:center;">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+</button>
+<div id="chatDrawerPanel" style="position:fixed;right:24px;bottom:86px;width:360px;height:520px;background:#111;border:2px solid #2a2a2a;z-index:9998;display:flex;flex-direction:column;transform:translateY(120%);transition:transform 200ms linear;opacity:0;pointer-events:none;font-family:var(--mono, monospace);">
+  <div style="padding:14px;border-bottom:2px solid #2a2a2a;font-weight:700;font-size:12px;color:#f2f2f2;background:#151515;">AI ASSISTANT</div>
+  <div id="chatDrawerLog" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;"></div>
+  <div style="border-top:2px solid #2a2a2a;display:flex;background:#111;">
+    <input type="text" id="chatDrawerInput" placeholder="ASK SOMETHING..." style="background:transparent;border:none;color:#e8e8e8;padding:14px;flex:1;font-family:inherit;font-size:12px;outline:none;">
+    <button id="chatDrawerSend" style="background:#151515;border:none;border-left:2px solid #2a2a2a;color:#00e5cc;padding:0 14px;font-weight:700;cursor:pointer;font-family:inherit;">SEND &rarr;</button>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const escHTML = v => String(v||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // F3: Nav Highlights
+  const anchors = document.querySelectorAll('a[href^="#"]');
+  const validSections = [];
+  anchors.forEach(a => {
+    const id = a.getAttribute('href').substring(1);
+    if (!id) return;
+    const sec = document.getElementById(id);
+    if(sec) validSections.push({ link: a, section: sec });
+  });
+  if(validSections.length > 0) {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if(e.isIntersecting) {
+          validSections.forEach(s => {
+            if(s.section === e.target) {
+              s.link.style.borderLeft = '2px solid #00e5cc';
+              s.link.style.color = '#00e5cc';
+              s.link.style.paddingLeft = '8px';
+            } else {
+              s.link.style.borderLeft = '';
+              s.link.style.color = '';
+              s.link.style.paddingLeft = '';
+            }
+          });
+        }
+      });
+    }, { threshold: 0.2 });
+    validSections.forEach(s => obs.observe(s.section));
+    document.documentElement.style.scrollBehavior = 'smooth';
+  }
+
+  // F9: Chat Drawer
+  const fab = document.getElementById('chatFabBtn');
+  const panel = document.getElementById('chatDrawerPanel');
+  const log = document.getElementById('chatDrawerLog');
+  const inp = document.getElementById('chatDrawerInput');
+  const send = document.getElementById('chatDrawerSend');
+  
+  let chatOpen = false;
+  const toggleChat = (force) => {
+    chatOpen = force ?? !chatOpen;
+    panel.style.transform = chatOpen ? 'translateY(0)' : 'translateY(120%)';
+    panel.style.opacity = chatOpen ? '1' : '0';
+    panel.style.pointerEvents = chatOpen ? 'auto' : 'none';
+    if(chatOpen) setTimeout(() => inp.focus(), 250);
+  };
+  
+  fab.addEventListener('click', () => toggleChat());
+
+  const renderMsg = (role, text, isLow) => {
+    const div = document.createElement('div');
+    div.style.cssText = `padding:10px;font-size:12px;color:#e8e8e8;background:#151515;border:1px solid #2a2a2a;line-height:1.5;align-self:${role==='user'?'flex-end':'flex-start'};max-width:85%;border-left:3px solid ${role==='user'?'#b8ff57':'#00e5cc'};word-break:break-word;`;
+    div.innerHTML = escHTML(text) + (isLow ? '<div style="margin-top:6px;font-size:10px;color:#f5c842;border:1px solid #f5c842;display:inline-block;padding:2px 4px;">LOW CONFIDENCE</div>' : '');
+    log.appendChild(div);
+    log.scrollTop = log.scrollHeight;
+  };
+
+  const getChatHist = () => { try { return JSON.parse(sessionStorage.getItem('chatHistory')||'[]'); } catch { return []; } };
+  const initChat = () => getChatHist().forEach(m => renderMsg(m.role, m.content, m.low_confidence));
+  initChat();
+
+  const sendMsg = async () => {
+    const val = inp.value.trim();
+    if(!val) return;
+    inp.value = '';
+    renderMsg('user', val);
+    const hist = getChatHist();
+    hist.push({role:'user',content:val});
+    sessionStorage.setItem('chatHistory', JSON.stringify(hist.slice(-20)));
+    
+    try {
+      const res = await fetch('/chat', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ message: val, history: hist })
+      });
+      const data = await res.json();
+      const isLow = !!data.confidence && data.confidence !== 'high';
+      renderMsg('assistant', data.response || 'NO RESPONSE', isLow);
+      const updatedHist = getChatHist(); 
+      updatedHist.push({role:'assistant', content: data.response, low_confidence: isLow});
+      sessionStorage.setItem('chatHistory', JSON.stringify(updatedHist.slice(-20)));
+    } catch(err) {
+      renderMsg('assistant', `ERROR: ${err.message}`, true);
+    }
+  };
+
+  send.addEventListener('click', sendMsg);
+  inp.addEventListener('keydown', e => { if(e.key === 'Enter') sendMsg(); });
+
+  // F12: Keyboard map
+  const kbd = document.getElementById('kbdMap');
+  let qTimer = null;
+  let gPressed = false;
+  
+  document.addEventListener('keydown', e => {
+    if(e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+      if(e.key === 'Escape' && chatOpen) {
+        e.preventDefault();
+        toggleChat(false);
+        e.target.blur();
+      }
+      return;
+    }
+    
+    if(e.key === '?') {
+      if(!qTimer) {
+        qTimer = setTimeout(() => { kbd.style.display = 'block'; }, 500);
+      }
+    }
+    if(e.key.toLowerCase() === 'g') {
+      gPressed = true;
+      setTimeout(() => { gPressed = false; }, 1000);
+    }
+    if(gPressed) {
+      const char = e.key.toLowerCase();
+      if(char === 's') window.location.href = '/app';
+      if(char === 'w') window.location.href = '/workspace';
+      if(char === 'l') window.location.href = '/live-market';
+      if(char === 'h') window.location.href = '/';
+    }
+    if(e.key === '/') {
+      e.preventDefault();
+      toggleChat(true);
+    }
+    if(e.key === 'Escape' && chatOpen) {
+      toggleChat(false);
+    }
+  });
+
+  document.addEventListener('keyup', e => {
+    if(e.key === '?') {
+      clearTimeout(qTimer);
+      qTimer = null;
+      kbd.style.display = 'none';
+    }
+  });
+});
+</script>
 </body>
 </html>
+
+
+

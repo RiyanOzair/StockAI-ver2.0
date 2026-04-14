@@ -79,6 +79,9 @@ async def evaluate_bot_suite(
             training_mode="deterministic",
         )
         evaluator.set_run_id(f"eval-run-{seed}")
+        # FIX C1: Seed RNG before world build so evaluation runs are deterministic per seed
+        import random
+        random.seed(seed)
         bundle = state.build_world_bundle(config=cfg, extra_agents=[evaluator])
         sim = bundle["simulation"]
         sim.activate_run({"id": f"eval-run-{seed}", "config_snapshot": cfg})

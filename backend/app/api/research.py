@@ -45,12 +45,17 @@ def _get_active_run_record() -> Optional[Dict[str, Any]]:
 
 
 def _build_status_payload() -> Dict[str, Any]:
+    from backend.app.core.config import settings
+    provider_type = settings.DEFAULT_MODEL_PROVIDER.lower()
+    llm_mode = "mock" if provider_type == "mock" or (not settings.GROQ_API_KEY and not settings.OPENAI_API_KEY) else "active"
+
     sim = state.simulation
     prices = {symbol: (state.market_books[symbol].last_price or state.STOCKS[symbol].initial_price) for symbol in state.STOCKS}
     analytics = compute_market_analytics(sim, prices, state.STOCKS)
     return {
         "is_running": sim.is_running,
         "is_paused": sim.is_paused,
+        "llm_mode": llm_mode,
         "day": sim.day,
         "session": sim.session,
         "session_phase": getattr(sim, "session_phase", "pre_open"),
@@ -401,11 +406,16 @@ async def get_run_events(run_id: str, after_sequence: int = 0):
 
 @router.get("/runs/{run_id}/export")
 async def export_run_bundle(run_id: str):
+    from backend.app.core.config import settings
+    provider_type = settings.DEFAULT_MODEL_PROVIDER.lower()
+    llm_mode = "mock" if provider_type == "mock" or (not settings.GROQ_API_KEY and not settings.OPENAI_API_KEY) else "active"
+
     run = state.research_store.get_record("runs", run_id)
     if not run:
         raise HTTPException(404, "Run not found")
     return {
         "run": run,
+        "llm_mode": llm_mode,
         "events": state.research_store.list_run_events(run_id),
         "dataset": state.research_store.get_record("datasets", run.get("dataset_id", state.DEFAULT_DATASET_ID)),
         "scenario": state.research_store.get_record("scenarios", run.get("scenario_id", state.DEFAULT_SCENARIO_ID)),
@@ -439,11 +449,31 @@ async def stream_run_events(run_id: str, after_sequence: int = 0):
 
     return StreamingResponse(event_source(), media_type="text/event-stream")
 
+@router.get("/data/purge/preview")
+async def preview_purge():
+    active_run_id = getattr(state.simulation, "active_run_id", None)
+    return state.research_store.get_purge_preview(active_run_id)
+
+@router.post("/data/purge/execute")
+async def execute_purge():
+    active_run_id = getattr(state.simulation, "active_run_id", None)
+    return state.research_store.execute_purge(active_run_id)
+
+@router.get("/data/notebooks")
+async def list_agent_notebooks(run_id: str):
+    return state.research_store.list_notebook_entries(run_id, limit=200)
+
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Header
 
 @router.post("/runs")
-async def launch_run(req: RunLaunchRequest, background_tasks: BackgroundTasks):
+async def launch_run(req: RunLaunchRequest, background_tasks: BackgroundTasks, x_session_id: Optional[str] = Header(None)):
     if state.simulation.is_running:
+        if state.active_session_id and x_session_id != state.active_session_id:
+            raise HTTPException(409, f"Simulation session lock active (ID: {state.active_session_id[:8]}...). Only the session that started the run can modify it.")
         raise HTTPException(400, "Stop the active simulation before launching a new run")
+    
+    # Establish session lock on launch
+    state.active_session_id = x_session_id
     _require_record("datasets", req.config.dataset_version, "Dataset")
     _require_record("scenarios", req.config.scenario_id, "Scenario")
     _require_record("experiments", req.config.experiment_id, "Experiment")

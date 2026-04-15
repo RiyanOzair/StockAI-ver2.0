@@ -740,6 +740,7 @@ main {
       <div class="nav-chip">LIVE PERFORMANCE MONITOR</div>
     </div>
     <div class="nav-right">
+      <button class="nav-btn" id="refresh-btn" style="background:var(--lime);color:#000;font-weight:700;border:none;cursor:pointer;">REFRESH TAPE</button>
       <a class="nav-btn" href="/">LANDING</a>
       <a class="nav-btn" href="/workspace">WORKSPACE</a>
       <a class="nav-btn" href="/app">SIMULATION CONSOLE</a>
@@ -1214,10 +1215,12 @@ function renderBrief(data) {
 async function loadSnapshot(forceRefresh = false) {
   if (isLoading) return;
   isLoading = true;
-  els.refreshBtn.disabled = true;
-  els.refreshBtn.textContent = "Refreshing...";
+  
+  if (els.refreshBtn) {
+    els.refreshBtn.disabled = true;
+    els.refreshBtn.textContent = "Refreshing...";
+  }
 
-  // Ensure 'Loading' state is visible if explicitly needed, but usually it transitions fast
   try {
     const response = await fetch(`/api/live-market/snapshot${forceRefresh ? "?refresh=true" : ""}`, {
       cache: "no-store",
@@ -1265,8 +1268,10 @@ async function loadSnapshot(forceRefresh = false) {
     }
   } finally {
     isLoading = false;
-    els.refreshBtn.disabled = false;
-    els.refreshBtn.textContent = "REFRESH TAPE";
+    if (els.refreshBtn) {
+      els.refreshBtn.disabled = false;
+      els.refreshBtn.textContent = "REFRESH TAPE";
+    }
     
     // Final safety: if heroMeta still has 'loading' class or text, clear it
     if (els.heroMeta.querySelector('.loading')) {

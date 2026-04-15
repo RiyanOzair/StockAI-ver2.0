@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import copy
 import logging
+import random
 from datetime import datetime, timezone
 from typing import Any
 from urllib.parse import quote
@@ -148,8 +149,11 @@ class LiveMarketService:
             # FIX: Introduce small jitter between requests to avoid burst blocking
             results = []
             for symbol in symbols:
-                res = await self._fetch_symbol_chart(client, symbol)
-                results.append(res)
+                try:
+                    res = await self._fetch_symbol_chart(client, symbol)
+                    results.append(res)
+                except Exception as exc:
+                    results.append(exc)
                 await asyncio.sleep(random.uniform(0.1, 0.3))
 
         quote_map: dict[str, dict[str, Any]] = {}

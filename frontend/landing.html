@@ -36,6 +36,10 @@ body {
   min-height: 100vh;
 }
 
+.custom-cursor-active, .custom-cursor-active * {
+  cursor: none !important;
+}
+
 /* ── GRID NOISE BACKGROUND ── */
 body::before {
   content: '';
@@ -83,19 +87,40 @@ nav {
   font-size: 16px;
 }
 
+.nav-links {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.nav-link {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: color 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--lime);
+}
+
 .nav-cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 24px;
+  padding: 8px 18px;
   background: var(--lime);
   color: #000;
   font-family: var(--mono);
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
   text-decoration: none;
-  border: 2px solid var(--lime);
-  transition: background .15s, color .15s, transform .1s;
+  border: 1px solid var(--lime);
+  transition: all .2s;
 }
 
 .nav-cta:hover {
@@ -330,10 +355,11 @@ nav {
 .feature-card:hover::after { transform: scaleX(1); }
 .feature-card:hover { background: #161616; }
 
-.feature-icon {
-  font-size: 32px;
+.feature-marker {
+  width: 14px;
+  height: 2px;
+  background: var(--accent-color, var(--lime));
   margin-bottom: 16px;
-  display: block;
 }
 
 .feature-name {
@@ -615,25 +641,54 @@ nav {
   position: relative;
   z-index: 1;
   background: var(--lime);
-  padding: 80px 24px;
+  padding: 140px 24px;
   text-align: center;
   margin-top: 0;
+  overflow: hidden;
+}
+
+/* CRT Scanline Effect */
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+  background-size: 100% 3px, 3px 100%;
+  pointer-events: none;
+  z-index: 2;
+  animation: flicker 0.15s infinite;
+}
+
+@keyframes flicker {
+  0% { opacity: 0.95; }
+  50% { opacity: 1; }
+  100% { opacity: 0.9; }
 }
 
 .cta-section .cta-title {
+  position: relative;
+  z-index: 3;
   font-family: var(--mono);
-  font-size: clamp(32px, 5vw, 56px);
+  font-size: clamp(36px, 6vw, 64px);
   font-weight: 800;
   color: #000;
-  letter-spacing: -2px;
-  margin-bottom: 16px;
-  line-height: 1.1;
+  letter-spacing: -3px;
+  margin-bottom: 20px;
+  line-height: 1.05;
+  text-transform: uppercase;
 }
 
 .cta-section .cta-sub {
-  font-size: 18px;
-  color: #333;
-  margin-bottom: 40px;
+  position: relative;
+  z-index: 3;
+  font-size: 20px;
+  color: #000;
+  opacity: 0.8;
+  margin-bottom: 48px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  font-weight: 500;
 }
 
 .btn-dark {
@@ -652,11 +707,10 @@ nav {
 }
 
 .btn-dark:hover {
-  background: transparent;
-  color: #000;
-  border-color: #000;
-  transform: translate(-3px,-3px);
-  box-shadow: 6px 6px 0 #000;
+  background: #000;
+  color: #fff;
+  transform: translate(-4px,-4px);
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.25);
 }
 
 /* ── FOOTER ── */
@@ -745,21 +799,181 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── INTERACTIVE COMPONENTS ── */
+
+/* WAVES CANVAS */
+#marketTopologyCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.6;
+}
+
+/* CUSTOM CURSOR */
+#customCursorOuter, #customCursorInner {
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 10000;
+  transition: transform 0.08s ease-out, opacity 0.3s;
+  mix-blend-mode: difference;
+}
+#customCursorOuter {
+  width: 20px; height: 20px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  margin-left: -10px; margin-top: -10px;
+}
+#customCursorInner {
+  width: 3px; height: 3px;
+  background: #fff;
+  border-radius: 50%;
+  margin-left: -1.5px; margin-top: -1.5px;
+}
+#customCursorOuter.hover { transform: scale(1.5); border-color: var(--cyan); background: rgba(0,229,204,0.1); }
+#customCursorOuter.click { transform: scale(0.9); }
+
+@media (pointer: coarse) {
+  #customCursorOuter, #customCursorInner { display: none; }
+}
+
+/* HERO GLITCH */
+.hero-title.glitch {
+  position: relative;
+}
+.hero-title.glitch::before, .hero-title.glitch::after {
+  content: 'STOCKAI';
+  position: absolute;
+  top: 0; left: 1px;
+  width: 100%; height: 100%;
+  clip: rect(0, 900px, 0, 0);
+  background: var(--bg);
+}
+.hero-title.glitch::before {
+  left: -2px;
+  text-shadow: 2px 0 var(--cyan);
+  animation: glitch-anim 2s infinite linear alternate-reverse;
+}
+.hero-title.glitch::after {
+  left: 2px;
+  text-shadow: -2px 0 var(--magenta);
+  animation: glitch-anim2 3s infinite linear alternate-reverse;
+}
+@keyframes glitch-anim {
+  0% { clip: rect(44px, 9999px, 56px, 0); }
+  20% { clip: rect(12px, 9999px, 86px, 0); }
+  40% { clip: rect(76px, 9999px, 12px, 0); }
+  60% { clip: rect(32px, 9999px, 64px, 0); }
+  80% { clip: rect(98px, 9999px, 22px, 0); }
+  100% { clip: rect(14px, 9999px, 88px, 0); }
+}
+@keyframes glitch-anim2 {
+  0% { clip: rect(65px, 9999px, 12px, 0); }
+  20% { clip: rect(87px, 9999px, 34px, 0); }
+  40% { clip: rect(12px, 9999px, 56px, 0); }
+  60% { clip: rect(44px, 9999px, 78px, 0); }
+  80% { clip: rect(90px, 9999px, 22px, 0); }
+  100% { clip: rect(21px, 9999px, 64px, 0); }
+}
+
+/* SCROLL PROGRESS BAR */
+#scrollProgressBar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  background: var(--lime);
+  z-index: 1001;
+  width: 0%;
+  transition: width 0.1s;
+}
+
+/* TYPEWRITER */
+.typewriter {
+  overflow: hidden;
+  border-right: .15em solid var(--lime);
+  white-space: nowrap;
+  letter-spacing: .15em;
+  animation: blink-caret .75s step-end infinite;
+}
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: var(--lime); }
+}
+
+/* FADE IN UP */
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+.fade-in-up.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* TERMINAL LOOP */
+#terminalLoop {
+  color: #555;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.4;
+  height: 100px;
+  overflow: hidden;
+  text-align: left;
+  user-select: none;
+}
+
+/* FEATURE TAGS */
+.feature-tag {
+  position: absolute;
+  top: 10px; right: 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.feature-card.active .feature-tag {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #marketTopologyCanvas, #customCursorOuter, #customCursorInner { display: none !important; }
+  .hero-title.glitch::before, .hero-title.glitch::after { display: none; }
+  .fade-in-up { opacity: 1; transform: none; transition: none; }
+}
 </style>
 </head>
 <body>
 
+<!-- PROGRESS BAR -->
+<div id="scrollProgressBar"></div>
+
+<!-- BACKGROUND CANVAS -->
+<canvas id="marketTopologyCanvas"></canvas>
+
 <!-- NAV -->
 <nav>
-  <a class="nav-logo" href="/">
-    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="border-radius:6px">
-      <rect width="32" height="32" fill="#c8f04a" rx="7"/>
-      <polyline points="4,24 10,14 16,18 22,8 28,12" fill="none" stroke="#000" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="28" cy="12" r="2.2" fill="#000"/>
-    </svg>
-    StockAI
-  </a>
-  <a class="nav-cta" href="/app">Launch App →</a>
+  <div style="display:flex; align-items:center; gap:40px">
+    <a class="nav-logo" href="/">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="border-radius:6px">
+        <rect width="32" height="32" fill="#c8f04a" rx="7"/>
+        <polyline points="4,24 10,14 16,18 22,8 28,12" fill="none" stroke="#000" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="28" cy="12" r="2.2" fill="#000"/>
+      </svg>
+      StockAI
+    </a>
+    <div class="nav-links">
+      <a href="/" class="nav-link active">LANDING</a>
+      <a href="/workspace" class="nav-link">WORKSPACE</a>
+      <a href="/app" class="nav-link">SIMULATION CONSOLE</a>
+      <a href="/live-market" class="nav-link">LIVE MONITOR</a>
+    </div>
+  </div>
+  <a class="nav-cta" href="/app">LAUNCH APP →</a>
 </nav>
 
 <!-- TICKER STRIP -->
@@ -770,19 +984,18 @@ footer {
 <!-- HERO -->
 <section class="hero">
   <div class="hero-badge">AI-Powered · Real-time · Free</div>
-  <h1 class="hero-title">
+  <h1 class="hero-title" id="heroTitle">
     <span class="word-stock">STOCK</span><span class="word-ai">AI</span>
   </h1>
-  <div class="hero-version">VERSION 2.0</div>
-  <p class="hero-sub">
-    A <strong>synthetic US equities research platform</strong> for studying LLM agent behavior under controlled market conditions. 
-    Calibrate datasets, inject scenarios, benchmark strategies, and then promote the strongest bots into a 
-    <strong>US EQUITIES deployment surface</strong> for live-market monitoring.
+  <div class="hero-version" id="heroVersion"></div>
+  <p class="hero-sub" id="heroSub" style="max-width: 800px; margin-left: auto; margin-right: auto;">
+    StockAI is a <strong>comprehensive research ecosystem</strong> designed to study the complex interplay between <strong>LLM-driven agents</strong> and evolving market conditions. 
+    By combining a high-fidelity simulation engine with real-world performance monitoring, we enable researchers to calibrate multi-asset datasets, inject <strong>custom macro-regimes</strong>, and benchmark <strong>autonomous strategies</strong> with extreme precision before graduating them into the <strong>live monitor</strong>.
   </p>
   <div class="hero-buttons">
     <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;width:100%">
       <a class="btn-secondary" href="/workspace">OPEN RESEARCH WORKSPACE</a>
-      <a class="btn-secondary" href="/live-market">OPEN US EQUITIES</a>
+      <a class="btn-secondary" href="/live-market">OPEN LIVE MONITOR</a>
       <a class="btn-primary" href="/app">OPEN SIMULATOR</a>
     </div>
     <div style="display:flex;justify-content:center;width:100%;margin-top:16px">
@@ -846,7 +1059,6 @@ footer {
       <div class="surface-card">
         <div class="surface-head">
           <div class="surface-title">Tracked Tape Preview</div>
-          <div class="surface-live">LIVE</div>
         </div>
         <div class="surface-list" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
           <div class="surface-row">
@@ -909,19 +1121,19 @@ footer {
 <div class="section" style="padding-top:0;padding-bottom:0">
   <div class="stats-row">
     <div class="stat-card">
-      <span class="stat-num">26</span>
+      <span class="stat-num" data-target="26">0</span>
       <span class="stat-label">AI Agents</span>
     </div>
     <div class="stat-card">
-      <span class="stat-num">30+</span>
+      <span class="stat-num" data-target="25">0</span>
       <span class="stat-label">Stocks</span>
     </div>
     <div class="stat-card">
-      <span class="stat-num">6</span>
+      <span class="stat-num" data-target="6">0</span>
       <span class="stat-label">Sectors</span>
     </div>
     <div class="stat-card">
-      <span class="stat-num">∞</span>
+      <span class="stat-num" data-target="1000000">0</span>
       <span class="stat-label">Possibilities</span>
     </div>
   </div>
@@ -935,49 +1147,71 @@ footer {
 
   <div class="features-grid">
     <div class="feature-card" style="--accent-color:var(--lime)">
-      <span class="feature-icon">🤖</span>
+      <div class="feature-marker"></div>
       <div class="feature-name">LLM-Driven Agents</div>
       <p class="feature-desc">Each agent is powered by Groq's Llama 3.3. They read market events, form opinions, debate in a forum, and trade autonomously.</p>
     </div>
     <div class="feature-card" style="--accent-color:var(--cyan)">
-      <span class="feature-icon">📊</span>
+      <div class="feature-marker"></div>
       <div class="feature-name">Live WebSocket Feed</div>
       <p class="feature-desc">Price ticks, trade executions, and market events stream live via WebSocket. Every session is visible in real time.</p>
     </div>
     <div class="feature-card" style="--accent-color:var(--magenta)">
-      <span class="feature-icon">🏦</span>
+      <div class="feature-marker"></div>
       <div class="feature-name">Order Book Engine</div>
       <p class="feature-desc">A full limit-order matching engine with bid/ask queues, partial fills, and market orders. Real microstructure.</p>
     </div>
     <div class="feature-card" style="--accent-color:var(--yellow)">
-      <span class="feature-icon">⚡</span>
+      <div class="feature-marker"></div>
       <div class="feature-name">Circuit Breakers</div>
       <p class="feature-desc">Stocks that move more than 10% in a session are automatically halted — just like real exchanges.</p>
     </div>
     <div class="feature-card" style="--accent-color:var(--lime)">
-      <span class="feature-icon">🔗</span>
+      <div class="feature-marker"></div>
       <div class="feature-name">Sector Correlation</div>
       <p class="feature-desc">Price moves ripple across sectors based on a real correlation matrix. Tech and Finance move together; Energy stands apart.</p>
     </div>
     <div class="feature-card" style="--accent-color:var(--cyan)">
-      <span class="feature-icon">💬</span>
+      <div class="feature-marker"></div>
       <div class="feature-name">Agent Forum</div>
       <p class="feature-desc">Agents post bullish/bearish opinions each day. Watch the sentiment shift as events unfold and positions change.</p>
     </div>
     <div class="feature-card" style="--accent-color:var(--magenta)">
-      <span class="feature-icon">🏆</span>
+      <div class="feature-marker"></div>
       <div class="feature-name">Portfolio Race</div>
       <p class="feature-desc">A live leaderboard races agent portfolios over time. See who compounds the fastest — and who blows up.</p>
     </div>
     <div class="feature-card" style="--accent-color:var(--yellow)">
-      <span class="feature-icon">🔔</span>
+      <div class="feature-marker"></div>
       <div class="feature-name">Price Alerts</div>
       <p class="feature-desc">Set target prices for any stock. Get instant notifications when agents push prices through your thresholds.</p>
     </div>
     <div class="feature-card" style="--accent-color:var(--lime)">
-      <span class="feature-icon">🧠</span>
+      <div class="feature-marker"></div>
       <div class="feature-name">Explainability</div>
       <p class="feature-desc">Inspect every agent's decision logic, bias distribution, win rate, and maximum drawdown. Full transparency.</p>
+    </div>
+  </div>
+</section>
+
+<!-- STATS ROW -->
+<section class="section" style="padding-top:0">
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-num" data-target="1250">0</span>
+      <span class="stat-label">Daily Trades</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num" data-target="54">0</span>
+      <span class="stat-label">Mean Accuracy</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num" data-target="10">0</span>
+      <span class="stat-label">Agent Personas</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num" data-target="6">0</span>
+      <span class="stat-label">Market Regimes</span>
     </div>
   </div>
 </section>
@@ -1023,19 +1257,22 @@ footer {
   </div>
 </section>
 
-<!-- CTA -->
-<div class="cta-section">
-  <div class="cta-title">Ready to watch<br>AI trade?</div>
-  <p class="cta-sub">No sign-up. No credit card. Just launch and run.</p>
-  <a class="btn-dark" href="/app">▶ Open the Simulator</a>
-</div>
+<!-- CTA SECTION -->
+<section class="cta-section">
+  
+  <h2 class="cta-title">Ready to out-trade the simulation?</h2>
+  <p class="cta-sub">Join the next generation of quantitative researchers building with StockAI.</p>
+  <a class="btn-dark" href="/app">Get Started for Free →</a>
+</section>
 
 <!-- FOOTER -->
 <footer>
-  <div class="footer-logo">StockAI v2.0</div>
-  <div class="footer-note">Built with FastAPI · Groq Llama 3.3 · Chart.js · Vanilla JS</div>
-  <div class="footer-note" style="color:#333">© 2026</div>
+  <div class="footer-logo">STOCKAI</div>
+  <div class="footer-note">© 2026 Advanced AI Market Systems. Experimental v2.0 Platform.</div>
 </footer>
+
+<div id="customCursorOuter"></div>
+<div id="customCursorInner"></div>
 
 <script>
 // ── Fake ticker data ──
@@ -1103,9 +1340,178 @@ function updatePreviewChartLive() {
   buildPreviewChart();
 }
 
+
 buildTicker();
 buildPreviewChart();
 setInterval(updatePreviewChartLive, 1000);
+
+// ── MARKET TOPOLOGY WAVES ──
+const canvas = document.getElementById('marketTopologyCanvas');
+const ctx = canvas.getContext('2d');
+let width, height, waves = [];
+let mouse = { x: -1000, y: -1000 };
+
+function initWaves() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+  waves = [];
+  for (let i = 0; i < 6; i++) {
+    waves.push({
+      y: height / 2 + (Math.random() - 0.5) * 200,
+      length: 0.002 + Math.random() * 0.005,
+      amplitude: 20 + Math.random() * 60,
+      frequency: 0.01 + Math.random() * 0.03,
+      drift: Math.random() * 100,
+      color: `rgba(200, 240, 74, ${0.05 + Math.random() * 0.1})`
+    });
+  }
+}
+
+function animateWaves() {
+  ctx.clearRect(0, 0, width, height);
+  waves.forEach(w => {
+    ctx.beginPath();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = w.color;
+    for (let i = 0; i < width; i++) {
+      let dx = i - mouse.x;
+      let dy = (w.y + Math.sin(i * w.length + w.drift) * w.amplitude) - mouse.y;
+      let dist = Math.sqrt(dx*dx + dy*dy);
+      let warp = Math.max(0, (150 - dist) / 150) * 40;
+      
+      let x = i;
+      let y = w.y + Math.sin(i * w.length + w.drift) * w.amplitude - (dy / dist * warp || 0);
+      
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    w.drift += w.frequency;
+  });
+  requestAnimationFrame(animateWaves);
+}
+
+window.addEventListener('resize', initWaves);
+window.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
+initWaves();
+animateWaves();
+
+// ── CUSTOM CURSOR ──
+document.addEventListener('DOMContentLoaded', () => {
+    const cursorOuter = document.getElementById('customCursorOuter');
+    const cursorInner = document.getElementById('customCursorInner');
+    let curX = window.innerWidth / 2, curY = window.innerHeight / 2;
+    let targetX = curX, targetY = curY;
+
+    window.addEventListener('mousemove', e => {
+        targetX = e.clientX;
+        targetY = e.clientY;
+    });
+
+    function animateCursor() {
+  curX += (targetX - curX) * 0.15;
+  curY += (targetY - curY) * 0.15;
+  cursorOuter.style.transform = `translate(${curX}px, ${curY}px)`;
+  cursorInner.style.transform = `translate(${targetX}px, ${targetY}px)`;
+  document.documentElement.classList.add('custom-cursor-active');
+  requestAnimationFrame(animateCursor);
+}
+    animateCursor();
+
+    const updateHovers = () => {
+        document.querySelectorAll('a, button, [onclick], .feature-card').forEach(el => {
+            if (el.dataset.cursorBound) return;
+            el.dataset.cursorBound = "true";
+            el.addEventListener('mouseenter', () => {
+                cursorOuter.classList.add('hover');
+                cursorInner.classList.add('hover');
+            });
+            el.addEventListener('mouseleave', () => {
+                cursorOuter.classList.remove('hover');
+                cursorInner.classList.remove('hover');
+            });
+        });
+    };
+    updateHovers();
+    setInterval(updateHovers, 1000);
+
+    window.addEventListener('mousedown', () => cursorOuter.classList.add('click'));
+    window.addEventListener('mouseup', () => cursorOuter.classList.remove('click'));
+
+    // ── SCROLL OBSERVERS ──
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+          if (entry.target.classList.contains('stat-num') && !entry.target.dataset.animated) {
+            entry.target.dataset.animated = "true";
+            animateCounter(entry.target);
+          }
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in-up, .feature-card, .stat-num').forEach(el => observer.observe(el));
+    
+    typewriterEffect(document.getElementById('heroVersion'), 'VERSION 2.0', 150);
+});
+
+function animateCounter(el) {
+  const targetStr = el.getAttribute('data-target');
+  if (!targetStr) return;
+  const target = parseInt(targetStr.replace(/,/g, ''));
+  if (isNaN(target)) return;
+  
+  const duration = 2500;
+  const startTime = performance.now();
+  
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeProgress = 1 - Math.pow(1 - progress, 4);
+    
+    const currentCount = Math.floor(easeProgress * target);
+    
+    if (target >= 1000000) {
+      el.innerText = progress > 0.9 ? '1M+' : (currentCount / 1000).toFixed(0) + 'K';
+    } else if (target >= 1000) {
+      el.innerText = currentCount.toLocaleString() + '+';
+    } else if (el.nextElementSibling && el.nextElementSibling.textContent.includes('Accuracy')) {
+      el.innerText = currentCount + '%';
+    } else {
+      el.innerText = currentCount;
+    }
+    
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    } else {
+      if (target >= 1000000) el.innerText = '1M+';
+      else if (target >= 1000) el.innerText = target.toLocaleString() + '+';
+      else if (el.nextElementSibling && el.nextElementSibling.textContent.includes('Accuracy')) el.innerText = target + '%';
+      else el.innerText = target;
+    }
+  }
+  requestAnimationFrame(update);
+}
+
+// ── PROGRESS BAR ──
+window.addEventListener('scroll', () => {
+  const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+  const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+  const scrolled = (winScroll / height) * 100;
+  document.getElementById("scrollProgressBar").style.width = scrolled + "%";
+});
+
+
+// ── HERO GLITCH ──
+setInterval(() => {
+  const title = document.getElementById('heroTitle');
+  title.classList.add('glitch');
+  setTimeout(() => title.classList.remove('glitch'), 500);
+}, 4000);
 </script>
 </body>
 </html>

@@ -49,6 +49,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Lowercase repository owner
+        run: |
+          echo "OWNER_LC=${OWNER,,}" >>${GITHUB_ENV}
+        env:
+          OWNER: '${{ github.repository_owner }}'
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -62,11 +68,11 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/stockai:latest
-            ghcr.io/${{ github.repository_owner }}/stockai:${{ github.sha }}
+            ghcr.io/${{ env.OWNER_LC }}/stockai:latest
+            ghcr.io/${{ env.OWNER_LC }}/stockai:${{ github.sha }}
 
       - name: Confirm
-        run: echo "Image pushed → ghcr.io/${{ github.repository_owner }}/stockai:${{ github.sha }}"
+        run: echo "Image pushed → ghcr.io/${{ env.OWNER_LC }}/stockai:${{ github.sha }}"
 
       # ── Optional: deploy to Google Cloud Run ──────────────────────────────
       # Uncomment and add GCP_SERVICE_ACCOUNT_KEY secret to enable:
@@ -76,4 +82,4 @@ jobs:
       #   with:
       #     service: stockai
       #     region: us-central1
-      #     image: ghcr.io/${{ github.repository_owner }}/stockai:${{ github.sha }}
+      #     image: ghcr.io/${{ env.OWNER_LC }}/stockai:${{ github.sha }}

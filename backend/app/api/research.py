@@ -428,6 +428,15 @@ async def export_run_bundle(run_id: str):
     }
 
 
+@router.get("/runs/{run_id}/replay")
+async def get_run_replay(run_id: str):
+    """Fetch structured event timeline for simulation playback."""
+    _require_record("runs", run_id, "Run")
+    events = state.research_store.list_run_events(run_id)
+    # Return all events for the run; frontend will filter/handle empty state
+    return events
+
+
 @router.get("/runs/{run_id}/stream")
 async def stream_run_events(run_id: str, after_sequence: int = 0):
     _require_record("runs", run_id, "Run")

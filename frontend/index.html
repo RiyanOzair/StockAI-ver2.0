@@ -46,6 +46,10 @@ html, body {
   overflow: hidden;
 }
 
+.custom-cursor-active, .custom-cursor-active * {
+  cursor: none !important;
+}
+
 :focus-visible{outline:2px solid var(--cyan);outline-offset:2px}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 
 /* ═══════════════════════════════════════════
@@ -143,6 +147,34 @@ html, body {
 .nav-link:hover { color: var(--white); background: var(--bg3); }
 .nav-link.active { color: var(--lime); border-left-color: var(--lime); background: var(--bg3); }
 .nav-icon { font-size: 14px; }
+
+/* CUSTOM CURSOR */
+#customCursorOuter, #customCursorInner {
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 10000;
+  transition: transform 0.08s ease-out, opacity 0.3s;
+  mix-blend-mode: difference;
+}
+#customCursorOuter {
+  width: 20px; height: 20px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  margin-left: -10px; margin-top: -10px;
+}
+#customCursorInner {
+  width: 3px; height: 3px;
+  background: #fff;
+  border-radius: 50%;
+  margin-left: -1.5px; margin-top: -1.5px;
+}
+#customCursorOuter.hover { transform: scale(1.5); border-color: var(--cyan); background: rgba(56,189,248,0.1); }
+#customCursorOuter.click { transform: scale(0.9); }
+
+@media (pointer: coarse) {
+  #customCursorOuter, #customCursorInner { display: none; }
+}
 
 .sidebar-controls {
   padding: 12px 16px;
@@ -1225,6 +1257,9 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
       <a class="nav-link" data-page="explainability" onclick="nav('explainability')">
         <span class="nav-icon">◆</span> Explainability
       </a>
+      <a class="nav-link" data-page="replay" onclick="nav('replay')">
+        <span class="nav-icon">⟳</span> Replay
+      </a>
       <a class="nav-link" data-page="settings" onclick="nav('settings')">
         <span class="nav-icon">≡</span> Settings
       </a>
@@ -1404,6 +1439,81 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
           </div>
           <div id="snapshot-info" style="margin-top:10px;display:none">
             <div class="grid-3" style="gap:8px;margin-top:8px" id="snapshot-cards"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════
+         PAGE: REPLAY
+    ════════════════════════════════════════ -->
+    <div id="page-replay" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Simulation Replay</div>
+          <div class="page-sub">Scrub through history to audit agent decisions &amp; market dynamics</div>
+        </div>
+        <div class="inline-flex">
+          <button class="btn btn-ghost" id="replay-play-btn" onclick="toggleReplayPlayback()">▶ Play</button>
+          <select id="replay-speed" style="width:80px" onchange="setReplaySpeed(this.value)">
+            <option value="1">1x</option>
+            <option value="2" selected>2x</option>
+            <option value="5">5x</option>
+            <option value="10">10x</option>
+          </select>
+        </div>
+      </div>
+      <div class="page-content">
+        
+        <!-- Replay Scrubber -->
+        <div class="card yellow" style="margin-bottom:20px">
+          <div class="card-title">Timeline Scrubber</div>
+          <div class="slider-row">
+            <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">Step</span>
+            <input type="range" id="replay-scrubber" min="0" max="0" value="0" oninput="scrubReplay(this.value)">
+            <span class="range-val" id="replay-step-label">0 / 0</span>
+          </div>
+          <div id="replay-meta" style="margin-top:8px;font-family:var(--mono);font-size:11px;color:var(--cyan)">
+            Selected: <span id="replay-day-val">—</span> | Session: <span id="replay-session-val">—</span> | Phase: <span id="replay-phase-val">—</span>
+          </div>
+        </div>
+
+        <div id="replay-empty-state" class="card" style="display:none;padding:40px;text-align:center;border-color:var(--red)">
+            <h3 style="color:var(--red);font-family:var(--mono);margin-bottom:10px">REPLAY DATA UNAVAILABLE</h3>
+            <p style="font-size:13px;color:var(--muted);font-family:var(--mono)">THIS RUN WAS RECORDED BEFORE REPLAY SUPPORT WAS ADDED. START A NEW SIMULATION TO USE REPLAY.</p>
+        </div>
+
+        <div id="replay-main-content">
+          <!-- Price Table & Sentiment Heatmap -->
+          <div class="grid-2" style="margin-bottom:16px">
+            <div class="card cyan">
+              <div class="card-title">Market Prices at Step</div>
+              <div class="tbl-wrap">
+                <table id="replay-price-table">
+                  <thead>
+                    <tr><th>Stock</th><th>Price</th><th>Regime</th></tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="card magenta">
+              <div class="card-title">Agent Sentiment Heatbar</div>
+              <div id="replay-sentiment-grid" style="display:grid;gap:8px"></div>
+            </div>
+          </div>
+
+          <!-- Decision Feed & Events -->
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-title">Agent Decisions Audit</div>
+              <div class="feed" id="replay-decision-feed" style="max-height:400px"></div>
+            </div>
+            <div class="card yellow">
+              <div class="card-title">Session Events &amp; Log</div>
+              <div class="feed" id="replay-event-feed" style="max-height:400px"></div>
+            </div>
           </div>
         </div>
 
@@ -2052,6 +2162,7 @@ function nav(page) {
   if (page === 'agents' && agents.length) { setTimeout(loadRaceChart, 300); }
   if (page === 'agents')         { loadAgents(); loadLoans(); }
   if (page === 'explainability') { loadExplainabilityPage(); }
+  if (page === 'replay')         { loadReplayPage(); }
 }
 
 window.addEventListener('hashchange', () => {
@@ -4553,7 +4664,38 @@ function renderComparePanel() {
     </div>`;
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
+
+// ── CUSTOM CURSOR ──
+const cursorOuter = document.getElementById('customCursorOuter');
+const cursorInner = document.getElementById('customCursorInner');
+let curX = 0, curY = 0, targetX = 0, targetY = 0;
+
+window.addEventListener('mousemove', e => {
+    targetX = e.clientX;
+    targetY = e.clientY;
+});
+
+function animateCursor() {
+    curX += (targetX - curX) * 0.15;
+    curY += (targetY - curY) * 0.15;
+    cursorOuter.style.transform = `translate(${curX}px, ${curY}px)`;
+    cursorInner.style.transform = `translate(${targetX}px, ${targetY}px)`;
+    requestAnimationFrame(animateCursor);
+}
+animateCursor();
+
+document.querySelectorAll('a, button, [onclick], .nav-link, .ctrl-btn, .quickrun-btn').forEach(el => {
+    el.addEventListener('mouseenter', () => cursorOuter.classList.add('hover'));
+    el.addEventListener('mouseleave', () => cursorOuter.classList.remove('hover'));
+});
+
+window.addEventListener('mousedown', () => cursorOuter.classList.add('click'));
+window.addEventListener('mouseup', () => cursorOuter.classList.remove('click'));
 </script>
+
+<div id="customCursorOuter"></div>
+<div id="customCursorInner"></div>
+
 </body>
 </html>
 <style>
@@ -4776,4 +4918,270 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+/* ═══════════════════════════════════════════
+   SIMULATION REPLAY FEATURE
+═══════════════════════════════════════════ */
+let replayEvents = [];
+let replayTimeline = [];
+let replayIsPlaying = false;
+let replaySpeed = 2;
+let replayStepIndex = 0;
+let replayTimer = null;
+
+async function loadReplayPage() {
+    const runId = activeRunId || state.run_id;
+    if (!runId) {
+        showReplayUI(false, "NO ACTIVE RUN DETECTED. START A SIMULATION FIRST.");
+        return;
+    }
+    
+    // Fetch replay data
+    toast("Loading replay timeline...", "var(--cyan)");
+    const data = await apiFetch(`/runs/${runId}/replay`);
+    if (!data || data.length === 0) {
+        showReplayUI(false, "THIS RUN WAS RECORDED BEFORE REPLAY SUPPORT WAS ADDED. START A NEW SIMULATION TO USE REPLAY.");
+        return;
+    }
+    
+    handleReplayData(data);
+}
+
+function showReplayUI(hasData, errorMsg = "") {
+    const emptyState = document.getElementById('replay-empty-state');
+    const mainContent = document.getElementById('replay-main-content');
+    
+    if (hasData) {
+        emptyState.style.display = 'none';
+        mainContent.style.display = 'block';
+    } else {
+        emptyState.style.display = 'block';
+        mainContent.style.display = 'none';
+        if (errorMsg) {
+            emptyState.querySelector('p').textContent = errorMsg;
+        }
+    }
+}
+
+function handleReplayData(events) {
+    replayEvents = events;
+    
+    // Build timeline from market_snapshots and phase transitions
+    const steps = [];
+    const seen = new Set();
+    
+    events.forEach(ev => {
+        if (ev.event_type === 'market_snapshot' || ev.event_type === 'phase_start') {
+            const phase = ev.event_type === 'market_snapshot' ? 'snapshot' : (ev.payload?.phase || 'start');
+            const key = `${ev.day}-${ev.session}-${phase}`;
+            if (!seen.has(key)) {
+                steps.push({
+                    day: ev.day,
+                    session: ev.session,
+                    phase: phase,
+                    timestamp: ev.created_at,
+                    snapshot: ev.event_type === 'market_snapshot' ? ev.payload : null
+                });
+                seen.add(key);
+            }
+        }
+    });
+    
+    // Sort steps by day, session
+    steps.sort((a, b) => a.day !== b.day ? a.day - b.day : a.session - b.session);
+    
+    if (steps.length === 0) {
+        showReplayUI(false, "THIS RUN WAS RECORDED BEFORE REPLAY SUPPORT WAS ADDED. START A NEW SIMULATION TO USE REPLAY.");
+        return;
+    }
+
+    replayTimeline = steps;
+    showReplayUI(true);
+    
+    const scrubber = document.getElementById('replay-scrubber');
+    scrubber.max = steps.length - 1;
+    scrubber.value = 0;
+    
+    replayStepIndex = 0;
+    renderReplayStep(0);
+}
+
+function scrubReplay(val) {
+    replayStepIndex = parseInt(val);
+    renderReplayStep(replayStepIndex);
+}
+
+function toggleReplayPlayback() {
+    replayIsPlaying = !replayIsPlaying;
+    const btn = document.getElementById('replay-play-btn');
+    btn.textContent = replayIsPlaying ? "⏸ Pause" : "▶ Play";
+    if (replayIsPlaying) playNextReplayStep();
+}
+
+function setReplaySpeed(val) {
+    replaySpeed = parseInt(val);
+}
+
+function playNextReplayStep() {
+    if (!replayIsPlaying) return;
+    if (replayStepIndex >= replayTimeline.length - 1) {
+        replayIsPlaying = false;
+        document.getElementById('replay-play-btn').textContent = "▶ Play";
+        return;
+    }
+    
+    replayStepIndex++;
+    document.getElementById('replay-scrubber').value = replayStepIndex;
+    renderReplayStep(replayStepIndex);
+    
+    setTimeout(playNextReplayStep, 1000 / replaySpeed);
+}
+
+function renderReplayStep(idx) {
+    const step = replayTimeline[idx];
+    if (!step) return;
+    
+    document.getElementById('replay-step-label').textContent = `${idx + 1} / ${replayTimeline.length}`;
+    document.getElementById('replay-day-val').textContent = step.day;
+    document.getElementById('replay-session-val').textContent = step.session;
+    document.getElementById('replay-phase-val').textContent = step.phase;
+    
+    // Find the latest snapshot up to this point
+    let lastSnap = step.snapshot;
+    if (!lastSnap) {
+        for (let i = idx; i >= 0; i--) {
+            if (replayTimeline[i].snapshot) {
+                lastSnap = replayTimeline[i].snapshot;
+                break;
+            }
+        }
+    }
+    
+    // 1. Render Prices
+    const priceTable = document.getElementById('replay-price-table').querySelector('tbody');
+    priceTable.innerHTML = '';
+    if (lastSnap && lastSnap.prices) {
+        Object.entries(lastSnap.prices).forEach(([sym, p]) => {
+            priceTable.innerHTML += `<tr>
+                <td><strong>${sym}</strong></td>
+                <td style="color:var(--cyan)">${fmtMoney(p)}</td>
+                <td style="color:var(--muted);font-size:10px">${lastSnap.regime || '—'}</td>
+            </tr>`;
+        });
+    } else {
+        priceTable.innerHTML = '<tr><td colspan="3" class="empty">No price data at this step</td></tr>';
+    }
+    
+    // 2. Filter Events and Decisions for this specific day/session
+    const currentEvents = replayEvents.filter(e => e.day === step.day && e.session === step.session);
+    
+    // 3. Render Decisions feed
+    const decisionFeed = document.getElementById('replay-decision-feed');
+    decisionFeed.innerHTML = '';
+    const decisions = currentEvents.filter(e => e.event_type === 'agent_decision');
+    if (decisions.length) {
+        decisions.forEach(d => {
+            const p = d.payload;
+            const sideCls = p.action === 'BUY' ? 'buy' : p.action === 'SELL' ? 'sell' : 'hold';
+            decisionFeed.innerHTML += `<div class="feed-item">
+                <div class="feed-item-header">
+                    <span class="badge ${sideCls}">${p.action}</span>
+                    <span class="feed-item-name">${escHtml(p.agent_name)}</span>
+                    <span class="feed-item-day">${p.stock}</span>
+                </div>
+                <div class="feed-item-body" style="font-size:11px;color:var(--muted)">${escHtml(p.reasoning)}</div>
+                <div class="feed-item-sub">Qty: ${p.quantity} | P: ${fmtMoney(p.price)}</div>
+            </div>`;
+        });
+    } else {
+        decisionFeed.innerHTML = '<div class="empty">No decisions recorded in this session</div>';
+    }
+    
+    // 4. Render Sentiment Heatbars
+    const sentimentGrid = document.getElementById('replay-sentiment-grid');
+    sentimentGrid.innerHTML = '';
+    if (decisions.length) {
+        const agentSentiment = {};
+        decisions.forEach(d => {
+            agentSentiment[d.payload.agent_name] = d.payload.bias;
+        });
+        
+        Object.entries(agentSentiment).forEach(([name, bias]) => {
+            const hasBias = bias !== undefined && bias !== null;
+            const bVal = hasBias ? bias : 0;
+            const color = !hasBias ? '#444' : (bVal > 0 ? `rgba(74,222,128,${Math.abs(bVal)})` : `rgba(248,113,113,${Math.abs(bVal)})`);
+            
+            sentimentGrid.innerHTML += `<div>
+                <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:2px">
+                    <span>${escHtml(name)}</span>
+                    <span>${hasBias ? bVal.toFixed(2) : 'N/A'}</span>
+                </div>
+                <div style="height:4px;background:#222;border-radius:2px;overflow:hidden">
+                    <div style="height:100%;width:${(hasBias ? Math.abs(bVal) : 1) * 100}%;background:${color};margin-left:${bVal < 0 ? 0 : 'auto'}"></div>
+                </div>
+            </div>`;
+        });
+    } else {
+        sentimentGrid.innerHTML = '<div class="empty">No sentiment data</div>';
+    }
+    
+    // 5. Render Events log
+    const eventFeed = document.getElementById('replay-event-feed');
+    eventFeed.innerHTML = '';
+    const logs = currentEvents.filter(e => !['market_snapshot', 'agent_decision', 'phase_start'].includes(e.event_type));
+    if (logs.length) {
+        logs.forEach(l => {
+            eventFeed.innerHTML += `<div class="feed-item" style="padding:4px 0;border-bottom:none">
+                <span style="color:var(--muted);font-size:10px">[${l.event_type.toUpperCase().replace('_', ' ')}]</span>
+                <span style="font-size:11px">${escHtml(JSON.stringify(l.payload).slice(0, 100))}...</span>
+            </div>`;
+        });
+    } else {
+        eventFeed.innerHTML = '<div class="empty">No other events recorded</div>';
+    }
+}
 </script>
+
+<div id="customCursorOuter"></div>
+<div id="customCursorInner"></div>
+
+<script>
+// ── CUSTOM CURSOR ──
+document.addEventListener('DOMContentLoaded', () => {
+    const cursorOuter = document.getElementById('customCursorOuter');
+    const cursorInner = document.getElementById('customCursorInner');
+    let curX = window.innerWidth / 2, curY = window.innerHeight / 2;
+    let targetX = curX, targetY = curY;
+
+    window.addEventListener('mousemove', e => {
+        targetX = e.clientX;
+        targetY = e.clientY;
+    });
+
+    function animateCursor() {
+        curX += (targetX - curX) * 0.15;
+        curY += (targetY - curY) * 0.15;
+        cursorOuter.style.transform = `translate(${curX}px, ${curY}px)`;
+        cursorInner.style.transform = `translate(${targetX}px, ${targetY}px)`;
+        document.documentElement.classList.add('custom-cursor-active');
+        requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    const updateHovers = () => {
+        document.querySelectorAll('a, button, [onclick], .nav-link, .ctrl-btn, .quickrun-btn').forEach(el => {
+            if (el.dataset.cursorBound) return;
+            el.dataset.cursorBound = "true";
+            el.addEventListener('mouseenter', () => cursorOuter.classList.add('hover'));
+            el.addEventListener('mouseleave', () => cursorOuter.classList.remove('hover'));
+        });
+    };
+    updateHovers();
+    setInterval(updateHovers, 1000);
+
+    window.addEventListener('mousedown', () => cursorOuter.classList.add('click'));
+    window.addEventListener('mouseup', () => cursorOuter.classList.remove('click'));
+});
+</script>
+</body>
+</html>

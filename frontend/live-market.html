@@ -8,7 +8,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>StockAI - US Equities Deployment Layer</title>
+<title>StockAI - Live Performance Monitor</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23c8f04a' rx='7'/%3E%3Cpolyline points='4,24 10,14 16,18 22,8 28,12' fill='none' stroke='%23000' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='28' cy='12' r='2.2' fill='%23000'/%3E%3C/svg%3E" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -44,6 +44,10 @@ body {
   color: var(--text);
   font-family: var(--sans);
   min-height: 100vh;
+}
+
+.custom-cursor-active, .custom-cursor-active * {
+  cursor: none !important;
 }
 
 body::before {
@@ -691,6 +695,34 @@ main {
 .pulse-anim-red { animation: pRed 2s 2; }
 @keyframes pGreen { 0% { box-shadow: 0 0 0 0 rgba(0, 229, 204, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0, 229, 204, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 229, 204, 0); } }
 @keyframes pRed { 0% { box-shadow: 0 0 0 0 rgba(228, 53, 75, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(228, 53, 75, 0); } 100% { box-shadow: 0 0 0 0 rgba(228, 53, 75, 0); } }
+
+/* CUSTOM CURSOR */
+#customCursorOuter, #customCursorInner {
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 10000;
+  transition: transform 0.08s ease-out, opacity 0.3s;
+  mix-blend-mode: difference;
+}
+#customCursorOuter {
+  width: 20px; height: 20px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  margin-left: -10px; margin-top: -10px;
+}
+#customCursorInner {
+  width: 3px; height: 3px;
+  background: #fff;
+  border-radius: 50%;
+  margin-left: -1.5px; margin-top: -1.5px;
+}
+#customCursorOuter.hover { transform: scale(1.5); border-color: var(--cyan); background: rgba(0,217,192,0.1); }
+#customCursorOuter.click { transform: scale(0.9); }
+
+@media (pointer: coarse) {
+  #customCursorOuter, #customCursorInner { display: none; }
+}
 </style>
 </head>
 <body>
@@ -705,20 +737,20 @@ main {
         </svg>
         StockAI
       </a>
-      <div class="nav-chip">US EQUITIES DEPLOYMENT LAYER</div>
+      <div class="nav-chip">LIVE PERFORMANCE MONITOR</div>
     </div>
     <div class="nav-right">
-      <a class="nav-btn" href="/">HOME</a>
+      <a class="nav-btn" href="/">LANDING</a>
       <a class="nav-btn" href="/workspace">WORKSPACE</a>
-      <a class="nav-btn" href="/app">OPEN SIMULATOR</a>
-      <button class="nav-btn" id="refresh-btn" type="button">REFRESH TAPE</button>
+      <a class="nav-btn" href="/app">SIMULATION CONSOLE</a>
+      <a class="nav-btn active" href="/live-market">LIVE MONITOR</a>
     </div>
   </nav>
 
   <main>
     <section class="hero-grid">
       <div class="panel magenta reveal">
-        <div class="eyebrow">US EQUITIES LAYER</div>
+        <div class="eyebrow">LIVE PERFORMANCE MONITOR</div>
         <h1 class="hero-title">STOCK<span>AI</span> tracks the deployment tape.</h1>
         <p class="hero-copy">
           This screen pulls in <strong>free real-world market data</strong>, then frames it against StockAI's
@@ -1393,8 +1425,45 @@ document.addEventListener('DOMContentLoaded', () => {
       kbd.style.display = 'none';
     }
   });
+
+  // ── CUSTOM CURSOR ──
+  const cursorOuter = document.getElementById('customCursorOuter');
+  const cursorInner = document.getElementById('customCursorInner');
+  let curX = window.innerWidth / 2, curY = window.innerHeight / 2;
+  let targetX = curX, targetY = curY;
+
+  window.addEventListener('mousemove', e => {
+    targetX = e.clientX;
+    targetY = e.clientY;
+  });
+
+  function animateCursor() {
+    curX += (targetX - curX) * 0.15;
+    curY += (targetY - curY) * 0.15;
+    cursorOuter.style.transform = `translate(${curX}px, ${curY}px)`;
+    cursorInner.style.transform = `translate(${targetX}px, ${targetY}px)`;
+    document.documentElement.classList.add('custom-cursor-active');
+    requestAnimationFrame(animateCursor);
+  }
+  animateCursor();
+
+  const updateHovers = () => {
+    document.querySelectorAll('a, button, [onclick], .nav-btn, .hero-btn, .pill').forEach(el => {
+      if (el.dataset.cursorBound) return;
+      el.dataset.cursorBound = "true";
+      el.addEventListener('mouseenter', () => cursorOuter.classList.add('hover'));
+      el.addEventListener('mouseleave', () => cursorOuter.classList.remove('hover'));
+    });
+  };
+  updateHovers();
+  setInterval(updateHovers, 1000);
+
+  window.addEventListener('mousedown', () => cursorOuter.classList.add('click'));
+  window.addEventListener('mouseup', () => cursorOuter.classList.remove('click'));
 });
 </script>
+<div id="customCursorOuter"></div>
+<div id="customCursorInner"></div>
 </body>
 </html>
 

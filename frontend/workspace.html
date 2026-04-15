@@ -14,7 +14,7 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet" />
   <style>
     :root{--bg:#0a0a0a;--panel:#111;--panel2:#151515;--line:#2a2a2a;--text:#f2f2f2;--muted:#a8a8a8;--green:#b8ff57;--cyan:#00e5ff;--pink:#ff2d78;--amber:#f5c842;--mono:"JetBrains Mono",monospace;--sans:"Space Grotesk",sans-serif}
-    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-width:1280px;background:var(--bg);color:var(--text);font-family:var(--sans)}a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-width:1280px;background:var(--bg);color:var(--text);font-family:var(--sans)}.custom-cursor-active, .custom-cursor-active *{cursor:none !important}a{text-decoration:none;color:inherit}button,input,select,textarea{font:inherit}
     .shell{max-width:1600px;margin:0 auto;padding:24px 24px 120px}.topbar,.hero,.section,.tool,.sticky,.chat-drawer{border:2px solid var(--line);background:var(--panel)}
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 20px}.brand{font:800 22px var(--mono);text-transform:uppercase}.brand span{color:var(--green)}.nav{display:flex;gap:12px;flex-wrap:wrap}
     .btn,.nav a,.chat-fab,.pill{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:0 14px;border:2px solid var(--line);background:var(--panel2);color:var(--text);font:700 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;cursor:pointer}
@@ -39,6 +39,33 @@
     @media (max-width:1320px){.tool{grid-template-columns:280px minmax(0,1fr)}.grid3{grid-template-columns:repeat(2,minmax(0,1fr))}.chat-drawer{width:340px}}
     .toast{position:fixed;bottom:24px;left:50%;transform:translate(-50%,20px);opacity:0;pointer-events:none;z-index:9999;background:var(--panel);color:var(--text);font:700 13px var(--mono);text-transform:uppercase;padding:14px 24px;border:2px solid var(--line);transition:all .2s ease;box-shadow:0 10px 30px rgba(0,0,0,.5)}.toast-visible{transform:translate(-50%,0);opacity:1}.toast-success{border-color:var(--green)}.toast-error{border-color:var(--pink)}.toast-warning{border-color:var(--amber)}
     :focus-visible{outline:2px solid var(--cyan);outline-offset:2px}button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+    /* CUSTOM CURSOR */
+    #customCursorOuter, #customCursorInner {
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 10000;
+      transition: transform 0.08s ease-out, opacity 0.3s;
+      mix-blend-mode: difference;
+    }
+    #customCursorOuter {
+      width: 20px; height: 20px;
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      margin-left: -10px; margin-top: -10px;
+    }
+    #customCursorInner {
+      width: 3px; height: 3px;
+      background: #fff;
+      border-radius: 50%;
+      margin-left: -1.5px; margin-top: -1.5px;
+    }
+    #customCursorOuter.hover { transform: scale(1.5); border-color: var(--cyan); background: rgba(0,229,204,0.1); }
+    #customCursorOuter.click { transform: scale(0.9); }
+
+    @media (pointer: coarse) {
+      #customCursorOuter, #customCursorInner { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -48,15 +75,15 @@
       <div class="nav">
         <a href="/">LANDING</a>
         <a href="/app">SIMULATION CONSOLE</a>
-        <a href="/live-market">US EQUITIES</a>
+        <a href="/live-market">LIVE MONITOR</a>
       </div>
     </header>
 
     <section class="hero">
       <div>
-        <div class="eyebrow">RESEARCH MODE + BOT DEPLOYMENT MODE</div>
+        <div class="eyebrow">RESEARCH MODE + DEPLOYMENT MODE</div>
         <h1>CALIBRATE, STRESS, BENCHMARK, PROMOTE.</h1>
-        <p class="copy">This workspace is the orchestration layer on top of StockAI’s research core. Configure the synthetic US equities market, shape agent populations, inject scenarios, inspect agent reasoning, compare experiments, and identify which bots are ready to graduate into the US EQUITIES surface.</p>
+        <p class="copy">This workspace is the orchestration layer on top of StockAI’s research core. Configure high-fidelity market simulation environments, shape agent populations, inject scenarios, inspect agent reasoning, compare experiments, and identify which strategies are ready to graduate into the live monitoring surface.</p>
         <div id="heroStats" class="stats"></div>
       </div>
       <aside class="hero-side">
@@ -64,7 +91,7 @@
           <div class="eyebrow">WORKSPACE PURPOSE</div>
           <div class="hero-points">
             <div>RESEARCH MODE: STUDY LLM AGENT BEHAVIOR UNDER CONTROLLED WHAT-IF SCENARIOS.</div>
-            <div>BOT DEPLOYMENT MODE: RANK THE STRATEGIES THAT LOOK READY FOR LIVE US EQUITIES MONITORING.</div>
+            <div>DEPLOYMENT MODE: RANK THE STRATEGIES THAT LOOK READY FOR LIVE PERFORMANCE MONITORING.</div>
             <div>THE BACKEND RESEARCH STORE, SIMULATOR, SSE, WS, AND API CONTRACTS REMAIN UNCHANGED.</div>
           </div>
         </div>
@@ -79,7 +106,7 @@
       </div>
       <div class="sticky-right">
         <a class="btn" href="/app">OPEN SIMULATION CONSOLE</a>
-        <a class="btn" href="/live-market">OPEN US EQUITIES</a>
+        <a class="btn" href="/live-market">OPEN LIVE MONITOR</a>
         <button id="refreshBtn" class="btn amber" type="button">REFRESH WORKSPACE</button>
         <button id="exportRunBtn" class="btn pink" type="button">EXPORT ACTIVE RUN</button>
       </div>
@@ -492,6 +519,46 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
     function bind(){ $('refreshBtn').addEventListener('click',loadWorkspace);$('exportRunBtn').addEventListener('click',exportRun);$('launchRunBtn').addEventListener('click',()=>launchRun(false));$('launchRunStartBtn').addEventListener('click',()=>launchRun(true));$('createBotBtn').addEventListener('click',createBot);$('calibrateBtn').addEventListener('click',calibrate);$('createScenarioBtn').addEventListener('click',createScenario);$('createExperimentBtn').addEventListener('click',createExperiment);$('runEvalBtn').addEventListener('click',runEvaluation);$('injectEventBtn').addEventListener('click',injectEvent);$('previewPurgeBtn').addEventListener('click',previewPurge);$('executePurgeBtn').addEventListener('click',executePurge);$('mixLlm').addEventListener('input',normalizeMix);$('mixRule').addEventListener('input',normalizeMix);$('mixStrategy').addEventListener('input',normalizeMix);$('runAgents').addEventListener('input',normalizeMix);$('evtMagnitude').addEventListener('input',magnitude);$('chatFab').addEventListener('click',()=>toggleChat());$('chatClose').addEventListener('click',()=>toggleChat(false));$('chatSend').addEventListener('click',sendChat);$('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});$('eventTapePanel').addEventListener('toggle',()=>{if(!$('eventTapePanel').open){closeEventStream();return}if(app.status?.run_id)openEventStream(app.status.run_id)})}
     async function init(){bind();magnitude();renderEvents();addMsg('bot','ASK ABOUT THE CURRENT REGIME, ACTIVE RUN STATS, AGENT DECISIONS, OR WHICH BOTS LOOK READY FOR THE US EQUITIES SURFACE.');await loadStocks();await loadWorkspace();setInterval(()=>loadWorkspace().catch(()=>{}),8000)}
     init().catch(err=>{$('overviewGrid').innerHTML=`<div class="empty">WORKSPACE LOAD FAILED: ${esc(err.message)}</div>`})
+
+  <div id="customCursorOuter"></div>
+  <div id="customCursorInner"></div>
+  <script>
+    // ── CUSTOM CURSOR ──
+    document.addEventListener('DOMContentLoaded', () => {
+      const cursorOuter = document.getElementById('customCursorOuter');
+      const cursorInner = document.getElementById('customCursorInner');
+      let curX = window.innerWidth / 2, curY = window.innerHeight / 2;
+      let targetX = curX, targetY = curY;
+
+      window.addEventListener('mousemove', e => {
+        targetX = e.clientX;
+        targetY = e.clientY;
+      });
+
+      function animateCursor() {
+        curX += (targetX - curX) * 0.15;
+        curY += (targetY - curY) * 0.15;
+        cursorOuter.style.transform = `translate(${curX}px, ${curY}px)`;
+        cursorInner.style.transform = `translate(${targetX}px, ${targetY}px)`;
+        document.documentElement.classList.add('custom-cursor-active');
+        requestAnimationFrame(animateCursor);
+      }
+      animateCursor();
+
+      const updateHovers = () => {
+        document.querySelectorAll('a, button, [onclick], .nav a, .btn, .chat-fab, .pill, .tool-meta').forEach(el => {
+          if (el.dataset.cursorBound) return;
+          el.dataset.cursorBound = "true";
+          el.addEventListener('mouseenter', () => cursorOuter.classList.add('hover'));
+          el.addEventListener('mouseleave', () => cursorOuter.classList.remove('hover'));
+        });
+      };
+      updateHovers();
+      setInterval(updateHovers, 1000);
+
+      window.addEventListener('mousedown', () => cursorOuter.classList.add('click'));
+      window.addEventListener('mouseup', () => cursorOuter.classList.remove('click'));
+    });
   </script>
   
   <!-- KBD SHORTCUTS OVERLAY -->

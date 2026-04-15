@@ -4,7 +4,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-API-009688.svg)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
-StockAI v2.0 is a local-first research platform for hybrid synthetic US equities market simulation. It combines a FastAPI backend with static HTML frontends for the landing page, research workspace, simulator console, and live-market intelligence layer. Researchers and bot builders can configure persistent runs, inspect agent behavior, evaluate strategy bots, compare experiments, and export research data.
+StockAI v2.0 is a local-first research platform for high-fidelity market simulation. It combines a FastAPI backend with static HTML frontends for the landing page, research workspace, simulator console, and live performance monitor. Researchers and bot builders can configure persistent runs, inspect agent behavior, evaluate strategy bots, compare experiments, and export research data.
 
 Live deployment: https://stockai-ver2-0.onrender.com/
 
@@ -13,7 +13,7 @@ Live deployment: https://stockai-ver2-0.onrender.com/
 - A landing page at `/`
 - A research workspace at `/workspace`
 - A simulator dashboard at `/app`
-- A live-market intelligence surface at `/live-market`
+- A live performance monitor at `/live-market`
 - A FastAPI backend serving market, simulation, agents, chat, data, and websocket routes
 - Research APIs for runs, scenarios, experiments, datasets, bots, evaluations, jobs, and run-scoped event streams
 - Live simulation state including stocks, agents, trades, events, forum activity, loans, financial reports, and persistent run events
@@ -53,7 +53,7 @@ StockAI/
 |-- frontend/
 |   |-- landing.html          # Landing page served at /
 |   |-- workspace.html        # Research workspace served at /workspace
-|   |-- live-market.html      # Live-market intelligence layer
+|   |-- live-market.html      # Live performance monitor
 |   `-- index.html            # Simulator UI served at /app
 |-- docs/                     # Architecture and workflow diagrams
 |-- tests/                    # Critical path API tests
@@ -81,7 +81,7 @@ Open:
 - `http://127.0.0.1:8000/` for the landing page
 - `http://127.0.0.1:8000/workspace` for the research workspace
 - `http://127.0.0.1:8000/app` for the simulation console
-- `http://127.0.0.1:8000/live-market` for the live-market intelligence layer
+- `http://127.0.0.1:8000/live-market` for the live performance monitor
 
 ## Environment Variables
 
@@ -122,7 +122,7 @@ Run the critical path suite with:
 .\.venv\Scripts\python.exe -m pytest tests -q
 ```
 
-The suite covers the current FastAPI behavior, including the landing, workspace, simulator, and live-market HTML responses, the JSON health endpoint, the main market/simulation/agents/data routes, the research resource routes, calibration, evaluation, and execution-kernel behaviors.
+The suite covers the current FastAPI behavior, including the landing, workspace, simulator, and live performance monitor HTML responses, the JSON health endpoint, the main market/simulation/agents/data routes, the research resource routes, calibration, evaluation, and execution-kernel behaviors.
 
 ## Deployment
 

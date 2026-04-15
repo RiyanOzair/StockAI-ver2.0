@@ -231,6 +231,7 @@ class BaseAgent:
             "timestamp": __import__("datetime").datetime.now().isoformat(),
         }
         self.decision_log.append(entry)
+        return entry
 
     def _record_trade(self, qty: int):
         self.trade_count += 1

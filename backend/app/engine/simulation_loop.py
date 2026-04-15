@@ -464,18 +464,31 @@ class SimulationLoop:
             other_agents = [a for a in active_agents if a.agent_kind != "llm"]
             for agent in other_agents:
                 try:
-                    results.append(agent.demo_act(market_state) if hasattr(agent, "demo_act") else None)
+                    res = agent.demo_act(market_state) if hasattr(agent, "demo_act") else None
+                    results.append(res)
+                    if hasattr(agent, 'decision_log') and agent.decision_log:
+                        self._emit_run_event("agent_decision", {"agent_id": agent.id, **agent.decision_log[-1]})
                 except Exception as exc:
                     logger.error("Agent %s error: %s", agent.id, exc)
             for idx in range(0, len(llm_agents), LLM_BATCH_SIZE):
                 batch = llm_agents[idx: idx + LLM_BATCH_SIZE]
-                results.extend(await asyncio.gather(*[a.act(market_state, news) for a in batch], return_exceptions=True))
+                batch_results = await asyncio.gather(*[a.act(market_state, news) for a in batch], return_exceptions=True)
+                for agent, res in zip(batch, batch_results):
+                    if isinstance(res, BaseException):
+                        logger.error("Agent %s error: %s", agent.id, res)
+                        continue
+                    results.append(res)
+                    if hasattr(agent, 'decision_log') and agent.decision_log:
+                        self._emit_run_event("agent_decision", {"agent_id": agent.id, **agent.decision_log[-1]})
                 if idx + LLM_BATCH_SIZE < len(llm_agents):
                     await asyncio.sleep(LLM_BATCH_DELAY)
         else:
             for agent in active_agents:
                 try:
-                    results.append(agent.demo_act(market_state) if hasattr(agent, "demo_act") else None)
+                    res = agent.demo_act(market_state) if hasattr(agent, "demo_act") else None
+                    results.append(res)
+                    if hasattr(agent, 'decision_log') and agent.decision_log:
+                        self._emit_run_event("agent_decision", {"agent_id": agent.id, **agent.decision_log[-1]})
                 except Exception as exc:
                     logger.error("Agent %s error: %s", agent.id, exc)
         for res in results:
@@ -540,6 +553,14 @@ class SimulationLoop:
                     self._session_open = {s: (b.last_price or self.base_prices.get(s, 100.0)) for s, b in self.order_books.items()}
                     self._session_trade_notional = 0.0
                     self._emit_run_event("phase_start", {"day": self.day, "session": self.session, "session_phase": self.session_phase, "clock_time": clock_time})
+                    self._emit_run_event("market_snapshot", {
+                        "day": self.day,
+                        "session": self.session,
+                        "session_phase": self.session_phase,
+                        "prices": self._session_open,
+                        "regime": self.current_regime,
+                        "regime_headline": self.current_regime_profile["headline"]
+                    })
                     report_data = None
                     if self.session == 1:
                         day_events = self._generate_events(self.day)

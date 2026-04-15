@@ -1,15 +1,19 @@
-# StockAI v2.0: System Diagrams
+## 1. High-Level Architecture (V2)
+The following descriptive diagram illustrates the architectural layers of StockAI 2.0.
 
-This document contains visual representations of the StockAI architecture, data models, and workflow logic.
-
-## 1. High-Level Architecture
-The following diagram illustrates the three-tier architecture of StockAI, from the backend market kernel to the interactive research interfaces.
-
-![System Architecture](./architecture_diagram.png)
+![System Architecture V2](./architecture_v2.png)
 
 ---
 
-## 2. UML Diagrams
+## 2. UML Diagram Suite
+A comprehensive visual suite of the project's core logic and data flow.
+
+![UML Suite](./uml_suite.png)
+
+---
+
+## 3. Mermaid Source Diagrams
+The following sections provide the live Mermaid code for maintenance and expansion.
 
 ### 2.1 Class Diagram (Core Data Models)
 This diagram shows the relationships between orders, trades, agents, and simulation snapshots.

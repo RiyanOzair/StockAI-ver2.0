@@ -95,6 +95,19 @@ async def serve_live_market():
     )
 
 
+@app.get("/credits", response_class=FileResponse)
+async def serve_credits():
+    return FileResponse(
+        _FRONTEND_DIR / "credits.html",
+        media_type="text/html",
+        headers={
+            "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+            "Pragma": "no-cache",
+            "Expires": "0",
+        },
+    )
+
+
 # ── Health check ──
 @app.get("/health")
 async def health():

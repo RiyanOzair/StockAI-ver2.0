@@ -1212,6 +1212,7 @@ async function loadSnapshot(forceRefresh = false) {
   els.refreshBtn.disabled = true;
   els.refreshBtn.textContent = "Refreshing...";
 
+  // Ensure 'Loading' state is visible if explicitly needed, but usually it transitions fast
   try {
     const response = await fetch(`/api/live-market/snapshot${forceRefresh ? "?refresh=true" : ""}`, {
       cache: "no-store",
@@ -1223,6 +1224,13 @@ async function loadSnapshot(forceRefresh = false) {
     }
 
     const data = await response.json();
+    
+    // Safety check: ensure required data arrays exist
+    data.market_snapshot = data.market_snapshot || [];
+    data.watchlist = data.watchlist || [];
+    data.sector_pulse = data.sector_pulse || [];
+    data.major_movers = data.major_movers || { leaders: [], laggards: [] };
+
     renderHeroMeta(data);
     renderBrief(data);
     renderAlerts(data);
@@ -1233,23 +1241,32 @@ async function loadSnapshot(forceRefresh = false) {
     renderWatchlist(data);
     renderOpportunities(data);
   } catch (error) {
+    console.error("StockAI live-market fetch error:", error);
     const message = error instanceof Error ? error.message : "Unknown error";
-    els.heroMeta.innerHTML = `<div class="nav-chip"><span class="status-dot fallback"></span>offline</div>`;
-    els.briefHeadline.textContent = "Live feed failed before the page could render";
-    els.briefSummary.textContent = "The page stayed online, but the initial data request failed. Try a manual refresh or open the simulator while the provider recovers.";
-    els.providerNote.textContent = `Client-side fetch error: ${message}`;
-    els.alertStack.innerHTML = `<div class="alert error">The live-market API request failed before StockAI received a response.</div>`;
-    els.snapshotGrid.innerHTML = `<div class="empty-state">Unable to load live snapshot right now.</div>`;
-    els.comparisonList.innerHTML = `<div class="empty-state">Comparison data is unavailable until the API responds.</div>`;
-    els.simStats.innerHTML = "";
-    els.moversGrid.innerHTML = `<div class="empty-state">Mover lists are unavailable.</div>`;
-    els.sectorGrid.innerHTML = `<div class="empty-state">Sector pulse is unavailable.</div>`;
-    els.watchlistGrid.innerHTML = `<div class="empty-state">Watchlist cards are unavailable.</div>`;
-    els.opGrid.innerHTML = `<div class="empty-state">Opportunity and risk panels are unavailable.</div>`;
+    
+    // FIX: Explicitly clear the loading text even on failure
+    els.heroMeta.innerHTML = `
+      <div class="nav-chip"><span class="status-dot fallback"></span>OFFLINE</div>
+      <div class="nav-chip">Retry required</div>
+    `;
+    
+    els.briefHeadline.textContent = "Live feed momentarily unavailable";
+    els.briefSummary.textContent = "StockAI encountered an error while reaching the market data provider. The system will automatically retry, or you can use the manual refresh button.";
+    
+    els.alertStack.innerHTML = `<div class="alert error">Connection error: ${escapeHtml(message)}</div>`;
+    
+    if (els.snapshotGrid.children.length === 0 || els.snapshotGrid.querySelector('.loading')) {
+      els.snapshotGrid.innerHTML = `<div class="empty-state">Unable to load live snapshot. Reverting to simulator baseline.</div>`;
+    }
   } finally {
     isLoading = false;
     els.refreshBtn.disabled = false;
     els.refreshBtn.textContent = "REFRESH TAPE";
+    
+    // Final safety: if heroMeta still has 'loading' class or text, clear it
+    if (els.heroMeta.querySelector('.loading')) {
+       els.heroMeta.innerHTML = `<div class="nav-chip">Feed Pending</div>`;
+    }
   }
 }
 

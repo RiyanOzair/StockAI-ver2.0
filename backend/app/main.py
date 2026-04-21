@@ -113,6 +113,11 @@ async def serve_favicon():
     return FileResponse(_FRONTEND_DIR / "favicon.png")
 
 
+@app.get("/favicon.ico")
+async def serve_favicon_ico():
+    return FileResponse(_FRONTEND_DIR / "favicon.png")
+
+
 # ── Health check ──
 @app.get("/health")
 async def health():

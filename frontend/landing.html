@@ -4,8 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>StockAI — AI-Powered Market Simulator</title>
-<link rel="icon" type="image/png" href="/favicon.png">
-<link rel="shortcut icon" href="/favicon.png">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23c8f04a' rx='7'/%3E%3Cpolyline points='4,24 10,14 16,18 22,8 28,12' fill='none' stroke='%23000' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='28' cy='12' r='2.2' fill='%23000'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -1514,83 +1513,5 @@ setInterval(() => {
   setTimeout(() => title.classList.remove('glitch'), 500);
 }, 4000);
 </script>
-  <!-- CHATBOT -->
-  <button id="chatFab" class="chat-fab" onclick="toggleChat()">AI</button>
-  <div id="chatDrawer" class="chat-drawer">
-    <div class="chat-head">
-      <span>STOCKAI ASSISTANT</span>
-      <button onclick="toggleChat()" style="background:none; border:none; cursor:pointer; font-weight:800; font-size:18px;">&times;</button>
-    </div>
-    <div id="chatLog" class="chat-log"></div>
-    <div class="chat-input-row">
-      <input type="text" id="chatInput" placeholder="Ask me anything..." onkeydown="if(event.key==='Enter') sendChat()">
-      <button onclick="sendChat()">SEND</button>
-    </div>
-  </div>
-
-  <script>
-    function toggleChat() {
-      const d = document.getElementById('chatDrawer');
-      d.classList.toggle('open');
-      if (d.classList.contains('open')) {
-        document.getElementById('chatInput').focus();
-      }
-    }
-    function getChatHistory() {
-      try { return JSON.parse(sessionStorage.getItem('chatLog') || '[]'); } catch(e) { return []; }
-    }
-    function addMsg(role, text, isLow = false) {
-      const log = document.getElementById('chatLog');
-      const n = document.createElement('div');
-      n.className = `chat-msg ${role}`;
-      n.textContent = text;
-      if (isLow && role === 'bot') {
-        const badge = document.createElement('div');
-        badge.style.cssText = 'margin-top:6px;font-size:10px;color:#f5c842;border:1px solid #f5c842;display:inline-block;padding:2px 6px;font-family:var(--mono);font-weight:700;';
-        badge.textContent = 'LOW CONFIDENCE';
-        n.appendChild(badge);
-      }
-      log.appendChild(n);
-      log.scrollTop = log.scrollHeight;
-    }
-    async function sendChat() {
-      const inp = document.getElementById('chatInput');
-      const msg = inp.value.trim();
-      if (!msg) return;
-      inp.value = '';
-      addMsg('user', msg);
-      
-      const hist = getChatHistory();
-      hist.push({role: 'user', content: msg});
-      sessionStorage.setItem('chatLog', JSON.stringify(hist.slice(-20)));
-
-      try {
-        const response = await fetch('/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ message: msg, history: hist.slice(-16) })
-        });
-        const data = await response.json();
-        const botMsg = data.response || 'NO RESPONSE';
-        const isLow = !!data.confidence && data.confidence !== 'high';
-        addMsg('bot', botMsg, isLow);
-        hist.push({role: 'assistant', content: botMsg, low_confidence: isLow});
-        sessionStorage.setItem('chatLog', JSON.stringify(hist.slice(-20)));
-      } catch (err) {
-        addMsg('bot', 'Sorry, I could not reach the assistant right now.', true);
-        hist.push({role: 'assistant', content: 'Sorry, I could not reach the assistant right now.', low_confidence: true});
-        sessionStorage.setItem('chatLog', JSON.stringify(hist.slice(-20)));
-      }
-    }
-    // Load history
-    document.addEventListener('DOMContentLoaded', () => {
-      const hist = getChatHistory();
-      if (hist.length) {
-        hist.forEach(m => addMsg(m.role === 'user' ? 'user' : 'bot', m.content, m.low_confidence));
-      } else {
-        addMsg('bot', 'Hi! I am the StockAI Market Assistant. How can I help you today?');
-      }
-    });
-  </script>
 </body>
 </html>

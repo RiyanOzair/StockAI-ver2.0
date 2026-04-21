@@ -9,6 +9,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>STOCKAI WORKSPACE</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;700;800&display=swap" rel="stylesheet" />
@@ -415,8 +417,9 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
     async function injectEvent(){const m=magnitude(),sector=$('evtSector').value,affected=sector==='ALL'?[]:Object.entries(app.stocks).filter(([,meta])=>meta.sector===sector).map(([symbol])=>symbol),title=`${$('evtType').value.toUpperCase()} · DAY ${$('evtDay').value}`,description=`${$('evtDesc').value.trim()} TARGET DAY: ${$('evtDay').value}. SECTOR: ${sector}.`;await post('/data/event',{title,description,severity:m.severity,impact_pct:m.impact,affected_stocks:affected});$('eventStatus').textContent=`LAST INJECTED: ${title}`;await refreshEvents(app.status?.run_id)}
     async function exportRun(){if(!app.status?.run_id)return;const bundle=await api(`/runs/${app.status.run_id}/export`),blob=new Blob([JSON.stringify(bundle,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${app.status.run_id}.json`;a.click();URL.revokeObjectURL(url)}
     function addMsg(role,text,confidence){const n=document.createElement('div');n.className=`msg ${role}`;n.innerHTML=`<div>${esc(text)}</div>${confidence&&confidence!=='high'?'<div class="low">LOW CONFIDENCE</div>':''}`;$('chatLog').appendChild(n);$('chatLog').scrollTop=$('chatLog').scrollHeight}
-    function getChatHistory(){try{return JSON.parse(sessionStorage.getItem('chatHistory')||'[]')}catch{return []}}
-    async function sendChat(){const message=$('chatInput').value.trim();if(!message)return;$('chatInput').value='';addMsg('user',message);const h=getChatHistory();h.push({role:'user',content:message});try{const res=await post('/chat',{message,history:h.slice(-16)});addMsg('bot',res.response||'NO RESPONSE',res.confidence);h.push({role:'assistant',content:res.response});sessionStorage.setItem('chatHistory',JSON.stringify(h.slice(-20)))}catch(err){addMsg('bot',`CHAT UNAVAILABLE: ${err.message}`,'low')}}
+    function getChatHistory(){try{return JSON.parse(sessionStorage.getItem('chatLog')||'[]')}catch{return []}}
+    async function sendChat(){const message=$('chatInput').value.trim();if(!message)return;$('chatInput').value='';addMsg('user',message);const h=getChatHistory();h.push({role:'user',content:message});try{const res=await post('/chat',{message,history:h.slice(-16)});addMsg('bot',res.response||'NO RESPONSE',res.confidence);h.push({role:'assistant',content:res.response});sessionStorage.setItem('chatLog',JSON.stringify(h.slice(-20)))}catch(err){addMsg('bot',`CHAT UNAVAILABLE: ${err.message}`,'low')}}
+    function loadChatHistory(){const h=getChatHistory();if(h.length){$('chatLog').innerHTML='';h.forEach(m=>addMsg(m.role==='user'?'user':'bot',m.content))}}
     
     async function previewPurge() {
       const p = await api('/data/purge/preview');
@@ -517,8 +520,9 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
 
     function toggleChat(force){app.chatOpen=typeof force==='boolean'?force:!app.chatOpen;$('chatDrawer').classList.toggle('open',app.chatOpen)}
     function bind(){ $('refreshBtn').addEventListener('click',loadWorkspace);$('exportRunBtn').addEventListener('click',exportRun);$('launchRunBtn').addEventListener('click',()=>launchRun(false));$('launchRunStartBtn').addEventListener('click',()=>launchRun(true));$('createBotBtn').addEventListener('click',createBot);$('calibrateBtn').addEventListener('click',calibrate);$('createScenarioBtn').addEventListener('click',createScenario);$('createExperimentBtn').addEventListener('click',createExperiment);$('runEvalBtn').addEventListener('click',runEvaluation);$('injectEventBtn').addEventListener('click',injectEvent);$('previewPurgeBtn').addEventListener('click',previewPurge);$('executePurgeBtn').addEventListener('click',executePurge);$('mixLlm').addEventListener('input',normalizeMix);$('mixRule').addEventListener('input',normalizeMix);$('mixStrategy').addEventListener('input',normalizeMix);$('runAgents').addEventListener('input',normalizeMix);$('evtMagnitude').addEventListener('input',magnitude);$('chatFab').addEventListener('click',()=>toggleChat());$('chatClose').addEventListener('click',()=>toggleChat(false));$('chatSend').addEventListener('click',sendChat);$('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});$('eventTapePanel').addEventListener('toggle',()=>{if(!$('eventTapePanel').open){closeEventStream();return}if(app.status?.run_id)openEventStream(app.status.run_id)})}
-    async function init(){bind();magnitude();renderEvents();addMsg('bot','ASK ABOUT THE CURRENT REGIME, ACTIVE RUN STATS, AGENT DECISIONS, OR WHICH BOTS LOOK READY FOR THE US EQUITIES SURFACE.');await loadStocks();await loadWorkspace();setInterval(()=>loadWorkspace().catch(()=>{}),8000)}
+    async function init(){bind();magnitude();renderEvents();loadChatHistory();addMsg('bot','ASK ABOUT THE CURRENT REGIME, ACTIVE RUN STATS, AGENT DECISIONS, OR WHICH BOTS LOOK READY FOR THE US EQUITIES SURFACE.');await loadStocks();await loadWorkspace();setInterval(()=>loadWorkspace().catch(()=>{}),8000)}
     init().catch(err=>{$('overviewGrid').innerHTML=`<div class="empty">WORKSPACE LOAD FAILED: ${esc(err.message)}</div>`})
+  </script>
 
   <div id="customCursorOuter"></div>
   <div id="customCursorInner"></div>

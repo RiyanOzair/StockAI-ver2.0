@@ -4,7 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>StockAI v2.0 — Market Simulator</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23c8f04a' rx='7'/%3E%3Cpolyline points='4,24 10,14 16,18 22,8 28,12' fill='none' stroke='%23000' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='28' cy='12' r='2.2' fill='%23000'/%3E%3C/svg%3E" />
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="shortcut icon" href="/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -3837,6 +3838,19 @@ function buildChatContext() {
   return '[Context: ' + parts.join('; ') + ']';
 }
 
+function getChatHistory() {
+  try { return JSON.parse(sessionStorage.getItem('chatLog') || '[]'); } catch { return []; }
+}
+
+function loadChatHistory() {
+  const hist = getChatHistory();
+  if (hist.length) {
+    const container = document.getElementById('chat-messages');
+    container.innerHTML = '';
+    hist.forEach(m => appendMsg(m.role === 'user' ? 'user' : 'bot', m.content, [], m.low_confidence));
+  }
+}
+
 async function sendChat() {
   const input = document.getElementById('chat-input');
   const msg = input.value.trim();
@@ -3844,17 +3858,23 @@ async function sendChat() {
   input.value = '';
 
   appendMsg('user', msg);
+  const hist = getChatHistory();
+  hist.push({role: 'user', content: msg});
   const ctx = buildChatContext();
-  const r = await apiPost('/chat', { message: msg + ' ' + ctx });
+  const r = await apiPost('/chat', { message: msg + ' ' + ctx, history: hist.slice(-16) });
   if (r) {
+    const isLow = !!r.confidence && r.confidence !== 'high';
     // suggested_followup may be a string or array — normalise to array
     const followups = Array.isArray(r.suggested_followup)
       ? r.suggested_followup
       : (r.suggested_followup ? [r.suggested_followup] : []);
-    appendMsg('bot', r.response, followups);
+    appendMsg('bot', r.response, followups, isLow);
+    hist.push({role: 'assistant', content: r.response, low_confidence: isLow});
   } else {
-    appendMsg('bot', 'Sorry, I could not reach the assistant right now.');
+    appendMsg('bot', 'Sorry, I could not reach the assistant right now.', [], true);
+    hist.push({role: 'assistant', content: 'Sorry, I could not reach the assistant right now.', low_confidence: true});
   }
+  sessionStorage.setItem('chatLog', JSON.stringify(hist.slice(-20)));
 }
 
 function askChat(q) {
@@ -3863,11 +3883,17 @@ function askChat(q) {
   sendChat();
 }
 
-function appendMsg(role, text, followups = []) {
+function appendMsg(role, text, followups = [], isLow = false) {
   const container = document.getElementById('chat-messages');
   const div = document.createElement('div');
   div.className = 'chat-msg ' + role;
   div.textContent = text;
+  if (isLow && role === 'bot') {
+    const badge = document.createElement('div');
+    badge.style.cssText = 'margin-top:6px;font-size:10px;color:#f5c842;border:1px solid #f5c842;display:inline-block;padding:2px 6px;font-family:var(--mono);font-weight:700;';
+    badge.textContent = 'LOW CONFIDENCE';
+    div.appendChild(badge);
+  }
   container.appendChild(div);
 
   if (followups && followups.length) {
@@ -3964,6 +3990,7 @@ async function init() {
   loadEvents();
   loadForum();
   loadSnapshots();
+  loadChatHistory();
   updateMetrics();
   startRefreshLoop();
 }
@@ -4835,9 +4862,9 @@ sendChat = async function() {
   const ctx = buildChatContext();
   
   let hist = [];
-  try { hist = JSON.parse(sessionStorage.getItem('chatHistory') || '[]'); } catch(e){}
+  try { hist = JSON.parse(sessionStorage.getItem('chatLog') || '[]'); } catch(e){}
   hist.push({role: 'user', content: msg});
-  sessionStorage.setItem('chatHistory', JSON.stringify(hist.slice(-20)));
+  sessionStorage.setItem('chatLog', JSON.stringify(hist.slice(-20)));
 
   const r = await apiPost('/chat', { message: msg + ' ' + ctx, history: hist });
   if (r) {
@@ -4848,7 +4875,7 @@ sendChat = async function() {
     
     // Write bot back to history
     hist.push({role: 'assistant', content: r.response});
-    sessionStorage.setItem('chatHistory', JSON.stringify(hist.slice(-20)));
+    sessionStorage.setItem('chatLog', JSON.stringify(hist.slice(-20)));
   } else {
     appendMsg('bot', 'Sorry, I could not reach the assistant right now.');
   }
@@ -4856,7 +4883,7 @@ sendChat = async function() {
 
 setTimeout(() => {
   let hist = [];
-  try { hist = JSON.parse(sessionStorage.getItem('chatHistory') || '[]'); } catch(e){}
+  try { hist = JSON.parse(sessionStorage.getItem('chatLog') || '[]'); } catch(e){}
   if (hist.length > 0) {
     const container = document.getElementById('chat-messages');
     if(container) container.innerHTML = '';

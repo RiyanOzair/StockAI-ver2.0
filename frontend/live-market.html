@@ -9,7 +9,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>StockAI - Live Performance Monitor</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23c8f04a' rx='7'/%3E%3Cpolyline points='4,24 10,14 16,18 22,8 28,12' fill='none' stroke='%23000' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='28' cy='12' r='2.2' fill='%23000'/%3E%3C/svg%3E" />
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="shortcut icon" href="/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -1372,7 +1373,7 @@ document.addEventListener('DOMContentLoaded', () => {
     log.scrollTop = log.scrollHeight;
   };
 
-  const getChatHist = () => { try { return JSON.parse(sessionStorage.getItem('chatHistory')||'[]'); } catch { return []; } };
+  const getChatHist = () => { try { return JSON.parse(sessionStorage.getItem('chatLog')||'[]'); } catch { return []; } };
   const initChat = () => getChatHist().forEach(m => renderMsg(m.role, m.content, m.low_confidence));
   initChat();
 
@@ -1383,7 +1384,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderMsg('user', val);
     const hist = getChatHist();
     hist.push({role:'user',content:val});
-    sessionStorage.setItem('chatHistory', JSON.stringify(hist.slice(-20)));
+    sessionStorage.setItem('chatLog', JSON.stringify(hist.slice(-20)));
     
     try {
       const res = await fetch('/chat', {
@@ -1396,7 +1397,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderMsg('assistant', data.response || 'NO RESPONSE', isLow);
       const updatedHist = getChatHist(); 
       updatedHist.push({role:'assistant', content: data.response, low_confidence: isLow});
-      sessionStorage.setItem('chatHistory', JSON.stringify(updatedHist.slice(-20)));
+      sessionStorage.setItem('chatLog', JSON.stringify(updatedHist.slice(-20)));
     } catch(err) {
       renderMsg('assistant', `ERROR: ${err.message}`, true);
     }

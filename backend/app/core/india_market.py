@@ -93,26 +93,29 @@ class IndiaMarketService:
 
     @staticmethod
     def _get_api_key() -> str | None:
-        from backend.app.core.config import settings
-        # 1. Try settings (Pydantic)
-        key = getattr(settings, "INDIA_MARKET_API_KEY", "").strip()
+        # 1. Try direct environment variable FIRST (Always works on Render/Local)
+        key = os.environ.get("INDIA_MARKET_API_KEY", "").strip()
+        if key: return key
         
-        # 2. Try direct environment variable
-        if not key:
-            key = os.environ.get("INDIA_MARKET_API_KEY", "").strip()
+        # 2. Try settings (Pydantic)
+        try:
+            from backend.app.core.config import settings
+            key = getattr(settings, "INDIA_MARKET_API_KEY", "").strip()
+            if key: return key
+        except Exception:
+            pass
             
         # 3. Fallback: manually parse .env if environment isn't synced
-        if not key:
-            try:
-                from pathlib import Path
-                # Search multiple possible root locations
-                possible_paths = [
-                    Path(__file__).resolve().parent.parent.parent.parent / ".env",
-                    Path.cwd() / ".env",
-                    Path(__file__).resolve().parent.parent.parent / ".env"
-                ]
-                for env_path in possible_paths:
-                    if env_path.exists():
+        try:
+            from pathlib import Path
+            # Search multiple possible root locations
+            possible_paths = [
+                Path(__file__).resolve().parent.parent.parent.parent / ".env",
+                Path.cwd() / ".env",
+                Path(__file__).resolve().parent.parent.parent / ".env"
+            ]
+            for env_path in possible_paths:
+                if env_path.exists():
                         for line in env_path.read_text(encoding="utf-8").splitlines():
                             if line.strip().startswith("INDIA_MARKET_API_KEY="):
                                 key = line.split("=", 1)[1].strip().strip("'").strip('"')

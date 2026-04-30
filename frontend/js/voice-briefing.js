@@ -196,16 +196,20 @@ class VoiceBriefing {
     updateUI() {
         if (!this.ui) return;
         const { btn, pulse } = this.ui;
+        const moodToggle = document.getElementById('moodAudioToggle');
+
         if (this.isSpeaking) {
             btn.style.borderColor = 'var(--magenta)';
             btn.style.color = 'var(--magenta)';
             btn.style.boxShadow = '0 0 25px var(--magenta)';
             pulse.style.background = 'var(--magenta)';
+            if (moodToggle) moodToggle.style.display = 'flex';
         } else {
             btn.style.borderColor = 'var(--lime)';
             btn.style.color = 'var(--lime)';
             btn.style.boxShadow = '0 0 20px rgba(200, 240, 74, 0.2)';
             pulse.style.background = 'var(--lime)';
+            if (moodToggle) moodToggle.style.display = 'none';
         }
     }
 

@@ -676,13 +676,29 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
   <script src="/js/topology-3d.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-       const header = document.querySelector('.header-title');
+       const header = document.querySelector('.nav');
        if (header) {
+         const container = document.createElement('div');
+         container.style.cssText = 'display:inline-flex; align-items:center; margin-left:15px;';
+         
          const moodLabel = document.createElement('span');
          moodLabel.id = 'marketMoodLabel';
-         moodLabel.style.cssText = 'font-family:var(--mono); font-size:11px; margin-left:15px; border:1px solid var(--border); padding:2px 10px; border-radius:4px; vertical-align:middle;';
+         moodLabel.style.cssText = 'font-family:var(--mono); font-size:11px; border:1px solid var(--line); padding:2px 10px; border-radius:4px; vertical-align:middle; text-transform:uppercase;';
          moodLabel.textContent = 'NEUTRAL';
-         header.appendChild(moodLabel);
+         
+         const toggleBtn = document.createElement('button');
+         toggleBtn.innerHTML = '⏻';
+         toggleBtn.title = 'Toggle Mood Engine';
+         toggleBtn.style.cssText = 'background:transparent; border:2px solid var(--line); color:var(--muted); font-size:11px; cursor:pointer; padding:2px 8px; border-radius:4px; margin-left:8px; vertical-align:middle; transition:all 0.2s;';
+         toggleBtn.onclick = () => {
+             const isOff = window.moodController.toggleMoodEngine();
+             toggleBtn.style.color = isOff ? 'var(--pink)' : 'var(--muted)';
+             toggleBtn.style.borderColor = isOff ? 'var(--pink)' : 'var(--line)';
+         };
+         
+         container.appendChild(moodLabel);
+         container.appendChild(toggleBtn);
+         header.appendChild(container);
        }
     });
   </script>

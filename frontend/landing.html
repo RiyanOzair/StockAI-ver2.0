@@ -1542,11 +1542,27 @@ setInterval(() => {
        // Append mood indicator to nav
        const navLinks = document.querySelector('.nav-links');
        if (navLinks) {
+         const container = document.createElement('div');
+         container.style.cssText = 'display:inline-flex; align-items:center; margin-left:20px;';
+         
          const moodLabel = document.createElement('span');
          moodLabel.id = 'marketMoodLabel';
-         moodLabel.style.cssText = 'font-family:var(--mono); font-size:10px; margin-left:20px; border:1px solid var(--border); padding:2px 8px; border-radius:4px;';
+         moodLabel.style.cssText = 'font-family:var(--mono); font-size:10px; border:1px solid var(--border); padding:2px 8px; border-radius:4px; text-transform:uppercase;';
          moodLabel.textContent = 'NEUTRAL';
-         navLinks.appendChild(moodLabel);
+         
+         const toggleBtn = document.createElement('button');
+         toggleBtn.innerHTML = '⏻';
+         toggleBtn.title = 'Toggle Mood Engine';
+         toggleBtn.style.cssText = 'background:transparent; border:1px solid var(--border); color:var(--muted); font-size:10px; cursor:pointer; padding:2px 6px; border-radius:4px; margin-left:6px; transition:all 0.2s;';
+         toggleBtn.onclick = () => {
+             const isOff = window.moodController.toggleMoodEngine();
+             toggleBtn.style.color = isOff ? 'var(--magenta)' : 'var(--muted)';
+             toggleBtn.style.borderColor = isOff ? 'var(--magenta)' : 'var(--border)';
+         };
+         
+         container.appendChild(moodLabel);
+         container.appendChild(toggleBtn);
+         navLinks.appendChild(container);
        }
     });
   </script>

@@ -12,6 +12,7 @@ class MoodController {
         this.audioContext = null;
         this.oscillator = null;
         this.gainNode = null;
+        this.disabled = false;
         
         // Base theme colors (from CSS)
         this.themes = {
@@ -51,6 +52,7 @@ class MoodController {
     }
 
     async updateMood() {
+        if (this.disabled) return;
         try {
             const resp = await fetch('/market/sentiment');
             const data = await resp.json();
@@ -97,6 +99,23 @@ class MoodController {
             label.textContent = regime.toUpperCase();
             label.style.color = theme.lime;
         }
+    }
+    
+    toggleMoodEngine() {
+        this.disabled = !this.disabled;
+        console.log(`Mood Engine ${this.disabled ? 'Disabled' : 'Enabled'}`);
+        
+        if (this.disabled) {
+            this.applyTheme('neutral');
+            if (this.audioEnabled) this.stopAudio();
+            const label = document.getElementById('marketMoodLabel');
+            if (label) label.textContent = 'OFF';
+        } else {
+            this.updateMood();
+            if (this.audioEnabled) this.startAudio();
+        }
+        
+        return this.disabled;
     }
 
     createAudioToggle() {

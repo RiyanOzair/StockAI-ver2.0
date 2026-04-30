@@ -12,7 +12,10 @@ class MoodController {
         this.audioContext = null;
         this.oscillator = null;
         this.gainNode = null;
-        this.disabled = false;
+        
+        // Read persistence state - default to false (disabled) if not set
+        const savedState = localStorage.getItem('moodEngineEnabled');
+        this.disabled = savedState === 'true' ? false : true; 
         
         // Base theme colors (from CSS)
         this.themes = {
@@ -43,8 +46,17 @@ class MoodController {
     }
 
     async init() {
-        console.log("Mood Engine Initialized");
-        await this.updateMood();
+        console.log("Mood Engine Initialized (Status:", this.disabled ? "OFF" : "ON", ")");
+        
+        if (!this.disabled) {
+            await this.updateMood();
+        } else {
+            // Apply neutral theme immediately if disabled
+            this.applyTheme('neutral');
+            const label = document.getElementById('marketMoodLabel');
+            if (label) label.textContent = 'OFF';
+        }
+        
         setInterval(() => this.updateMood(), this.pollInterval);
 
         // UI for audio toggle
@@ -103,6 +115,7 @@ class MoodController {
     
     toggleMoodEngine() {
         this.disabled = !this.disabled;
+        localStorage.setItem('moodEngineEnabled', !this.disabled);
         console.log(`Mood Engine ${this.disabled ? 'Disabled' : 'Enabled'}`);
         
         if (this.disabled) {

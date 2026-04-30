@@ -1748,6 +1748,12 @@ document.addEventListener('DOMContentLoaded', () => {
              toggleBtn.style.borderColor = isOff ? 'var(--red)' : 'var(--border)';
          };
          
+         // Initial state
+         if (window.moodController.disabled) {
+             toggleBtn.style.color = 'var(--red)';
+             toggleBtn.style.borderColor = 'var(--red)';
+         }
+         
          container.appendChild(moodLabel);
          container.appendChild(toggleBtn);
          header.appendChild(container);

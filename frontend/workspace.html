@@ -696,6 +696,12 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
              toggleBtn.style.borderColor = isOff ? 'var(--pink)' : 'var(--line)';
          };
          
+         // Initial state
+         if (window.moodController.disabled) {
+             toggleBtn.style.color = 'var(--pink)';
+             toggleBtn.style.borderColor = 'var(--pink)';
+         }
+         
          container.appendChild(moodLabel);
          container.appendChild(toggleBtn);
          header.appendChild(container);

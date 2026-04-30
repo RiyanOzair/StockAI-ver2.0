@@ -117,18 +117,22 @@ class VoiceBriefing {
         this.ui.ring.style.borderColor = 'var(--cyan)';
 
         try {
-            // Fetch the tactical briefing from the mood engine
-            const response = await fetch('/market/briefing');
-            const data = await response.json();
+            const isMoodEnabled = window.moodController && !window.moodController.disabled;
+            let briefing = "";
+
+            if (isMoodEnabled) {
+                // Fetch the tactical briefing from the mood engine
+                const response = await fetch('/market/briefing');
+                const data = await response.json();
+                briefing = data.briefing || "The system is calibrating. ";
+            } else {
+                // Explain the current page architecture
+                briefing = this.getPageExplanation();
+            }
             
-            let briefing = data.briefing || "The system is calibrating. ";
-            
-            // Add page-specific context if it's not already in the AI briefing
-            const path = window.location.pathname;
-            if (!briefing.includes('Research') && path.includes('workspace')) {
-                briefing += " You are in the Research Workspace, currently monitoring agent cognitive layers.";
-            } else if (!briefing.includes('Simulator') && path.includes('app')) {
-                briefing += " Viewing the Simulator Console. All execution parameters are nominal.";
+            // Add extra context if it's brief
+            if (briefing.length < 50) {
+                briefing += " All systems are currently nominal.";
             }
 
             this.speak(briefing);
@@ -140,6 +144,20 @@ class VoiceBriefing {
             this.ui.ring.style.animationDuration = '10s';
             this.ui.ring.style.borderColor = 'var(--cyan)';
         }
+    }
+
+    getPageExplanation() {
+        const path = window.location.pathname;
+        if (path.includes('workspace')) {
+            return "Architecture Overview: You are in the Research Workspace. This is the orchestration layer where market datasets are calibrated and agent cognitive populations are stress-tested before deployment.";
+        } else if (path.includes('app')) {
+            return "Simulator Console Active: This environment manages real-time WebSocket streams, order book matching, and agent trade execution cycles in a high-fidelity synthetic market.";
+        } else if (path.includes('live-market')) {
+            return "Live Monitor Synced: This surface tracks real-world equity data across U.S. and Indian markets, providing a direct comparison between live conditions and simulator benchmarks.";
+        } else if (path === '/' || path.includes('landing')) {
+            return "StockAI v2.0 Platform: You are viewing the global research ecosystem interface. This platform studies the interplay between autonomous LLM agents and multi-market financial telemetry.";
+        }
+        return "StockAI is standing by. All systems are operating within nominal research parameters.";
     }
 
     speak(text) {

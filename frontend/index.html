@@ -5272,6 +5272,12 @@ document.addEventListener('DOMContentLoaded', () => {
              toggleBtn.style.borderColor = isOff ? '#ef4e63' : 'var(--border)';
          };
          
+         // Initial state
+         if (window.moodController.disabled) {
+             toggleBtn.style.color = '#ef4e63';
+             toggleBtn.style.borderColor = '#ef4e63';
+         }
+         
          container.appendChild(moodLabel);
          container.appendChild(toggleBtn);
          header.appendChild(container);

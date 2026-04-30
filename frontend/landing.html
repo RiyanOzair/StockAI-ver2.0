@@ -1560,6 +1560,12 @@ setInterval(() => {
              toggleBtn.style.borderColor = isOff ? 'var(--magenta)' : 'var(--border)';
          };
          
+         // Initial state
+         if (window.moodController.disabled) {
+             toggleBtn.style.color = 'var(--magenta)';
+             toggleBtn.style.borderColor = 'var(--magenta)';
+         }
+         
          container.appendChild(moodLabel);
          container.appendChild(toggleBtn);
          navLinks.appendChild(container);

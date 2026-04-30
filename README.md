@@ -22,6 +22,8 @@ Live deployment: https://stockai-ver2-0.onrender.com/
 ## Features
 
 - Multi-agent market simulation with LLM, deterministic, and Python strategy-SDK agents
+- Multi-Market Support: Native support for Indian (NSE/BSE), US, and Crypto markets
+- Immersive Analytics: Mood Engine (sentiment-driven UI), 3D Topology (market density visualization), and AI Voice Briefings
 - Persistent run, scenario, dataset, experiment, bot, evaluation, and job records backed by SQLite
 - Session-phase aware market kernel with latency, slippage, market orders, partial fills, and queue-priority matching
 - Live stock prices, recent trades, market depth, price history, and run-scoped event tape

@@ -20,7 +20,7 @@ class VoiceBriefing {
         btn.id = 'briefingToggle';
         btn.innerHTML = '🛡️ BRIEFING';
         btn.style.cssText = `
-            position: fixed; bottom: 20px; left: 70px; z-index: 9999;
+            position: fixed; bottom: 80px; left: 20px; z-index: 9999;
             background: rgba(0,0,0,0.5); border: 1px solid var(--lime);
             color: var(--lime); padding: 8px 16px; border-radius: 4px;
             cursor: pointer; font-size: 11px; font-family: var(--mono);

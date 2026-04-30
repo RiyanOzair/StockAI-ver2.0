@@ -67,6 +67,18 @@
     @media (pointer: coarse) {
       #customCursorOuter, #customCursorInner { display: none; }
     }
+
+    /* ── THEMED SCROLLBARS ── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0a0a; }
+    ::-webkit-scrollbar-thumb {
+      background: #1a3a5c;
+      border-radius: 3px;
+      transition: background 0.2s;
+    }
+    ::-webkit-scrollbar-thumb:hover { background: #00e5ff; }
+    ::-webkit-scrollbar-corner { background: #0a0a0a; }
+    * { scrollbar-width: thin; scrollbar-color: #1a3a5c #0a0a0a; }
   </style>
 </head>
 <body>
@@ -142,9 +154,10 @@
             <!-- Stage 2: Context -->
             <div class="launcher-stage" id="stage-2" style="display:none">
               <div class="eyebrow" style="margin-bottom:12px;color:var(--cyan)">STAGE 2 OF 4: CONTEXT</div>
-              <div class="grid2">
+              <div class="grid3">
                 <div class="field"><label for="runDataset">DATASET</label><select id="runDataset"></select></div>
                 <div class="field"><label for="runScenario">SCENARIO</label><select id="runScenario"></select></div>
+                <div class="field"><label for="runMarketContext">MARKET CONTEXT</label><select id="runMarketContext"><option value="us_equities">US EQUITIES</option><option value="india_nse_bse">INDIA NSE/BSE</option><option value="global">GLOBAL</option></select></div>
               </div>
             </div>
             
@@ -292,12 +305,21 @@
       </article>
       <article class="tool">
         <div class="tool-meta blue">
-          <div><div class="tool-title">AGENT NOTEBOOKS</div><p class="copy">Review qualitative research entries and agent observations from the current simulation run.</p></div>
+          <div><div class="tool-title">AGENT NOTEBOOKS</div><p class="copy">Create research entries, observations, and thesis notes attached to the active simulation run. Review existing entries below.</p></div>
           <div id="notebookStatus" class="pill blue">0 ENTRIES</div>
         </div>
         <div class="tool-body">
-          <div class="feed" id="notebookFeed" style="max-height:300px;overflow-y:auto;background:var(--bg-lighter,#0a0a0a);padding:12px;border:1px solid #222;">
-            <div class="empty">NO NOTEBOOKS LOADED / WAIT FOR ACTIVE RUN</div>
+          <div class="grid2">
+            <div class="field"><label for="nbEntryType">ENTRY TYPE</label><select id="nbEntryType"><option value="research">RESEARCH</option><option value="thesis">THESIS</option><option value="review">REVIEW</option><option value="observation">OBSERVATION</option></select></div>
+            <div class="field"><label for="nbAuthor">AUTHOR TAG</label><input id="nbAuthor" value="RESEARCHER" /></div>
+            <div class="field full"><label for="nbContent">NOTEBOOK CONTENT</label><textarea id="nbContent" placeholder="WRITE YOUR RESEARCH NOTE, THESIS ENTRY, OR OBSERVATION HERE..."></textarea></div>
+          </div>
+          <div class="actions"><button id="createNotebookBtn" class="btn primary" type="button">CREATE NOTEBOOK ENTRY</button></div>
+          <div style="margin-top:18px;border-top:2px solid var(--line);padding-top:16px">
+            <div class="eyebrow" style="margin-bottom:12px">EXISTING ENTRIES</div>
+            <div class="feed" id="notebookFeed" style="max-height:300px;overflow-y:auto;background:var(--bg-lighter,#0a0a0a);padding:12px;border:1px solid #222;">
+              <div class="empty">NO NOTEBOOKS LOADED / WAIT FOR ACTIVE RUN</div>
+            </div>
           </div>
         </div>
       </article>
@@ -407,7 +429,7 @@
       }
       mb.style.display = (app.status?.llm_mode === 'mock') ? 'block' : 'none';
     }
-    async function launchRun(autostart){const mix=normalizeMix();closeEventStream();await post('/runs',{name:$('runName').value.trim()||'WORKSPACE RUN',autostart,config:{num_agents:+$('runAgents').value||10,num_days:+$('runDays').value||4,seed:+$('runSeed').value||42,use_llm:$('runLLM').value==='true',speed:autostart?0.5:0.1,training_mode:$('runMode').value,dataset_version:$('runDataset').value,scenario_id:$('runScenario').value,experiment_id:$('runExperiment').value,agent_population_id:$('runPopulation').value,agent_mix:mix,latency_ms:$('runMode').value==='deterministic'?80:120,slippage_bps:$('runMode').value==='deterministic'?4:6}});app.hydrated=false;await loadWorkspace()}
+    async function launchRun(autostart){const mix=normalizeMix();closeEventStream();await post('/runs',{name:$('runName').value.trim()||'WORKSPACE RUN',autostart,config:{num_agents:+$('runAgents').value||10,num_days:+$('runDays').value||4,seed:+$('runSeed').value||42,use_llm:$('runLLM').value==='true',speed:autostart?0.5:0.1,training_mode:$('runMode').value,dataset_version:$('runDataset').value,scenario_id:$('runScenario').value,experiment_id:$('runExperiment').value,agent_population_id:$('runPopulation').value,agent_mix:mix,market_context:$('runMarketContext').value||'us_equities',latency_ms:$('runMode').value==='deterministic'?80:120,slippage_bps:$('runMode').value==='deterministic'?4:6}});app.hydrated=false;await loadWorkspace()}
     async function createBot(){await post('/bots',{name:$('botName').value.trim()||'WORKSPACE BOT',bot_type:'strategy',strategy_id:$('botStrategy').value,description:$('botDesc').value.trim(),config:JSON.parse($('botConfig').value||'{}'),attach_to_active_simulation:$('botAttach').value==='true'});await loadWorkspace()}
     async function calibrate(){await post('/datasets/calibrate',{dataset_id:$('calDataset').value,returns:$('calReturns').value.split(',').map(v=>+v.trim()).filter(Number.isFinite),spreads_bps:$('calSpreads').value.split(',').map(v=>+v.trim()).filter(Number.isFinite),volumes_millions:$('calVolumes').value.split(',').map(v=>+v.trim()).filter(Number.isFinite),event_frequency:1});await loadWorkspace()}
     async function createScenario(){const presets={stress:{regime_overrides:{market_regime:'risk_off',liquidity_regime:'thin'},shock_profile:{volatility_spike:1.35,spillover_bias:.9},config_overrides:{liquidity_regime:'thin',slippage_bps:10,training_mode:'deterministic'}},momentum:{regime_overrides:{market_regime:'trend',liquidity_regime:'core'},shock_profile:{volatility_spike:.9,spillover_bias:.35},config_overrides:{liquidity_regime:'core',slippage_bps:4.5,training_mode:'hybrid'}},balanced:{regime_overrides:{market_regime:'balanced',liquidity_regime:'core'},shock_profile:{volatility_spike:1,spillover_bias:.5},config_overrides:{liquidity_regime:'core',slippage_bps:6,training_mode:'hybrid'}}};const p=presets[$('scenarioRegime').value];await post('/scenarios',{name:$('scenarioName').value.trim()||'WORKSPACE SCENARIO',description:$('scenarioDesc').value.trim(),version:$('scenarioVersion').value.trim()||'1.0',regime_overrides:p.regime_overrides,shock_profile:p.shock_profile,config_overrides:p.config_overrides});await loadWorkspace()}
@@ -441,6 +463,13 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
       const data = await api(`/data/notebooks?run_id=${app.status.run_id}`);
       $('notebookStatus').textContent = `${data.length} ENTRIES`;
       $('notebookFeed').innerHTML = data.length ? data.map(d=>`<div class="item" style="border-bottom:1px solid #333;padding-bottom:8px;margin-bottom:8px"><div style="font-size:11px;color:var(--cyan);margin-bottom:4px"><strong>${esc(d.agent_id)}</strong> · DAY ${d.day} SESS ${d.session} · ${esc(d.entry_type.toUpperCase())}</div><div class="copy">${esc(d.content)}</div></div>`).join('') : '<div class="empty">NOTEBOOKS REQUIRE LLM AGENTS. CURRENT RUN MAY BE IN MOCK MODE OR NO NOTEBOOKS GENERATED YET.</div>';
+    }
+    async function createNotebook(){
+      const content=$('nbContent').value.trim();
+      if(!content){showToast('NOTEBOOK CONTENT IS REQUIRED','error');return}
+      await post('/data/notebooks',{entry_type:$('nbEntryType').value,content:content,agent_id:$('nbAuthor').value.trim()||'RESEARCHER'});
+      $('nbContent').value='';
+      await loadNotebooks();
     }
 
     /* FEATURE 5: STEPPED RUN LAUNCHER */
@@ -518,7 +547,7 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
     updateEventPreview();
 
     function toggleChat(force){app.chatOpen=typeof force==='boolean'?force:!app.chatOpen;$('chatDrawer').classList.toggle('open',app.chatOpen)}
-    function bind(){ $('refreshBtn').addEventListener('click',loadWorkspace);$('exportRunBtn').addEventListener('click',exportRun);$('launchRunBtn').addEventListener('click',()=>launchRun(false));$('launchRunStartBtn').addEventListener('click',()=>launchRun(true));$('createBotBtn').addEventListener('click',createBot);$('calibrateBtn').addEventListener('click',calibrate);$('createScenarioBtn').addEventListener('click',createScenario);$('createExperimentBtn').addEventListener('click',createExperiment);$('runEvalBtn').addEventListener('click',runEvaluation);$('injectEventBtn').addEventListener('click',injectEvent);$('previewPurgeBtn').addEventListener('click',previewPurge);$('executePurgeBtn').addEventListener('click',executePurge);$('mixLlm').addEventListener('input',normalizeMix);$('mixRule').addEventListener('input',normalizeMix);$('mixStrategy').addEventListener('input',normalizeMix);$('runAgents').addEventListener('input',normalizeMix);$('evtMagnitude').addEventListener('input',magnitude);$('chatFab').addEventListener('click',()=>toggleChat());$('chatClose').addEventListener('click',()=>toggleChat(false));$('chatSend').addEventListener('click',sendChat);$('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});$('eventTapePanel').addEventListener('toggle',()=>{if(!$('eventTapePanel').open){closeEventStream();return}if(app.status?.run_id)openEventStream(app.status.run_id)})}
+    function bind(){ $('refreshBtn').addEventListener('click',loadWorkspace);$('exportRunBtn').addEventListener('click',exportRun);$('launchRunBtn').addEventListener('click',()=>launchRun(false));$('launchRunStartBtn').addEventListener('click',()=>launchRun(true));$('createBotBtn').addEventListener('click',createBot);$('calibrateBtn').addEventListener('click',calibrate);$('createScenarioBtn').addEventListener('click',createScenario);$('createExperimentBtn').addEventListener('click',createExperiment);$('runEvalBtn').addEventListener('click',runEvaluation);$('injectEventBtn').addEventListener('click',injectEvent);$('previewPurgeBtn').addEventListener('click',previewPurge);$('executePurgeBtn').addEventListener('click',executePurge);$('createNotebookBtn').addEventListener('click',createNotebook);$('mixLlm').addEventListener('input',normalizeMix);$('mixRule').addEventListener('input',normalizeMix);$('mixStrategy').addEventListener('input',normalizeMix);$('runAgents').addEventListener('input',normalizeMix);$('evtMagnitude').addEventListener('input',magnitude);$('chatFab').addEventListener('click',()=>toggleChat());$('chatClose').addEventListener('click',()=>toggleChat(false));$('chatSend').addEventListener('click',sendChat);$('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});$('eventTapePanel').addEventListener('toggle',()=>{if(!$('eventTapePanel').open){closeEventStream();return}if(app.status?.run_id)openEventStream(app.status.run_id)})}
     async function init(){bind();magnitude();renderEvents();loadChatHistory();addMsg('bot','ASK ABOUT THE CURRENT REGIME, ACTIVE RUN STATS, AGENT DECISIONS, OR WHICH BOTS LOOK READY FOR THE US EQUITIES SURFACE.');await loadStocks();await loadWorkspace();setInterval(()=>loadWorkspace().catch(()=>{}),8000)}
     init().catch(err=>{$('overviewGrid').innerHTML=`<div class="empty">WORKSPACE LOAD FAILED: ${esc(err.message)}</div>`})
   </script>

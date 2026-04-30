@@ -472,6 +472,31 @@ async def execute_purge():
 async def list_agent_notebooks(run_id: str):
     return state.research_store.list_notebook_entries(run_id, limit=200)
 
+
+class NotebookEntryRequest(BaseModel):
+    entry_type: str = "research"
+    content: str
+    agent_id: str = "researcher"
+    day: int = 0
+    session: int = 0
+    payload: Dict[str, Any] = Field(default_factory=dict)
+
+
+@router.post("/data/notebooks")
+async def create_notebook_entry(req: NotebookEntryRequest):
+    run_id = getattr(state.simulation, "active_run_id", None)
+    if not run_id:
+        raise HTTPException(400, "No active run — launch a run first to attach notebook entries")
+    return state.research_store.save_notebook_entry(
+        run_id=run_id,
+        agent_id=req.agent_id,
+        day=req.day or getattr(state.simulation, "day", 0),
+        session=req.session or getattr(state.simulation, "session", 0),
+        entry_type=req.entry_type,
+        content=req.content,
+        payload_json=req.payload,
+    )
+
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Header
 
 @router.post("/runs")

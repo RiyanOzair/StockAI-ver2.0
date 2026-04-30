@@ -724,6 +724,18 @@ main {
 @media (pointer: coarse) {
   #customCursorOuter, #customCursorInner { display: none; }
 }
+
+/* ── THEMED SCROLLBARS ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb {
+  background: #1a3a5c;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover { background: #00e5ff; }
+::-webkit-scrollbar-corner { background: #0a0a0a; }
+* { scrollbar-width: thin; scrollbar-color: #1a3a5c #0a0a0a; }
 </style>
 </head>
 <body>
@@ -778,6 +790,21 @@ main {
       </div>
     </section>
 
+    <!-- ── MARKET SELECTOR ── -->
+    <section class="section" style="margin-top:16px;">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div class="eyebrow" style="margin-bottom:0;">Market Region</div>
+        <div id="market-selector" style="display:flex;gap:0;border:2px solid var(--border);">
+          <button class="nav-btn market-tab active" data-market="us" style="border:none;padding:10px 18px;font-size:11px;min-height:0;" onclick="switchMarket('us')">US EQUITIES</button>
+          <button class="nav-btn market-tab" data-market="india" style="border:none;border-left:1px solid var(--border);padding:10px 18px;font-size:11px;min-height:0;" onclick="switchMarket('india')">INDIA NSE/BSE</button>
+          <button class="nav-btn market-tab" data-market="global" style="border:none;border-left:1px solid var(--border);padding:10px 18px;font-size:11px;min-height:0;" onclick="switchMarket('global')">GLOBAL</button>
+        </div>
+        <div id="nse-status-badge" style="display:none;font-family:var(--mono);font-size:11px;font-weight:700;padding:4px 10px;border:2px solid var(--border);letter-spacing:1px;"></div>
+      </div>
+    </section>
+
+    <!-- ── US EQUITIES SECTION ── -->
+    <div id="us-section">
     <section class="section">
       <div class="section-head">
         <div>
@@ -838,7 +865,46 @@ main {
     </section>
 
     <div class="footnote" id="scope-note"></div>
-    <div style="margin-top:60px;padding:40px 20px;border-top:1px solid var(--border);text-align:center;">
+    </div><!-- close #us-section -->
+
+    <!-- ── INDIA NSE/BSE SECTION ── -->
+    <div id="india-section" style="display:none;">
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Indian Market Indices</div>
+            <h2 class="section-title">NSE & BSE tracked tape preview.</h2>
+          </div>
+          <div id="india-api-status" class="nav-chip" style="font-size:11px;"></div>
+        </div>
+        <div class="snapshot-grid" id="india-indices-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Top NSE Stocks</div>
+            <h2 class="section-title">Market-cap leaders on the National Stock Exchange.</h2>
+          </div>
+        </div>
+        <div class="snapshot-grid" id="india-stocks-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));"></div>
+      </section>
+
+      <div id="india-connect-prompt" style="display:none;border:2px dashed var(--border);padding:28px;text-align:center;color:var(--muted);font-family:var(--mono);line-height:1.8;margin-top:18px;">
+        <div style="font-size:14px;font-weight:700;color:var(--cyan);margin-bottom:10px;">CONNECT INDIAN MARKET DATA</div>
+        <div style="font-size:12px;">Get a free API key from <a href="https://twelvedata.com" target="_blank" style="color:var(--cyan);">twelvedata.com</a> and set <strong style="color:var(--text);">INDIA_MARKET_API_KEY</strong> in your .env file.</div>
+        <div style="font-size:11px;margin-top:8px;">Free tier: 800 requests/day — enough for demos and research.</div>
+      </div>
+    </div>
+
+    <!-- ── ATTRIBUTION FOOTER ── -->
+    <div style="margin-top:40px;padding:20px;border-top:1px solid var(--border);text-align:center;">
+      <div id="data-attribution" style="font-family:var(--mono);font-size:10px;color:#555;line-height:1.8;letter-spacing:0.5px;">
+        US DATA: YAHOO FINANCE (FREE, NO API KEY) · INDIA DATA: TWELVE DATA (FREE TIER, API KEY REQUIRED) · DATA MAY BE DELAYED · NOT FINANCIAL ADVICE · FOR ACADEMIC RESEARCH ONLY
+      </div>
+    </div>
+
+    <div style="margin-top:20px;padding:40px 20px;border-top:1px solid var(--border);text-align:center;">
       <div style="font-family:var(--mono);font-size:14px;color:var(--muted);letter-spacing:1px;">
         © 2026 STOCKAI &middot; <a href="/credits" style="color:var(--cyan);text-decoration:none;">TEAM CREDITS</a>
       </div>
@@ -1285,6 +1351,138 @@ els.refreshBtn.addEventListener("click", () => loadSnapshot(true));
 
 loadSnapshot(false);
 setInterval(() => loadSnapshot(false), 120000);
+
+// ── MARKET SELECTOR ──
+let currentMarket = "us";
+let indiaData = null;
+
+function fmtINR(value) {
+  if (value == null || Number.isNaN(Number(value))) return "--";
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: value >= 10000 ? 0 : 2,
+  }).format(value);
+}
+
+function switchMarket(market) {
+  currentMarket = market;
+  document.querySelectorAll(".market-tab").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.market === market);
+    if (btn.dataset.market === market) {
+      btn.style.background = "var(--lime)";
+      btn.style.color = "#000";
+      btn.style.borderColor = "var(--lime)";
+    } else {
+      btn.style.background = "transparent";
+      btn.style.color = "var(--text)";
+      btn.style.borderColor = "var(--border)";
+    }
+  });
+
+  const usSection = document.getElementById("us-section");
+  const indiaSection = document.getElementById("india-section");
+  const nseBadge = document.getElementById("nse-status-badge");
+
+  if (market === "us") {
+    usSection.style.display = "block";
+    indiaSection.style.display = "none";
+    nseBadge.style.display = "none";
+  } else if (market === "india") {
+    usSection.style.display = "none";
+    indiaSection.style.display = "block";
+    nseBadge.style.display = "inline-flex";
+    loadIndiaData();
+  } else {
+    // GLOBAL: show both
+    usSection.style.display = "block";
+    indiaSection.style.display = "block";
+    nseBadge.style.display = "inline-flex";
+    loadIndiaData();
+  }
+}
+
+async function loadIndiaData() {
+  try {
+    const response = await fetch("/api/live-market/india/summary", {
+      cache: "no-store",
+      headers: { "Accept": "application/json" },
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    indiaData = await response.json();
+    renderIndiaData(indiaData);
+  } catch (err) {
+    console.error("India market fetch error:", err);
+    const indicesGrid = document.getElementById("india-indices-grid");
+    indicesGrid.innerHTML = `<div class="empty-state">Unable to load Indian market data: ${escapeHtml(err.message)}</div>`;
+  }
+}
+
+function renderIndiaData(data) {
+  const nseBadge = document.getElementById("nse-status-badge");
+  const indicesGrid = document.getElementById("india-indices-grid");
+  const stocksGrid = document.getElementById("india-stocks-grid");
+  const apiStatus = document.getElementById("india-api-status");
+  const connectPrompt = document.getElementById("india-connect-prompt");
+
+  // NSE status badge
+  if (data.nse_open) {
+    nseBadge.textContent = "NSE OPEN";
+    nseBadge.style.borderColor = "var(--lime)";
+    nseBadge.style.color = "var(--lime)";
+    nseBadge.style.background = "rgba(200,240,74,0.08)";
+  } else {
+    const nextOpen = data.next_open ? new Date(data.next_open).toLocaleString("en-IN", { weekday: "short", hour: "2-digit", minute: "2-digit" }) : "";
+    nseBadge.textContent = `NSE CLOSED${nextOpen ? " · OPENS " + nextOpen : ""}`;
+    nseBadge.style.borderColor = "var(--red)";
+    nseBadge.style.color = "var(--red)";
+    nseBadge.style.background = "rgba(239,78,99,0.08)";
+  }
+
+  // API key status
+  if (!data.api_key_configured) {
+    apiStatus.textContent = "API KEY NOT SET";
+    apiStatus.style.color = "var(--yellow)";
+    connectPrompt.style.display = "block";
+    indicesGrid.innerHTML = "";
+    stocksGrid.innerHTML = "";
+    return;
+  }
+
+  connectPrompt.style.display = "none";
+  const staleTag = data.is_stale ? ' <span style="color:var(--yellow);font-size:10px;">[STALE]</span>' : "";
+  apiStatus.innerHTML = `SOURCE: ${escapeHtml(data.data_source)}${staleTag}`;
+  apiStatus.style.color = data.is_stale ? "var(--yellow)" : "var(--cyan)";
+
+  // Render indices
+  const indices = Array.isArray(data.indices) ? data.indices : [];
+  indicesGrid.innerHTML = indices.length ? indices.map(idx => `
+    <article class="snapshot-card reveal">
+      <div class="snapshot-label">${escapeHtml(idx.label)} <span style="font-size:9px;color:var(--muted);">${escapeHtml(idx.exchange)}</span></div>
+      <div class="snapshot-value">${fmtINR(idx.price)}</div>
+      <div class="delta ${deltaClass(idx.change_pct)}">${fmtPct(idx.change_pct)} &middot; ${fmtSignedNumber(idx.change)}</div>
+    </article>
+  `).join("") : '<div class="empty-state">No Indian index data available.</div>';
+
+  // Render stocks
+  const stocks = Array.isArray(data.top_stocks) ? data.top_stocks : [];
+  stocksGrid.innerHTML = stocks.length ? stocks.map(s => `
+    <article class="snapshot-card reveal">
+      <div class="snapshot-label">${escapeHtml(s.symbol)} <span style="font-size:9px;color:var(--muted);">NSE</span></div>
+      <div style="font-weight:600;font-size:13px;margin-top:4px;color:var(--muted);">${escapeHtml(s.label)}</div>
+      <div class="snapshot-value" style="font-size:22px;">${fmtINR(s.price)}</div>
+      <div class="delta ${deltaClass(s.change_pct)}">${fmtPct(s.change_pct)}</div>
+    </article>
+  `).join("") : '<div class="empty-state">No Indian stock data available.</div>';
+}
+
+// Load India data in background on page load for GLOBAL toggle
+setTimeout(() => {
+  fetch("/api/live-market/india/summary", { cache: "no-store" })
+    .then(r => r.ok ? r.json() : null)
+    .then(d => { if (d) indiaData = d; })
+    .catch(() => {});
+}, 2000);
 </script>
 <!-- KBD SHORTCUTS OVERLAY -->
 <div id="kbdMap" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;border:3px solid #2a2a2a;padding:24px;z-index:9999;font-family:var(--mono, monospace);box-shadow:0 10px 30px rgba(0,0,0,.8);color:#e8e8e8;">

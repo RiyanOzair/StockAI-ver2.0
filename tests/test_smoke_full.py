@@ -395,3 +395,44 @@ class TestLiveMarketSmoke:
         monkeypatch.setattr(lm_api.live_market_service, "get_snapshot", fake)
         r = client.get("/api/live-market/snapshot")
         assert r.status_code == 200
+
+
+# ═══════════════════════════════════════════════════════════
+#  INDIA MARKET (MULTI-MARKET)
+# ═══════════════════════════════════════════════════════════
+
+class TestIndiaMarketSmoke:
+    def test_india_summary_endpoint(self):
+        resp = client.get("/api/live-market/india/summary")
+        assert resp.status_code in [200, 503]
+        if resp.status_code == 200:
+            data = resp.json()
+            assert "indices" in data
+            assert "market_status" in data
+            assert "data_source" in data
+            assert data["data_source"] != "Yahoo Finance"
+
+    def test_india_graceful_fallback(self):
+        # Even if external source is down, must not return 500
+        resp = client.get("/api/live-market/india/summary")
+        assert resp.status_code != 500
+
+    def test_india_comparison_endpoint(self):
+        resp = client.get("/api/live-market/india/comparison")
+        assert resp.status_code in [200, 503]
+        if resp.status_code == 200:
+            data = resp.json()
+            assert "india" in data
+            assert "data_source" in data
+
+
+# ═══════════════════════════════════════════════════════════
+#  SCROLLBAR THEMING
+# ═══════════════════════════════════════════════════════════
+
+class TestScrollbarTheming:
+    def test_scrollbars_present(self):
+        for page in ["/", "/app", "/workspace", "/live-market"]:
+            resp = client.get(page)
+            assert "webkit-scrollbar" in resp.text, \
+                f"Scrollbar styles missing from {page}"

@@ -1184,6 +1184,18 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
   title: "Replay tour";
 }
 #tour-replay-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+/* ── THEMED SCROLLBARS ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb {
+  background: #1a3a5c;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover { background: #00e5ff; }
+::-webkit-scrollbar-corner { background: #0a0a0a; }
+* { scrollbar-width: thin; scrollbar-color: #1a3a5c #0a0a0a; }
 </style>
 </head>
 <body>

@@ -94,7 +94,20 @@ class IndiaMarketService:
     @staticmethod
     def _get_api_key() -> str | None:
         from backend.app.core.config import settings
-        return settings.INDIA_MARKET_API_KEY.strip() or None
+        key = settings.INDIA_MARKET_API_KEY.strip()
+        if not key:
+            # Fallback: manually parse .env if Uvicorn hasn't been restarted
+            try:
+                from pathlib import Path
+                env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
+                if env_path.exists():
+                    for line in env_path.read_text(encoding="utf-8").splitlines():
+                        if line.startswith("INDIA_MARKET_API_KEY="):
+                            key = line.split("=", 1)[1].strip()
+                            break
+            except Exception:
+                pass
+        return key or None
 
     def has_api_key(self) -> bool:
         return self._get_api_key() is not None

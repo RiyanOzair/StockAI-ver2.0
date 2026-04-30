@@ -58,7 +58,7 @@ StockAI v2.0 introduces a client-server architecture centered around a high-fide
 - **Market Kernel**: Handles multi-session price-time priority matching with slippage modeling.
 - **Agent Sandbox**: 50+ autonomous LLM instances with unique personality fragments.
 - **Research Store**: Persistent SQLite storage for runs, scenarios, and experiments.
-- **Live Monitor**: Zero-latency integration with real-world market proxies (Yahoo Finance).
+- **Live Monitor**: Zero-latency integration with real-world multi-market proxies (Yahoo Finance for US, Twelve Data for India NSE/BSE).
 
 ---
 

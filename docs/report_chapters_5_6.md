@@ -6,11 +6,11 @@
 The implementation of StockAI v2.0 was conducted using **Visual Studio Code (VS Code)** as the primary IDE, leveraging its robust ecosystem for Python development, debugging, and Markdown documentation. The backend is built on **FastAPI**, chosen for its native support for asynchronous programming, which is critical for handling 50+ concurrent LLM agents without blocking the core Market Kernel.
 
 ### 5.2 Core Module Implementation
-#### 5.2.1 The Market Kernel (`SimulationLoop`)
-The Kernel is implemented as an asynchronous event-loop that resides in `backend/app/core/simulation.py`. 
-- **Logic**: It maintains a global `current_time` and triggers session phase transitions. 
+#### 5.2.1 The Market Kernel & Multi-Market Data
+The Kernel is implemented as an asynchronous event-loop that resides in `backend/app/engine/simulation_loop.py`. 
+- **Multi-Market Scope**: Operates across dynamic contexts including US Equities and India NSE/BSE, mitigating geographic data bias by incorporating Twelve Data alongside Yahoo Finance.
 - **Matching**: It uses a price-time priority queue to match incoming `BUY` and `SELL` orders.
-- **Resiliency**: It includes a "Synthetic Fallback Engine" that ensures the simulation continues even if external data providers are unreachable.
+- **Resiliency**: It includes a "Synthetic Fallback Engine" that gracefully continues operations via cached or synthesized data if external providers like Twelve Data are unreachable.
 
 #### 5.2.2 The AI Agent Kernel
 Agents are characterized by their `PersonalityFragment`. The implementation involves:

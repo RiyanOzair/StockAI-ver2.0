@@ -23,8 +23,14 @@ Live deployment: https://stockai-ver2-0.onrender.com/
 
 - Multi-agent market simulation with LLM, deterministic, and Python strategy-SDK agents
 - Multi-Market Support: Native support for Indian (NSE/BSE), US, and Crypto markets
-- Immersive Analytics: Mood Engine (sentiment-driven UI), 3D Topology (market density visualization), and AI Voice Briefings
-- Persistent run, scenario, dataset, experiment, bot, evaluation, and job records backed by SQLite
+- Cognitive HUD & Immersive UI: 
+  - Mood Engine: Sentiment-driven UI atmosphere and data visualization
+  - 3D Topology: Real-time market density and sector topology visualization
+  - AI Voice Briefings: Context-aware narrated market summaries
+  - Onboarding Tour: Guided walkthrough for new researchers
+- Research Toolkit & Persistence:
+  - Agent Notebooks: Research entries, thesis notes, and observations attached to active runs
+  - Persistent Records: Runs, scenarios, datasets, experiments, bots, and evaluations backed by SQLite
 - Session-phase aware market kernel with latency, slippage, market orders, partial fills, and queue-priority matching
 - Live stock prices, recent trades, market depth, price history, and run-scoped event tape
 - Research workspace for dataset/scenario/bot discovery and experiment comparison
@@ -113,6 +119,7 @@ Current important routes:
 - `GET` and `POST /simulation/*` control simulation state and snapshots
 - `GET` and `POST /agents/*` expose agent lists, analytics, decisions, explainability, and custom agent creation
 - `GET` and `POST /data/*` expose exports, events, forum items, reports, loans, and event injection
+- `GET` and `POST /data/notebooks` manage research entries and agent observations
 - `GET` and `POST /runs`, `/experiments`, `/scenarios`, `/bots`, `/evaluations`, `/datasets` expose the research platform resources
 - `GET /runs/{run_id}/events` and `GET /runs/{run_id}/stream` expose run-scoped event feeds
 

@@ -1097,6 +1097,36 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
   box-shadow: 0 0 0 1px rgba(0,255,255,0.15), 0 12px 40px rgba(0,0,0,0.7);
   transition: top 0.25s ease, left 0.25s ease;
 }
+/* ── 3D BUBBLE BACKGROUND ── */
+#bubbleCanvas {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+/* ── ONBOARDING TOUR ── */
+.tour-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  background: rgba(0,0,0,0.7);
+  z-index: 9000;
+  display: none;
+  backdrop-filter: blur(4px);
+}
+.tour-box {
+  position: absolute;
+  width: 320px;
+  background: #111;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  z-index: 9001;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+}
 .tour-step-num {
   font-family: var(--mono);
   font-size: 10px;
@@ -1323,6 +1353,9 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
       </select>
     </div>
   </aside>
+
+  <!-- BUBBLE BACKGROUND -->
+  <canvas id="bubbleCanvas"></canvas>
 
   <!-- MAIN -->
   <main id="main">
@@ -1625,22 +1658,26 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
           </div>
         </div>
 
-        <!-- Price Alerts Panel (always visible) -->
-        <div id="alerts-panel" class="card yellow section-gap" style="margin-bottom:16px">
-          <div class="card-title">🔔 Price Alerts <span id="alert-badge-count" style="color:var(--lime)"></span>
+        <!-- Refined Price Alerts Panel -->
+        <div id="alerts-panel" class="card section-gap" style="margin-bottom:16px; border-left: 3px solid var(--amber);">
+          <div class="card-title" style="display:flex; justify-content:space-between; align-items:center;">
+            <span>🔔 PRICE ALERTS</span>
+            <span id="alert-badge-count" style="font-family:var(--mono); font-size:10px; background:rgba(251,191,36,0.1); padding:2px 8px; border-radius:10px; color:var(--amber)">0 ACTIVE</span>
           </div>
-          <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-            <select id="alert-sym" style="width:130px;font-size:11px">
-              <option value="">Stock…</option>
+          <div style="display:grid; grid-template-columns: 1fr 1fr 100px auto; gap:8px; margin-bottom:12px; align-items:center;">
+            <select id="alert-sym" style="font-size:11px; height:32px; background:var(--bg3); border:1px solid var(--border);">
+              <option value="">STOCK…</option>
             </select>
-            <select id="alert-dir" style="width:110px;font-size:11px">
-              <option value="above">Rises above</option>
-              <option value="below">Falls below</option>
+            <select id="alert-dir" style="font-size:11px; height:32px; background:var(--bg3); border:1px solid var(--border);">
+              <option value="above">RISES ABOVE</option>
+              <option value="below">FALLS BELOW</option>
             </select>
-            <input type="number" id="alert-price" placeholder="Target $" style="width:100px;font-size:11px" />
-            <button class="btn btn-lime" style="font-size:11px;padding:5px 12px" onclick="addPriceAlert()">+ Add Alert</button>
+            <input type="number" id="alert-price" placeholder="TARGET $" style="font-size:11px; height:32px; background:var(--bg3); border:1px solid var(--border); padding:0 10px;" />
+            <button class="btn btn-lime" style="font-size:11px; height:32px; padding:0 15px; font-weight:800; border-radius:4px;" onclick="addPriceAlert()">ADD</button>
           </div>
-          <div id="alert-rules-list"><div class="empty" style="padding:12px">No alerts set. Add one above — you'll get notified when a stock crosses your target price.</div></div>
+          <div id="alert-rules-list" style="max-height:120px; overflow-y:auto; padding-right:4px;">
+            <div class="empty" style="padding:16px; font-size:11px; opacity:0.6;">NO ALERTS CONFIGURED</div>
+          </div>
         </div>
 
         <!-- Stock Heatmap -->
@@ -2796,6 +2833,18 @@ function renderTrades(trades) {
 }
 
 /* ═══════════════════════════════════════════
+   HALTED BANNER
+═══════════════════════════════════════════ */
+function renderHaltedBanner(haltedList) {
+  const banner = document.getElementById('halted-banner');
+  if (!haltedList.length) { banner.style.display = 'none'; return; }
+  banner.style.display = 'block';
+  banner.innerHTML = haltedList.map(sym =>
+    `<div class="halted-alert">&#9889; CIRCUIT BREAKER: <strong>${sym}</strong> (${allStocks[sym]?.name || sym}) halted — price moved >10% this session</div>`
+  ).join('');
+}
+
+/* ═══════════════════════════════════════════
    EVENTS FEED (Dashboard)
 ═══════════════════════════════════════════ */
 async function loadEvents() {
@@ -2849,18 +2898,6 @@ async function loadForum() {
     <div class="feed-item-body">${escHtml(p.message)}</div>`;
     feed.appendChild(el);
   });
-}
-
-/* ═══════════════════════════════════════════
-   HALTED BANNER
-═══════════════════════════════════════════ */
-function renderHaltedBanner(haltedList) {
-  const banner = document.getElementById('halted-banner');
-  if (!haltedList.length) { banner.style.display = 'none'; return; }
-  banner.style.display = 'block';
-  banner.innerHTML = haltedList.map(sym =>
-    `<div class="halted-alert">&#9889; CIRCUIT BREAKER: <strong>${sym}</strong> (${allStocks[sym]?.name || sym}) halted — price moved >10% this session</div>`
-  ).join('');
 }
 
 /* ═══════════════════════════════════════════
@@ -4253,6 +4290,56 @@ async function drawRaceChart(top10, snaps) {
   });
 }
 
+const TOUR_STEPS = [
+  {
+    title: "Welcome to StockAI",
+    text: "A fully simulated stock market driven by AI agents. Prices move, events fire, agents trade — you control the clock.",
+    target: null
+  },
+  {
+    title: "Simulation Controls",
+    text: "Start, Pause, or Reset the entire world from here. You can also speed up time or jump ahead by days.",
+    target: ".sidebar-controls"
+  },
+  {
+    title: "Live Metrics",
+    text: "Monitor the health of the market, total trades, and active agents in real-time.",
+    target: ".grid-6"
+  },
+  {
+    title: "Activity Feeds",
+    text: "Every agent decision and market event is logged here. Watch the narrative of the market unfold.",
+    target: ".grid-4"
+  },
+  {
+    title: "Neural Network",
+    text: "This live graph shows how agents are connected and how their sentiment influences each other.",
+    target: "#neural-container"
+  },
+  {
+    title: "Agent Analysis",
+    text: "Detailed breakdown of every agent's portfolio, logic, and recent trades.",
+    target: "#page-agents"
+  },
+  {
+    title: "Mood Engine",
+    text: "The global market sentiment is tracked here. You can toggle the autonomous engine on/off.",
+    target: "#marketMoodLabel"
+  },
+  {
+    title: "Voice Briefing",
+    text: "Click the shield icon for an immersive audio breakdown of the current market state.",
+    target: "#voiceBriefingContainer"
+  },
+  {
+    title: "Ready to Start?",
+    text: "Hit the Play button to begin the simulation. Good luck, Commander.",
+    target: "#btn-start"
+  }
+];
+
+
+
 /* ═══════════════════════════════════════════
    NOTIFICATION SYSTEM
 ═══════════════════════════════════════════ */
@@ -5250,6 +5337,7 @@ document.addEventListener('DOMContentLoaded', () => {
   <script src="/js/mood-controller.js"></script>
   <script src="/js/voice-briefing.js"></script>
   <script src="/js/topology-3d.js"></script>
+  <script src="/js/hud-controller.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
        const header = document.querySelector('.inline-flex');
@@ -5282,7 +5370,70 @@ document.addEventListener('DOMContentLoaded', () => {
          container.appendChild(toggleBtn);
          header.appendChild(container);
        }
-    });
+     });
+  </script>
+  <script>
+  // ── 3D BUBBLE ANIMATION ──
+  (function() {
+    const canvas = document.getElementById('bubbleCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let width, height, bubbles = [];
+
+    function init() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+      bubbles = [];
+      for (let i = 0; i < 40; i++) {
+        bubbles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: 2 + Math.random() * 4,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5,
+          alpha: 0.1 + Math.random() * 0.3
+        });
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      bubbles.forEach(b => {
+        b.x += b.vx;
+        b.y += b.vy;
+        if (b.x < 0) b.x = width;
+        if (b.x > width) b.x = 0;
+        if (b.y < 0) b.y = height;
+        if (b.y > height) b.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(74, 222, 128, ${b.alpha})`;
+        ctx.fill();
+        
+        // Connect nearby bubbles
+        bubbles.forEach(b2 => {
+          const dx = b.x - b2.x;
+          const dy = b.y - b2.y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.moveTo(b.x, b.y);
+            ctx.lineTo(b2.x, b2.y);
+            ctx.strokeStyle = `rgba(74, 222, 128, ${(1 - dist/120) * 0.1})`;
+            ctx.stroke();
+          }
+        });
+      });
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', init);
+    init();
+    animate();
+  })();
   </script>
 </body>
 <footer style="padding: 24px; border-top: 1px solid var(--border); text-align: center; background: var(--bg2);">

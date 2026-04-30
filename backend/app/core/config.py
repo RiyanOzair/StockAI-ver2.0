@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     GROQ_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
+    INDIA_MARKET_API_KEY: str = ""
     
     # Simulation Settings
     DEFAULT_MODEL_PROVIDER: str = "groq"

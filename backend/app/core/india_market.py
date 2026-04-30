@@ -93,7 +93,8 @@ class IndiaMarketService:
 
     @staticmethod
     def _get_api_key() -> str | None:
-        return os.environ.get("INDIA_MARKET_API_KEY", "").strip() or None
+        from backend.app.core.config import settings
+        return settings.INDIA_MARKET_API_KEY.strip() or None
 
     def has_api_key(self) -> bool:
         return self._get_api_key() is not None

@@ -2347,8 +2347,8 @@ function setWsDot(ok, err = false) {
   const lbl = document.getElementById('ws-label');
   const sl  = document.getElementById('ws-status-label');
   const cls = ok ? 'connected' : (err ? 'error' : '');
-  [d1].forEach(d => { d.className = cls; });
-  d2.style.background = ok ? 'var(--lime)' : (err ? 'var(--red)' : 'var(--muted)');
+  if (d1) d1.className = cls;
+  if (d2) d2.style.background = ok ? 'var(--lime)' : (err ? 'var(--red)' : 'var(--muted)');
   const txt = ok ? 'Live' : (err ? 'Error' : 'Disconnected');
   if (lbl) lbl.textContent = txt;
   if (sl)  sl.textContent  = ok ? 'Connected ✓' : txt;
@@ -4048,18 +4048,23 @@ function startRefreshLoop() {
    INIT
 ═══════════════════════════════════════════ */
 async function init() {
-  connectWS();
-  await pollStatus();
-  await loadMarketAnalytics();
-  await loadMarketStocks();
-  await loadAgents();
-  loadTrades();
-  loadEvents();
-  loadForum();
-  loadSnapshots();
-  loadChatHistory();
-  updateMetrics();
-  startRefreshLoop();
+  try {
+    connectWS();
+    await pollStatus();
+    await loadMarketAnalytics();
+    await loadMarketStocks();
+    await loadAgents();
+    loadTrades();
+    loadEvents();
+    loadForum();
+    loadSnapshots();
+    loadChatHistory();
+    updateMetrics();
+    startRefreshLoop();
+  } catch (err) {
+    console.error("INIT ERROR:", err);
+    alert("Init failed: " + err.message + "\n" + err.stack);
+  }
 }
 
 init();
@@ -4434,53 +4439,7 @@ setInterval(watchAgentStatuses, 8000);
 /* ═══════════════════════════════════════════
    ONBOARDING TOUR
 ═══════════════════════════════════════════ */
-const TOUR_STEPS = [
-  {
-    title: 'Welcome to StockAI',
-    text:  'A fully simulated stock market driven by AI agents. Prices move, events fire, agents trade — you control the clock. Let\'s take a quick tour!',
-    target: null,
-  },
-  {
-    title: 'Start / Advance Days',
-    text:  'Click the play button to run exactly 1 day of trading. Each click advances the market by one day at the selected speed.',
-    target: '#btn-start',
-  },
-  {
-    title: 'Quick-Run Buttons',
-    text:  'Press 5d, 10d or 30d to run multiple days hands-free. Days count up one by one automatically — it may take a moment depending on the speed setting.',
-    target: '.sidebar-quickrun',
-  },
-  {
-    title: 'Speed Control',
-    text:  'Choose Slow, Normal, Fast or Turbo. Change speed at any time. Hit the pause button to pause mid-run, stop to cancel, or reset to start fresh.',
-    target: '.sidebar-speed',
-  },
-  {
-    title: 'Live Price Chart',
-    text:  'Real-time stock prices plotted as they update. Toggle individual stocks on/off using the coloured name buttons above the chart.',
-    target: '#priceChart',
-  },
-  {
-    title: 'Market Heatmap',
-    text:  'Every stock colour-coded green (up) to red (down) vs. day-open price, grouped by sector. Hover any cell for details.',
-    target: '#heatmap-grid',
-  },
-  {
-    title: 'AI Agents',
-    text:  'Click "Agents" in the sidebar to see all traders ranked by portfolio value. Each has a bias: momentum, contrarian, herding…',
-    target: '[data-page="agents"]',
-  },
-  {
-    title: 'AI Market Advisor',
-    text:  'The glowing AI button (bottom-right) opens a chat powered by a live LLM. Ask anything — prices, trends, which agent is winning.',
-    target: '#chatbot-orb',
-  },
-  {
-    title: 'You\'re all set!',
-    text:  'Hit the play button to start the simulation. Press the ? button anytime to replay this tour. Good luck out there!',
-    target: null,
-  },
-];
+
 
 let _tourStep = 0;
 let _tourPrevTarget = null;

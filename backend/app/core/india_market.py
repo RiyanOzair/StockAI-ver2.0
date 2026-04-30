@@ -93,10 +93,10 @@ class IndiaMarketService:
 
     @staticmethod
     def _get_api_key() -> str | None:
-        # 1. Try direct environment variable FIRST (Always works on Render/Local)
+        # 1. Try environment variable
         key = os.environ.get("INDIA_MARKET_API_KEY", "").strip()
         if key: return key
-        
+
         # 2. Try settings (Pydantic)
         try:
             from backend.app.core.config import settings
@@ -106,6 +106,7 @@ class IndiaMarketService:
             pass
             
         # 3. Fallback: manually parse .env if environment isn't synced
+        key = None
         try:
             from pathlib import Path
             # Search multiple possible root locations
@@ -116,13 +117,13 @@ class IndiaMarketService:
             ]
             for env_path in possible_paths:
                 if env_path.exists():
-                        for line in env_path.read_text(encoding="utf-8").splitlines():
-                            if line.strip().startswith("INDIA_MARKET_API_KEY="):
-                                key = line.split("=", 1)[1].strip().strip("'").strip('"')
-                                if key: break
-                    if key: break
-            except Exception as e:
-                logger.debug("Manual .env parse failed: %s", e)
+                    for line in env_path.read_text(encoding="utf-8").splitlines():
+                        if line.strip().startswith("INDIA_MARKET_API_KEY="):
+                            key = line.split("=", 1)[1].strip().strip("'").strip('"')
+                            if key: break
+                if key: break
+        except Exception as e:
+            logger.debug("Manual .env parse failed: %s", e)
         
         return key if key else None
 

@@ -94,20 +94,34 @@ class IndiaMarketService:
     @staticmethod
     def _get_api_key() -> str | None:
         from backend.app.core.config import settings
-        key = settings.INDIA_MARKET_API_KEY.strip()
+        # 1. Try settings (Pydantic)
+        key = getattr(settings, "INDIA_MARKET_API_KEY", "").strip()
+        
+        # 2. Try direct environment variable
         if not key:
-            # Fallback: manually parse .env if Uvicorn hasn't been restarted
+            key = os.environ.get("INDIA_MARKET_API_KEY", "").strip()
+            
+        # 3. Fallback: manually parse .env if environment isn't synced
+        if not key:
             try:
                 from pathlib import Path
-                env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
-                if env_path.exists():
-                    for line in env_path.read_text(encoding="utf-8").splitlines():
-                        if line.startswith("INDIA_MARKET_API_KEY="):
-                            key = line.split("=", 1)[1].strip()
-                            break
-            except Exception:
-                pass
-        return key or None
+                # Search multiple possible root locations
+                possible_paths = [
+                    Path(__file__).resolve().parent.parent.parent.parent / ".env",
+                    Path.cwd() / ".env",
+                    Path(__file__).resolve().parent.parent.parent / ".env"
+                ]
+                for env_path in possible_paths:
+                    if env_path.exists():
+                        for line in env_path.read_text(encoding="utf-8").splitlines():
+                            if line.strip().startswith("INDIA_MARKET_API_KEY="):
+                                key = line.split("=", 1)[1].strip().strip("'").strip('"')
+                                if key: break
+                    if key: break
+            except Exception as e:
+                logger.debug("Manual .env parse failed: %s", e)
+        
+        return key if key else None
 
     def has_api_key(self) -> bool:
         return self._get_api_key() is not None

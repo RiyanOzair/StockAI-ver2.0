@@ -72,11 +72,16 @@ class MoodEngine:
 
         prompt = f"""
         Generate a professional, high-impact 2-sentence market briefing for a researcher.
+        Explain WHY the mood is {sentiment['regime'].upper()} based on the score.
+        
         Current Market Regime: {sentiment['regime'].upper()}
-        Mood Score: {sentiment['mood_score']}
+        Mood Score: {sentiment['mood_score']} (Range -1.0 to 1.0)
         Average Change: {sentiment['avg_change_pct']}%
         
-        Tone: Cyberpunk, precise, authoritative (like a mission briefing).
+        Indices tracked: {sentiment['indices_counted']} (Mixed US and Indian markets)
+        
+        Tone: Cyberpunk, tactical, authoritative (like a mission briefing).
+        Context: The mood change is driven by the aggregate movement across global indices. 
         Format: JSON with key "briefing".
         """
         

@@ -119,6 +119,44 @@ class IndiaMarketService:
         nse_open = is_nse_open()
 
         if not api_key:
+            # Attempt a limited fallback to Yahoo Finance for indices even without a key
+            try:
+                logger.info("No Twelve Data key found. Attempting limited Yahoo Finance fallback for Indian indices.")
+                async with httpx.AsyncClient(timeout=self.REQUEST_TIMEOUT_SECONDS) as client:
+                    indices = []
+                    for idx in INDIA_INDEX_SYMBOLS:
+                        data = await self._yahoo_fallback(client, idx["symbol"], idx.get("exchange", "NSE"))
+                        if data:
+                            indices.append({
+                                "symbol": idx["symbol"],
+                                "label": idx["label"],
+                                "kind": idx["kind"],
+                                "exchange": idx.get("exchange", "NSE"),
+                                "price": data.get("price"),
+                                "change": data.get("change"),
+                                "change_pct": data.get("change_pct"),
+                                "previous_close": data.get("previous_close"),
+                                "currency": "INR",
+                            })
+                    
+                    if indices:
+                        return {
+                            "data_source": "Yahoo Finance (Limited Fallback)",
+                            "data_source_note": "Displaying limited data via Yahoo Finance. For full real-time NSE stocks and indices, "
+                                                "set INDIA_MARKET_API_KEY in your environment variables.",
+                            "api_key_configured": False,
+                            "market_status": "NSE OPEN" if nse_open else "NSE CLOSED",
+                            "nse_open": nse_open,
+                            "next_open": None if nse_open else next_nse_open(),
+                            "indices": indices,
+                            "top_stocks": [],
+                            "generated_at": now.isoformat(),
+                            "is_stale": False,
+                            "warnings": ["INDIA_MARKET_API_KEY not configured. Showing limited index data via Yahoo Finance."],
+                        }
+            except Exception as e:
+                logger.warning("Yahoo fallback failed: %s", e)
+
             return {
                 "data_source": "Twelve Data",
                 "data_source_note": "Indian market data requires a free Twelve Data API key. "
@@ -131,7 +169,7 @@ class IndiaMarketService:
                 "top_stocks": [],
                 "generated_at": now.isoformat(),
                 "is_stale": False,
-                "warnings": ["INDIA_MARKET_API_KEY not configured. Set it in .env to enable Indian market data."],
+                "warnings": ["INDIA_MARKET_API_KEY not configured. Set it in your environment variables (e.g. Render Dashboard) to enable Indian market data."],
             }
 
         # Check cache

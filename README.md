@@ -132,6 +132,22 @@ The current deployed app is hosted on Render at:
 
 https://stockai-ver2-0.onrender.com/
 
+### Environment Variables on Render
+
+Since the `.env` file is gitignored for security, you must manually set your API keys in the **Render Dashboard** to enable AI and Indian market features:
+
+1. Go to your **Render Dashboard**
+2. Select your **StockAI** service
+3. Go to the **Environment** tab
+4. Add the following keys:
+   - `INDIA_MARKET_API_KEY` (from twelvedata.com)
+   - `GROQ_API_KEY` (from console.groq.com)
+   - `GEMINI_API_KEY` (from aistudio.google.com)
+   - `DEFAULT_MODEL_PROVIDER` (set to `groq`)
+   - `DEFAULT_MODEL_NAME` (set to `llama-3.3-70b-versatile`)
+
+5. Save Changes and Render will automatically redeploy.
+
 For Docker-based deployment:
 
 ```bash

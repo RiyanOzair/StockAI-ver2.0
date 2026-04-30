@@ -901,10 +901,32 @@ main {
         <div class="snapshot-grid" id="india-stocks-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));"></div>
       </section>
 
-      <div id="india-connect-prompt" style="display:none;border:2px dashed var(--border);padding:28px;text-align:center;color:var(--muted);font-family:var(--mono);line-height:1.8;margin-top:18px;">
-        <div style="font-size:14px;font-weight:700;color:var(--cyan);margin-bottom:10px;">CONNECT INDIAN MARKET DATA</div>
-        <div style="font-size:12px;">Get a free API key from <a href="https://twelvedata.com" target="_blank" style="color:var(--cyan);">twelvedata.com</a> and set <strong style="color:var(--text);">INDIA_MARKET_API_KEY</strong> in your .env file.</div>
-        <div style="font-size:11px;margin-top:8px;">Free tier: 800 requests/day — enough for demos and research.</div>
+      <div id="india-connect-prompt" style="display:none; position:relative; overflow:hidden; border:2px solid var(--border); padding:40px; text-align:center; background:rgba(10,10,10,0.4); backdrop-filter:blur(10px); margin-top:24px; border-radius:12px;">
+        <div style="position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(circle, rgba(0,217,192,0.05) 0%, transparent 70%); pointer-events:none;"></div>
+        
+        <div style="position:relative; z-index:1;">
+            <div style="font-family:var(--mono); font-size:16px; font-weight:800; color:var(--cyan); margin-bottom:16px; letter-spacing:2px;">AUTHENTICATION REQUIRED</div>
+            <div style="font-family:var(--sans); font-size:18px; font-weight:600; color:var(--text); margin-bottom:12px;">Connect to India's Real-Time Market Feed</div>
+            <p style="color:var(--muted); font-size:14px; max-width:600px; margin:0 auto 24px; line-height:1.6;">
+                StockAI requires a valid Twelve Data API handshake to stream live NSE and BSE telemetry. 
+                Set your key in the environment to unlock high-fidelity Indian equity monitoring.
+            </p>
+            
+            <div style="display:inline-flex; align-items:center; gap:12px; background:rgba(255,255,255,0.03); padding:12px 20px; border:1px solid var(--border); border-radius:8px; margin-bottom:24px;">
+                <span style="font-family:var(--mono); font-size:11px; color:var(--muted);">CONFIG:</span>
+                <code style="font-family:var(--mono); font-size:12px; color:var(--cyan);">INDIA_MARKET_API_KEY</code>
+                <span style="font-family:var(--mono); font-size:11px; color:var(--muted); border-left:1px solid var(--border); padding-left:12px;">STATUS: PENDING</span>
+            </div>
+
+            <div style="display:flex; justify-content:center; gap:16px; flex-wrap:wrap;">
+                <a href="https://twelvedata.com" target="_blank" style="background:var(--cyan); color:#000; text-decoration:none; padding:12px 24px; font-weight:800; font-family:var(--mono); font-size:11px; border-radius:4px; letter-spacing:1px;">GET FREE KEY</a>
+                <a href="https://render.com/docs/environment-variables" target="_blank" style="background:transparent; border:1px solid var(--border); color:var(--text); text-decoration:none; padding:12px 24px; font-weight:700; font-family:var(--mono); font-size:11px; border-radius:4px; letter-spacing:1px;">RENDER GUIDE</a>
+            </div>
+            
+            <div style="margin-top:24px; font-size:10px; color:var(--muted); font-family:var(--mono); opacity:0.6;">
+                FREE TIER: 800 REQ/DAY &middot; LATENCY: ~1s &middot; SOURCE: TWELVE DATA
+            </div>
+        </div>
       </div>
     </div>
 

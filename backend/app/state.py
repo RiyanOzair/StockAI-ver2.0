@@ -36,7 +36,7 @@ DEFAULT_EXPERIMENT_ID = "experiment-default-research-v1"
 DEFAULT_POPULATION_ID = "population-core-mixed-v1"
 
 
-STOCKS: Dict[str, StockMeta] = {
+US_STOCKS: Dict[str, StockMeta] = {
     "AAPL": StockMeta(symbol="AAPL", name="Apple", sector="Technology", initial_price=192.0, volatility_multiplier=1.0, emoji="AP", benchmark="QQQ", liquidity_profile="deep", market_cap_bucket="mega", beta=1.05, average_daily_volume_millions=58.0, description="Consumer devices and software platform leader."),
     "MSFT": StockMeta(symbol="MSFT", name="Microsoft", sector="Technology", initial_price=418.0, volatility_multiplier=0.9, emoji="MS", benchmark="QQQ", liquidity_profile="deep", market_cap_bucket="mega", beta=0.95, average_daily_volume_millions=26.0, description="Cloud and enterprise software heavyweight."),
     "NVDA": StockMeta(symbol="NVDA", name="NVIDIA", sector="Technology", initial_price=912.0, volatility_multiplier=1.5, emoji="NV", benchmark="QQQ", liquidity_profile="deep", market_cap_bucket="mega", beta=1.65, average_daily_volume_millions=48.0, description="AI compute and semiconductor leader."),
@@ -64,7 +64,19 @@ STOCKS: Dict[str, StockMeta] = {
     "RBLX": StockMeta(symbol="RBLX", name="Roblox", sector="Media", initial_price=41.0, volatility_multiplier=1.62, emoji="RB", benchmark="XLC", liquidity_profile="satellite", market_cap_bucket="mid", beta=1.42, average_daily_volume_millions=7.1, description="User-generated gaming and social platform."),
 }
 
-ALL_SYMBOLS = sorted(STOCKS.keys())
+INDIA_STOCKS: Dict[str, StockMeta] = {
+    "RELIANCE": StockMeta(symbol="RELIANCE", name="Reliance Industries", sector="Energy", initial_price=2900.0, volatility_multiplier=1.2, emoji="🇮🇳", benchmark="NIFTY", liquidity_profile="deep", market_cap_bucket="mega", beta=1.1, average_daily_volume_millions=7.0, description="Indian multinational conglomerate."),
+    "TCS": StockMeta(symbol="TCS", name="Tata Consultancy", sector="Technology", initial_price=3900.0, volatility_multiplier=0.8, emoji="🇮🇳", benchmark="NIFTY", liquidity_profile="deep", market_cap_bucket="mega", beta=0.9, average_daily_volume_millions=2.5, description="Global IT services and consulting."),
+    "HDFCBANK": StockMeta(symbol="HDFCBANK", name="HDFC Bank", sector="Financials", initial_price=1400.0, volatility_multiplier=1.0, emoji="🇮🇳", benchmark="NIFTY", liquidity_profile="deep", market_cap_bucket="mega", beta=1.1, average_daily_volume_millions=18.0, description="Largest private sector bank in India."),
+    "INFY": StockMeta(symbol="INFY", name="Infosys", sector="Technology", initial_price=1450.0, volatility_multiplier=1.1, emoji="🇮🇳", benchmark="NIFTY", liquidity_profile="deep", market_cap_bucket="mega", beta=1.0, average_daily_volume_millions=6.0, description="Information technology company."),
+    "ICICIBANK": StockMeta(symbol="ICICIBANK", name="ICICI Bank", sector="Financials", initial_price=1050.0, volatility_multiplier=1.2, emoji="🇮🇳", benchmark="NIFTY", liquidity_profile="deep", market_cap_bucket="mega", beta=1.2, average_daily_volume_millions=14.0, description="Multinational bank and financial services."),
+    "HINDUNILVR": StockMeta(symbol="HINDUNILVR", name="Hindustan Unilever", sector="Consumer", initial_price=2200.0, volatility_multiplier=0.7, emoji="🇮🇳", benchmark="NIFTY", liquidity_profile="deep", market_cap_bucket="mega", beta=0.6, average_daily_volume_millions=1.5, description="Consumer goods company."),
+    "ITC": StockMeta(symbol="ITC", name="ITC Limited", sector="Consumer", initial_price=420.0, volatility_multiplier=0.8, emoji="🇮🇳", benchmark="NIFTY", liquidity_profile="deep", market_cap_bucket="mega", beta=0.7, average_daily_volume_millions=12.0, description="Conglomerate with FMCG, hotels, packaging."),
+    "BHARTIARTL": StockMeta(symbol="BHARTIARTL", name="Bharti Airtel", sector="Media", initial_price=1200.0, volatility_multiplier=1.1, emoji="🇮🇳", benchmark="NIFTY", liquidity_profile="deep", market_cap_bucket="mega", beta=1.0, average_daily_volume_millions=5.0, description="Global telecommunications services."),
+}
+
+STOCKS: Dict[str, StockMeta] = US_STOCKS.copy()
+ALL_SYMBOLS: List[str] = sorted(STOCKS.keys())
 
 market_books: Dict[str, OrderBook] = {}
 agents: List[BaseAgent] = []
@@ -145,7 +157,21 @@ def _create_strategy_agent(
 
 
 def build_world_bundle(config: Optional[dict] = None, extra_agents: Optional[List[BaseAgent]] = None) -> dict:
+    global STOCKS, ALL_SYMBOLS
     cfg = SimulationConfig(**(config or {})).model_dump()
+    
+    market_context = cfg.get("market_context", "us_equities")
+    STOCKS.clear()
+    if market_context == "india_nse_bse":
+        STOCKS.update(INDIA_STOCKS)
+    elif market_context == "global":
+        STOCKS.update(US_STOCKS)
+        STOCKS.update(INDIA_STOCKS)
+    else:
+        STOCKS.update(US_STOCKS)
+    ALL_SYMBOLS.clear()
+    ALL_SYMBOLS.extend(sorted(STOCKS.keys()))
+
     seed = cfg.get("seed")
     if seed is not None:
         random.seed(seed)

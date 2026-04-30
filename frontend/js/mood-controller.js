@@ -58,6 +58,11 @@ class MoodController {
             this.score = data.mood_score;
             this.applyTheme(data.regime);
             this.updateAudio();
+            
+            // Pulse the 3D Topology if active
+            if (window.marketTopology && typeof window.marketTopology.pulse === 'function') {
+                window.marketTopology.pulse(this.score);
+            }
         } catch (e) {
             console.error("Mood update failed:", e);
         }

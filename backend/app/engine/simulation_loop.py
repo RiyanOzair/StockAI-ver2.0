@@ -467,7 +467,22 @@ class SimulationLoop:
                     res = agent.demo_act(market_state) if hasattr(agent, "demo_act") else None
                     results.append(res)
                     if hasattr(agent, 'decision_log') and agent.decision_log:
-                        self._emit_run_event("agent_decision", {"agent_id": agent.id, **agent.decision_log[-1]})
+                        last_dec = agent.decision_log[-1]
+                        self._emit_run_event("agent_decision", {"agent_id": agent.id, **last_dec})
+                        
+                        # NEW: Auto-generate Notebook entries for significant rule-based moves
+                        if self.research_store and self.active_run_id:
+                            conviction = last_dec.get("memo", {}).get("conviction", 0)
+                            if conviction > 75:
+                                self.research_store.save_notebook_entry(
+                                    run_id=self.active_run_id,
+                                    agent_id=agent.persona.get("name", agent.id),
+                                    day=self.day,
+                                    session=self.session,
+                                    entry_type="observation",
+                                    content=f"{agent.persona.get('name')} executed a high-conviction ({conviction}%) rule-based trade for {last_dec.get('stock')}. Reason: {last_dec.get('reasoning')}",
+                                    payload_json={"decision": last_dec}
+                                )
                 except Exception as exc:
                     logger.error("Agent %s error: %s", agent.id, exc)
             for idx in range(0, len(llm_agents), LLM_BATCH_SIZE):
@@ -479,7 +494,24 @@ class SimulationLoop:
                         continue
                     results.append(res)
                     if hasattr(agent, 'decision_log') and agent.decision_log:
-                        self._emit_run_event("agent_decision", {"agent_id": agent.id, **agent.decision_log[-1]})
+                        last_dec = agent.decision_log[-1]
+                        self._emit_run_event("agent_decision", {"agent_id": agent.id, **last_dec})
+                        
+                        # NEW: Auto-generate Notebook entries for high-impact decisions
+                        if self.research_store and self.active_run_id:
+                            conviction = last_dec.get("memo", {}).get("conviction", 0)
+                            biases = last_dec.get("biases", [])
+                            if conviction > 80 or biases:
+                                entry_type = "observation" if conviction < 90 else "thesis"
+                                self.research_store.save_notebook_entry(
+                                    run_id=self.active_run_id,
+                                    agent_id=agent.persona.get("name", agent.id),
+                                    day=self.day,
+                                    session=self.session,
+                                    entry_type=entry_type,
+                                    content=f"{agent.persona.get('name')} triggered {', '.join(biases) if biases else 'high-conviction'} logic for {last_dec.get('stock') or 'market posture'}. Reasoning: {last_dec.get('reasoning')}",
+                                    payload_json={"decision": last_dec}
+                                )
                 if idx + LLM_BATCH_SIZE < len(llm_agents):
                     await asyncio.sleep(LLM_BATCH_DELAY)
         else:
@@ -488,7 +520,22 @@ class SimulationLoop:
                     res = agent.demo_act(market_state) if hasattr(agent, "demo_act") else None
                     results.append(res)
                     if hasattr(agent, 'decision_log') and agent.decision_log:
-                        self._emit_run_event("agent_decision", {"agent_id": agent.id, **agent.decision_log[-1]})
+                        last_dec = agent.decision_log[-1]
+                        self._emit_run_event("agent_decision", {"agent_id": agent.id, **last_dec})
+                        
+                        # NEW: Auto-generate Notebook entries (non-LLM mode)
+                        if self.research_store and self.active_run_id:
+                            conviction = last_dec.get("memo", {}).get("conviction", 0)
+                            if conviction > 75:
+                                self.research_store.save_notebook_entry(
+                                    run_id=self.active_run_id,
+                                    agent_id=agent.persona.get("name", agent.id),
+                                    day=self.day,
+                                    session=self.session,
+                                    entry_type="observation",
+                                    content=f"{agent.persona.get('name')} recorded a high-conviction ({conviction}%) trade in non-LLM mode.",
+                                    payload_json={"decision": last_dec}
+                                )
                 except Exception as exc:
                     logger.error("Agent %s error: %s", agent.id, exc)
         for res in results:

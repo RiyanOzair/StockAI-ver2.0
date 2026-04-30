@@ -262,8 +262,8 @@ class IndiaMarketService:
         data = response.json()
 
         if "code" in data and data["code"] != 200:
-            logger.warning("Twelve Data error for %s: %s", symbol, data.get("message", "unknown"))
-            return None
+            logger.warning("Twelve Data error for %s: %s. Using Yahoo Finance fallback.", symbol, data.get("message", "unknown"))
+            return await self._yahoo_fallback(client, symbol, exchange)
 
         try:
             price = float(data.get("close", 0))
@@ -282,6 +282,44 @@ class IndiaMarketService:
             "change_pct": round(change_pct, 2),
             "previous_close": round(prev_close, 2),
         }
+
+    async def _yahoo_fallback(self, client: httpx.AsyncClient, symbol: str, exchange: str) -> dict[str, Any] | None:
+        """Fallback to Yahoo Finance if Twelve Data free tier rejects the symbol."""
+        mapping = {
+            "NIFTY 50": "^NSEI",
+            "SENSEX": "^BSESN",
+            "NIFTY BANK": "^NSEBANK",
+            "NIFTY IT": "^CNXIT",
+            "NIFTY AUTO": "^CNXAUTO"
+        }
+        yf_symbol = mapping.get(symbol)
+        if not yf_symbol:
+            suffix = ".NS" if exchange == "NSE" else ".BO"
+            yf_symbol = f"{symbol}{suffix}"
+
+        try:
+            url = f"https://query1.finance.yahoo.com/v8/finance/chart/{yf_symbol}"
+            headers = {"User-Agent": "Mozilla/5.0"}
+            resp = await client.get(url, headers=headers, params={"interval": "1d", "range": "1d"})
+            if resp.status_code != 200:
+                return None
+            
+            payload = resp.json()
+            meta = payload.get("chart", {}).get("result", [{}])[0].get("meta", {})
+            price = float(meta.get("regularMarketPrice", 0))
+            prev_close = float(meta.get("chartPreviousClose", 0))
+            change = round(price - prev_close, 2)
+            change_pct = round((change / prev_close) * 100, 2) if prev_close else 0.0
+
+            return {
+                "price": round(price, 2),
+                "change": change,
+                "change_pct": change_pct,
+                "previous_close": round(prev_close, 2)
+            }
+        except Exception as e:
+            logger.warning("Yahoo fallback failed for %s: %s", symbol, e)
+            return None
 
     def _empty_response(self, now: datetime, error: str) -> dict[str, Any]:
         """Return valid but empty response when everything fails."""

@@ -15,6 +15,12 @@ async def get_global_sentiment():
     return await mood_engine.get_global_sentiment()
 
 
+@router.get("/briefing")
+async def get_market_briefing():
+    """Generate a high-impact AI market briefing."""
+    return await mood_engine.get_market_briefing()
+
+
 @router.get("/stocks")
 async def get_all_stocks():
     """Return metadata + live price for every stock."""

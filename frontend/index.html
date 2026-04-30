@@ -5170,9 +5170,16 @@ function renderReplayStep(idx) {
     const logs = currentEvents.filter(e => !['market_snapshot', 'agent_decision', 'phase_start'].includes(e.event_type));
     if (logs.length) {
         logs.forEach(l => {
-            eventFeed.innerHTML += `<div class="feed-item" style="padding:4px 0;border-bottom:none">
-                <span style="color:var(--muted);font-size:10px">[${l.event_type.toUpperCase().replace('_', ' ')}]</span>
-                <span style="font-size:11px">${escHtml(JSON.stringify(l.payload).slice(0, 100))}...</span>
+            const hasImage = ['monetary_policy', 'earnings', 'macro', 'corporate', 'regulation'].includes(l.event_type);
+            const imgHtml = hasImage ? `<img src="/assets/events/${l.event_type}.png" style="width:100%; height:60px; object-fit:cover; border-radius:4px; margin-bottom:4px; border:1px solid var(--border); opacity:0.8">` : '';
+            
+            eventFeed.innerHTML += `<div class="feed-item" style="padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.05)">
+                ${imgHtml}
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px">
+                    <span style="color:var(--lime); font-size:9px; font-family:var(--mono)">[${l.event_type.toUpperCase().replace('_', ' ')}]</span>
+                    <span style="color:var(--muted); font-size:9px">${new Date().toLocaleTimeString()}</span>
+                </div>
+                <div style="font-size:11px; line-height:1.4">${escHtml(typeof l.payload === 'string' ? l.payload : (l.payload.title || JSON.stringify(l.payload).slice(0, 60)))}</div>
             </div>`;
         });
     } else {
@@ -5223,6 +5230,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
   <script src="/js/mood-controller.js"></script>
+  <script src="/js/voice-briefing.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
        const header = document.querySelector('.nav-links'); // Existing nav in index.html?

@@ -60,6 +60,47 @@ class MoodEngine:
             logger.error(f"Error calculating global sentiment: {e}")
             return self._neutral_response(str(e))
 
+    async def get_market_briefing(self) -> Dict[str, Any]:
+        """
+        Generate a 2-3 sentence strategic briefing based on current sentiment and movers.
+        """
+        sentiment = await self.get_global_sentiment()
+        
+        # If no real data, return a generic one
+        if sentiment.get("indices_counted", 0) == 0:
+            return {"briefing": "Systems are currently recalibrating. Global market pulse is neutral."}
+
+        prompt = f"""
+        Generate a professional, high-impact 2-sentence market briefing for a researcher.
+        Current Market Regime: {sentiment['regime'].upper()}
+        Mood Score: {sentiment['mood_score']}
+        Average Change: {sentiment['avg_change_pct']}%
+        
+        Tone: Cyberpunk, precise, authoritative (like a mission briefing).
+        Format: JSON with key "briefing".
+        """
+        
+        try:
+            from backend.app.core.llm_provider import LLMFactory
+            provider = LLMFactory.create_provider()
+            
+            # Use Mock briefing if in mock mode
+            if hasattr(provider, 'generate'):
+                response_str = provider.generate(prompt, system_message="You are the Lead Market Strategist AI.")
+                import json
+                response_data = json.loads(response_str)
+                return {"briefing": response_data.get("briefing", "Briefing unavailable.")}
+        except Exception as e:
+            logger.error(f"Failed to generate briefing: {e}")
+            
+        # Fallback briefings
+        fallbacks = {
+            "bullish": "Broad market indicators are flashing emerald. Momentum is deep in the growth layer; execute aggressive positioning.",
+            "bearish": "Warning: Crisis regime detected. Systemic volatility is surging. Pivot to defensive hedges and monitor liquidity traps.",
+            "neutral": "Markets are tracking in a tight range. Pulse is stable but low-volume. Maintain research posture."
+        }
+        return {"briefing": fallbacks.get(sentiment['regime'], "Maintain research posture.")}
+
     def _neutral_response(self, reason: str) -> Dict[str, Any]:
         return {
             "mood_score": 0.0,

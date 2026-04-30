@@ -1690,6 +1690,19 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 <div id="customCursorOuter"></div>
 <div id="customCursorInner"></div>
+  <script src="/js/mood-controller.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+       const header = document.querySelector('.header-left');
+       if (header) {
+         const moodLabel = document.createElement('div');
+         moodLabel.id = 'marketMoodLabel';
+         moodLabel.style.cssText = 'font-family:var(--mono); font-size:11px; margin-top:8px; border:1px solid var(--border); padding:4px 12px; border-radius:4px; display:inline-block;';
+         moodLabel.textContent = 'NEUTRAL';
+         header.appendChild(moodLabel);
+       }
+    });
+  </script>
 </body>
 </html>
 

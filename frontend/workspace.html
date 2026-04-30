@@ -660,6 +660,19 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
     });
   });
   </script>
+  <script src="/js/mood-controller.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+       const header = document.querySelector('.header-title');
+       if (header) {
+         const moodLabel = document.createElement('span');
+         moodLabel.id = 'marketMoodLabel';
+         moodLabel.style.cssText = 'font-family:var(--mono); font-size:11px; margin-left:15px; border:1px solid var(--border); padding:2px 10px; border-radius:4px; vertical-align:middle;';
+         moodLabel.textContent = 'NEUTRAL';
+         header.appendChild(moodLabel);
+       }
+    });
+  </script>
 </body>
 <footer style="padding: 24px; border-top: 1px solid var(--border); text-align: center; background: #0a0a0a;">
   <a href="/credits" style="color: var(--cyan); font-family: var(--mono); font-size: 11px; text-decoration: none; text-transform: uppercase;">Team Credits</a>

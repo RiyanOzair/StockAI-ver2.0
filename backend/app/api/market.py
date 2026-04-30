@@ -4,7 +4,15 @@ import backend.app.state as state
 from backend.app.state import STOCKS
 from backend.app.core.analytics import compute_market_analytics
 
+from backend.app.core.sentiment import mood_engine
+
 router = APIRouter(prefix="/market", tags=["market"])
+
+
+@router.get("/sentiment")
+async def get_global_sentiment():
+    """Return the global market sentiment score and regime."""
+    return await mood_engine.get_global_sentiment()
 
 
 @router.get("/stocks")

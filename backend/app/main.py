@@ -2,6 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 from datetime import datetime
 import logging
@@ -41,6 +42,9 @@ app.include_router(research.router)
 
 # ── Serve Frontend ──
 _FRONTEND_DIR = Path(__file__).resolve().parent.parent.parent / "frontend"
+
+app.mount("/js", StaticFiles(directory=str(_FRONTEND_DIR / "js")), name="js")
+app.mount("/assets", StaticFiles(directory=str(_FRONTEND_DIR / "assets")), name="assets")
 
 
 @app.get("/", response_class=FileResponse)

@@ -18,19 +18,20 @@ class VoiceBriefing {
     createBriefingUI() {
         const btn = document.createElement('button');
         btn.id = 'briefingToggle';
-        btn.innerHTML = '🛡️ BRIEFING';
+        btn.innerHTML = '🛡️';
+        btn.title = 'Page Briefing';
         btn.style.cssText = `
-            position: fixed; bottom: 80px; left: 20px; z-index: 9999;
+            position: fixed; bottom: 80px; right: 20px; z-index: 9999;
             background: rgba(0,0,0,0.5); border: 1px solid var(--lime);
-            color: var(--lime); padding: 8px 16px; border-radius: 4px;
-            cursor: pointer; font-size: 11px; font-family: var(--mono);
-            letter-spacing: 1px; transition: all 0.2s;
+            color: var(--lime); padding: 12px; border-radius: 50%;
+            cursor: pointer; font-size: 20px; line-height: 1;
+            transition: all 0.2s; display: flex; align-items: center; justify-content: center;
         `;
         btn.onclick = () => this.triggerBriefing();
         document.body.appendChild(btn);
     }
 
-    async triggerBriefing() {
+    triggerBriefing() {
         if (this.isSpeaking) {
             this.synth.cancel();
             this.isSpeaking = false;
@@ -38,24 +39,22 @@ class VoiceBriefing {
             return;
         }
 
-        const btn = document.getElementById('briefingToggle');
-        btn.innerHTML = '⏳ GENERATING...';
-        btn.style.borderColor = 'var(--cyan)';
-        btn.style.color = 'var(--cyan)';
+        const path = window.location.pathname;
+        let briefing = "The system is calibrating. ";
 
-        try {
-            const resp = await fetch('/market/briefing');
-            const data = await resp.json();
-            
-            if (data.briefing) {
-                this.speak(data.briefing);
-            } else {
-                this.speak("Strategic intelligence currently unavailable. Maintain your position.");
-            }
-        } catch (e) {
-            console.error("Briefing failed:", e);
-            this.speak("Communication link disrupted. Data feed unstable.");
+        if (path === '/' || path.includes('landing')) {
+            briefing += "Welcome to StockAI v2.0. This is the command center for high-fidelity market simulation. From here, you can access the research workspace, the real-time simulator, and the live performance monitor. Explore the features below to understand how our multi-agent systems operate.";
+        } else if (path.includes('workspace')) {
+            briefing += "You are now in the Research Workspace. This environment is designed for deep-dive analysis. You can configure simulation parameters, manage agent behaviors, and evaluate strategy bots. Use the panels to explore datasets and compare experiment results.";
+        } else if (path.includes('app')) {
+            briefing += "Welcome to the Simulator Console. This is the live execution environment where you can observe market dynamics in real-time. Monitor agent decision-making, trade executions, and the evolving order book. The system is currently tracking all active market participants.";
+        } else if (path.includes('live-market')) {
+            briefing += "This is the Live Performance Monitor. It provides a high-level overview of portfolio health and market trends. Track your agent's performance across multiple asset classes including Indian, US, and Crypto markets.";
+        } else {
+            briefing += "You are exploring the StockAI interface. Systems are standing by for simulation instructions.";
         }
+
+        this.speak(briefing);
     }
 
     speak(text) {
@@ -89,11 +88,9 @@ class VoiceBriefing {
     updateUI() {
         const btn = document.getElementById('briefingToggle');
         if (this.isSpeaking) {
-            btn.innerHTML = '⏹️ STOP BRIEF';
             btn.style.borderColor = 'var(--magenta)';
             btn.style.color = 'var(--magenta)';
         } else {
-            btn.innerHTML = '🛡️ BRIEFING';
             btn.style.borderColor = 'var(--lime)';
             btn.style.color = 'var(--lime)';
         }

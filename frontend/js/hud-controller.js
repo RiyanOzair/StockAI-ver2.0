@@ -145,7 +145,7 @@ class HUDController {
         const canvas = document.createElement('canvas');
         canvas.id = 'neuralMapCanvas';
         canvas.style.cssText = `
-            position: fixed; inset: 0; z-index: 9998;
+            position: fixed; inset: 0; z-index: 8000;
             pointer-events: none; width: 100%; height: 100%;
         `;
         document.body.appendChild(canvas);

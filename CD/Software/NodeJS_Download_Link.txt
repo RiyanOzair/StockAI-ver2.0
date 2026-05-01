@@ -1,0 +1,2 @@
+Node.js is used for managing frontend dependencies and running dev tools.
+Download Node.js (LTS version) from: https://nodejs.org/

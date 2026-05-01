@@ -1,0 +1,1640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>StockAI — AI-Powered Market Simulator</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23c8f04a' rx='7'/%3E%3Cpolyline points='4,24 10,14 16,18 22,8 28,12' fill='none' stroke='%23000' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='28' cy='12' r='2.2' fill='%23000'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Space+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #080808;
+  --surface: #111111;
+  --border:  #1e1e1e;
+  --lime:    #c8f04a;
+  --cyan:    #00e5cc;
+  --magenta: #e040c8;
+  --red:     #e0354b;
+  --yellow:  #f5c842;
+  --muted:   #555;
+  --text:    #e8e8e8;
+  --mono:    'JetBrains Mono', monospace;
+  --sans:    'Space Grotesk', sans-serif;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+.custom-cursor-active, .custom-cursor-active * {
+  cursor: none !important;
+}
+
+/* ── GRID NOISE BACKGROUND ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(200,240,74,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,240,74,.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 40px;
+  background: rgba(8,8,8,.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--lime);
+  text-decoration: none;
+  letter-spacing: -0.5px;
+}
+
+.nav-logo .logo-icon {
+  width: 32px; height: 32px;
+  background: var(--lime);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+
+.nav-link {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: color 0.2s;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--lime);
+}
+
+.nav-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: var(--lime);
+  color: #000;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid var(--lime);
+  transition: all .2s;
+}
+
+.nav-cta:hover {
+  background: transparent;
+  color: var(--lime);
+  transform: translate(-2px,-2px);
+  box-shadow: 4px 4px 0 var(--lime);
+}
+
+/* ── HERO ── */
+.hero {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  border: 1px solid var(--lime);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--lime);
+  letter-spacing: 2px;
+  margin-bottom: 32px;
+  text-transform: uppercase;
+}
+
+.hero-badge::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--lime);
+  border-radius: 50%;
+  animation: blink 1.2s step-end infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+.hero-title {
+  font-family: var(--mono);
+  font-size: clamp(48px, 8vw, 96px);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -3px;
+  margin-bottom: 8px;
+}
+
+.hero-title .word-stock { color: var(--lime); }
+.hero-title .word-ai {
+  color: var(--magenta);
+  font-size: 0.45em;
+  vertical-align: sub;
+  letter-spacing: 2px;
+  font-weight: 800;
+  position: relative;
+  bottom: -0.1em;
+}
+
+.hero-version {
+  font-family: var(--mono);
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  letter-spacing: 2px;
+}
+
+.hero-sub {
+  font-size: clamp(16px, 2.5vw, 22px);
+  color: #999;
+  max-width: 600px;
+  line-height: 1.6;
+  margin-bottom: 48px;
+  font-weight: 400;
+}
+
+.hero-sub strong { color: var(--text); font-weight: 600; }
+
+.hero-buttons {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 40px;
+  background: var(--lime);
+  color: #000;
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 800;
+  text-decoration: none;
+  border: 3px solid var(--lime);
+  transition: all .15s;
+}
+
+.btn-primary:hover {
+  background: transparent;
+  color: var(--lime);
+  transform: translate(-3px,-3px);
+  box-shadow: 6px 6px 0 var(--lime);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 40px;
+  background: transparent;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 2px solid var(--border);
+  transition: all .15s;
+}
+
+.btn-secondary:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  transform: translate(-2px,-2px);
+  box-shadow: 4px 4px 0 var(--cyan);
+}
+
+/* ── TICKER STRIP ── */
+.ticker-strip {
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  overflow: hidden;
+  padding: 10px 0;
+}
+
+.ticker-inner {
+  display: flex;
+  gap: 48px;
+  animation: scroll-left 25s linear infinite;
+  width: max-content;
+}
+
+@keyframes scroll-left { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+
+.ticker-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.ticker-sym   { color: var(--text); font-weight: 700; }
+.ticker-price { color: #777; }
+.ticker-chg.up   { color: var(--lime); }
+.ticker-chg.down { color: var(--red); }
+
+/* ── FEATURES ── */
+.section {
+  position: relative;
+  z-index: 1;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 96px 24px;
+}
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--cyan);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 700;
+  letter-spacing: -1px;
+  margin-bottom: 16px;
+  line-height: 1.15;
+}
+
+.section-sub {
+  color: #777;
+  font-size: 16px;
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 56px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2px;
+  border: 2px solid var(--border);
+}
+
+.feature-card {
+  background: var(--surface);
+  padding: 32px;
+  border: 0;
+  transition: background .2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.feature-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--accent-color, var(--lime));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform .25s;
+}
+
+.feature-card:hover::after { transform: scaleX(1); }
+.feature-card:hover { background: #161616; }
+
+.feature-marker {
+  width: 14px;
+  height: 2px;
+  background: var(--accent-color, var(--lime));
+  margin-bottom: 16px;
+}
+
+.feature-name {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-color, var(--lime));
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.feature-desc {
+  font-size: 14px;
+  color: #777;
+  line-height: 1.7;
+}
+
+/* —— LIVE MARKET SECTION —— */
+.reality-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, .85fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.reality-panel {
+  border: 2px solid var(--border);
+  background: var(--surface);
+  padding: 32px;
+  position: relative;
+  overflow: hidden;
+}
+
+.reality-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(135deg, rgba(0,229,204,.08), transparent 40%),
+    linear-gradient(315deg, rgba(224,64,200,.08), transparent 48%);
+  pointer-events: none;
+}
+
+.reality-content,
+.reality-surface {
+  position: relative;
+  z-index: 1;
+}
+
+.reality-title {
+  font-family: var(--mono);
+  font-size: clamp(28px, 4.5vw, 48px);
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  margin-bottom: 16px;
+}
+
+.reality-copy {
+  color: #8b8b8b;
+  font-size: 16px;
+  line-height: 1.8;
+  max-width: 620px;
+}
+
+.reality-copy strong { color: var(--text); }
+
+.section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.signal-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.signal-card {
+  border: 1px solid var(--border);
+  background: #0d0d0d;
+  padding: 18px 16px;
+}
+
+.signal-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.signal-value {
+  font-family: var(--mono);
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.signal-copy {
+  margin-top: 10px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #777;
+}
+
+.reality-surface {
+  display: grid;
+  gap: 14px;
+}
+
+.surface-card {
+  border: 2px solid var(--border);
+  background: #0d0d0d;
+  padding: 20px;
+}
+
+.surface-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.surface-title {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+.surface-live {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--lime);
+}
+
+.surface-list {
+  display: grid;
+  gap: 10px;
+}
+
+.surface-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid #181818;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.surface-row:first-child { border-top: 0; padding-top: 0; }
+
+.surface-row strong { color: var(--text); }
+
+.surface-positive { color: var(--lime); }
+.surface-negative { color: var(--red); }
+
+.surface-brief {
+  font-size: 14px;
+  line-height: 1.8;
+  color: #8a8a8a;
+}
+
+/* ── STATS ── */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0;
+  border: 2px solid var(--border);
+  margin: 64px 0;
+}
+
+.stat-card {
+  padding: 40px 32px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.stat-card:last-child { border-right: none; }
+
+.stat-num {
+  font-family: var(--mono);
+  font-size: 48px;
+  font-weight: 800;
+  color: var(--lime);
+  display: block;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #666;
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── HOW IT WORKS ── */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0;
+  border: 2px solid var(--border);
+}
+
+.step {
+  padding: 40px 32px;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+
+.step:last-child { border-right: none; }
+
+.step-num {
+  font-family: var(--mono);
+  font-size: 64px;
+  font-weight: 800;
+  color: var(--border);
+  line-height: 1;
+  margin-bottom: 12px;
+}
+
+.step-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.step-desc {
+  font-size: 13px;
+  color: #666;
+  line-height: 1.7;
+}
+
+/* ── TERMINAL BLOCK ── */
+.terminal {
+  background: #0a0a0a;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--lime);
+  padding: 24px 28px;
+  font-family: var(--mono);
+  font-size: 13px;
+  line-height: 2;
+  margin: 40px 0;
+  position: relative;
+}
+
+.terminal::before {
+  content: '● ● ●';
+  position: absolute;
+  top: 10px; left: 16px;
+  font-size: 9px;
+  color: #333;
+  letter-spacing: 6px;
+}
+
+.terminal code { display: block; padding-top:20px; }
+
+.t-comment { color: #444; }
+.t-key     { color: var(--cyan); }
+.t-val     { color: var(--lime); }
+.t-str     { color: var(--yellow); }
+.t-num     { color: var(--magenta); }
+
+/* ── CTA SECTION ── */
+.cta-section {
+  position: relative;
+  z-index: 1;
+  background: var(--lime);
+  padding: 140px 24px;
+  text-align: center;
+  margin-top: 0;
+  overflow: hidden;
+}
+
+/* CRT Scanline Effect */
+.cta-section::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.05) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.02), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.02));
+  background-size: 100% 3px, 3px 100%;
+  pointer-events: none;
+  z-index: 2;
+  animation: flicker 0.15s infinite;
+}
+
+@keyframes flicker {
+  0% { opacity: 0.95; }
+  50% { opacity: 1; }
+  100% { opacity: 0.9; }
+}
+
+.cta-section .cta-title {
+  position: relative;
+  z-index: 3;
+  font-family: var(--mono);
+  font-size: clamp(36px, 6vw, 64px);
+  font-weight: 800;
+  color: #000;
+  letter-spacing: -3px;
+  margin-bottom: 20px;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.cta-section .cta-sub {
+  position: relative;
+  z-index: 3;
+  font-size: 20px;
+  color: #000;
+  opacity: 0.8;
+  margin-bottom: 48px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  font-weight: 500;
+}
+
+.btn-dark {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 48px;
+  background: #000;
+  color: var(--lime);
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 800;
+  text-decoration: none;
+  border: 3px solid #000;
+  transition: all .15s;
+}
+
+.btn-dark:hover {
+  background: #000;
+  color: #fff;
+  transform: translate(-4px,-4px);
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.25);
+}
+
+/* ── FOOTER ── */
+footer {
+  position: relative;
+  z-index: 1;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.footer-logo {
+  font-family: var(--mono);
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--lime);
+}
+
+.footer-note {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* ── CANDLESTICK PREVIEW ── */
+.preview-box {
+  position: relative;
+  z-index: 1;
+  max-width: 900px;
+  margin: 0 auto;
+  border: 2px solid var(--border);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.preview-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+.preview-chart {
+  padding: 24px;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 160px;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 39px, #1a1a1a 39px, #1a1a1a 40px
+  );
+}
+
+.candle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.wick {
+  width: 2px;
+}
+
+.body {
+  width: 8px;
+  border-radius: 1px;
+}
+
+@media (max-width: 900px) {
+  .reality-grid,
+  .signal-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── INTERACTIVE COMPONENTS ── */
+
+/* WAVES CANVAS */
+#marketTopologyCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 1;
+}
+
+/* CUSTOM CURSOR */
+#customCursorOuter, #customCursorInner {
+  position: fixed;
+  top: 0; left: 0;
+  pointer-events: none;
+  z-index: 10000;
+  transition: transform 0.08s ease-out, opacity 0.3s;
+  mix-blend-mode: difference;
+}
+#customCursorOuter {
+  width: 20px; height: 20px;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  margin-left: -10px; margin-top: -10px;
+}
+#customCursorInner {
+  width: 3px; height: 3px;
+  background: #fff;
+  border-radius: 50%;
+  margin-left: -1.5px; margin-top: -1.5px;
+}
+#customCursorOuter.hover { transform: scale(1.5); border-color: var(--cyan); background: rgba(0,229,204,0.1); }
+#customCursorOuter.click { transform: scale(0.9); }
+
+@media (pointer: coarse) {
+  #customCursorOuter, #customCursorInner { display: none; }
+}
+
+/* HERO GLITCH */
+.hero-title.glitch {
+  position: relative;
+}
+.hero-title.glitch::before, .hero-title.glitch::after {
+  content: 'STOCKAI';
+  position: absolute;
+  top: 0; left: 1px;
+  width: 100%; height: 100%;
+  clip: rect(0, 900px, 0, 0);
+  background: var(--bg);
+}
+.hero-title.glitch::before {
+  left: -2px;
+  text-shadow: 2px 0 var(--cyan);
+  animation: glitch-anim 2s infinite linear alternate-reverse;
+}
+.hero-title.glitch::after {
+  left: 2px;
+  text-shadow: -2px 0 var(--magenta);
+  animation: glitch-anim2 3s infinite linear alternate-reverse;
+}
+@keyframes glitch-anim {
+  0% { clip: rect(44px, 9999px, 56px, 0); }
+  20% { clip: rect(12px, 9999px, 86px, 0); }
+  40% { clip: rect(76px, 9999px, 12px, 0); }
+  60% { clip: rect(32px, 9999px, 64px, 0); }
+  80% { clip: rect(98px, 9999px, 22px, 0); }
+  100% { clip: rect(14px, 9999px, 88px, 0); }
+}
+@keyframes glitch-anim2 {
+  0% { clip: rect(65px, 9999px, 12px, 0); }
+  20% { clip: rect(87px, 9999px, 34px, 0); }
+  40% { clip: rect(12px, 9999px, 56px, 0); }
+  60% { clip: rect(44px, 9999px, 78px, 0); }
+  80% { clip: rect(90px, 9999px, 22px, 0); }
+  100% { clip: rect(21px, 9999px, 64px, 0); }
+}
+
+/* SCROLL PROGRESS BAR */
+#scrollProgressBar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  background: var(--lime);
+  z-index: 1001;
+  width: 0%;
+  transition: width 0.1s;
+}
+
+/* TYPEWRITER */
+.typewriter {
+  overflow: hidden;
+  border-right: .15em solid var(--lime);
+  white-space: nowrap;
+  letter-spacing: .15em;
+  animation: blink-caret .75s step-end infinite;
+}
+@keyframes blink-caret {
+  from, to { border-color: transparent }
+  50% { border-color: var(--lime); }
+}
+
+/* FADE IN UP */
+.fade-in-up {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+.fade-in-up.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* TERMINAL LOOP */
+#terminalLoop {
+  color: #555;
+  font-family: var(--mono);
+  font-size: 11px;
+  line-height: 1.4;
+  height: 100px;
+  overflow: hidden;
+  text-align: left;
+  user-select: none;
+}
+
+/* FEATURE TAGS */
+.feature-tag {
+  position: absolute;
+  top: 10px; right: 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.feature-card.active .feature-tag {
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #marketTopologyCanvas, #customCursorOuter, #customCursorInner { display: none !important; }
+  .hero-title.glitch::before, .hero-title.glitch::after { display: none; }
+  .fade-in-up { opacity: 1; transform: none; transition: none; }
+}
+
+/* ── THEMED SCROLLBARS ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb {
+  background: #446b1d;
+  border-radius: 3px;
+  transition: background 0.2s;
+}
+::-webkit-scrollbar-thumb:hover { background: #b8ff57; }
+::-webkit-scrollbar-corner { background: #0a0a0a; }
+* { scrollbar-width: thin; scrollbar-color: #b8ff57 #0a0a0a; }
+#marketTopologyCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 1;
+}
+</style>
+</head>
+<body>
+
+<!-- PROGRESS BAR -->
+<div id="scrollProgressBar"></div>
+
+<!-- BACKGROUND CANVAS -->
+<canvas id="marketTopologyCanvas"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div style="display:flex; align-items:center; gap:40px">
+    <a class="nav-logo" href="/">
+      <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style="border-radius:6px">
+        <rect width="32" height="32" fill="#c8f04a" rx="7"/>
+        <polyline points="4,24 10,14 16,18 22,8 28,12" fill="none" stroke="#000" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="28" cy="12" r="2.2" fill="#000"/>
+      </svg>
+      StockAI
+    </a>
+    <div class="nav-links">
+      <a href="/" class="nav-link active">LANDING</a>
+      <a href="/workspace" class="nav-link">WORKSPACE</a>
+      <a href="/app" class="nav-link">SIMULATION CONSOLE</a>
+      <a href="/live-market" class="nav-link">LIVE MONITOR</a>
+    </div>
+  </div>
+  <a class="nav-cta" href="/app">LAUNCH APP →</a>
+</nav>
+
+<!-- TICKER STRIP -->
+<div class="ticker-strip" style="margin-top:64px">
+  <div class="ticker-inner" id="ticker"></div>
+</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">AI-Powered · Real-time · Free</div>
+  <h1 class="hero-title" id="heroTitle">
+    <span class="word-stock">STOCK</span><span class="word-ai">AI</span>
+  </h1>
+  <div class="hero-version" id="heroVersion"></div>
+  <p class="hero-sub" id="heroSub" style="max-width: 800px; margin-left: auto; margin-right: auto;">
+    StockAI is a <strong>comprehensive global research ecosystem</strong> designed to study the complex interplay between <strong>LLM-driven agents</strong> and evolving market conditions. 
+    By combining a high-fidelity simulation engine with real-world performance monitoring, we enable researchers to calibrate multi-market datasets across <strong>US Equities and India NSE/BSE</strong>, inject <strong>custom macro-regimes</strong>, and benchmark <strong>autonomous strategies</strong> with extreme precision before graduating them into the <strong>live monitor</strong>.
+  </p>
+  <div class="hero-buttons">
+    <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;width:100%">
+      <a class="btn-secondary" href="/workspace">OPEN RESEARCH WORKSPACE</a>
+      <a class="btn-secondary" href="/live-market">OPEN LIVE MONITOR</a>
+      <a class="btn-primary" href="/app">OPEN SIMULATOR</a>
+    </div>
+    <div style="display:flex;justify-content:center;width:100%;margin-top:16px">
+      <a class="btn-secondary" href="#features">VIEW PLATFORM CAPABILITIES</a>
+    </div>
+  </div>
+
+  <!-- mini candlestick preview -->
+  <div class="preview-box" style="margin-top:64px;max-width:700px">
+    <div class="preview-header">
+      <div class="preview-dot" style="background:#ff5f56"></div>
+      <div class="preview-dot" style="background:#ffbd2e"></div>
+      <div class="preview-dot" style="background:#27c93f"></div>
+      <span style="margin-left:8px">StockAI — Market Dashboard</span>
+      <span style="margin-left:auto;color:var(--lime)">● LIVE</span>
+    </div>
+    <div class="preview-chart" id="preview-chart"></div>
+  </div>
+</section>
+
+<!-- LIVE MARKET SECTION -->
+<section class="section">
+  <div class="section-label">New Reality Layer</div>
+  <div class="reality-grid">
+    <div class="reality-panel">
+      <div class="reality-content">
+        <h2 class="reality-title">Step out of simulation mode.<br>Read the actual tape.</h2>
+        <p class="reality-copy">
+          StockAI now includes a <strong>real-market intelligence layer</strong> that tracks broad-market proxies across <strong>US Equities, India NSE/BSE, and Global Markets</strong>. It streams real-time sector pulses, momentum leaders, watchlist charts, and an AI brief that compares live conditions with the simulator's current regime.
+        </p>
+
+        <div class="signal-strip">
+          <div class="signal-card">
+            <div class="signal-label">Market Snapshot</div>
+            <div class="signal-value" style="color:var(--lime)">5</div>
+            <div class="signal-copy">Headline proxy cards for index tone, volatility pressure, and timestamped freshness.</div>
+          </div>
+          <div class="signal-card">
+            <div class="signal-label">Sector Pulse</div>
+            <div class="signal-value" style="color:var(--cyan)">6</div>
+            <div class="signal-copy">ETF-based sector heat so leadership and weakness are readable at a glance.</div>
+          </div>
+          <div class="signal-card">
+            <div class="signal-label">AI Brief</div>
+            <div class="signal-value" style="color:var(--magenta)">LIVE</div>
+            <div class="signal-copy">Opportunities, risks, and direct comparison against StockAI's synthetic market.</div>
+          </div>
+        </div>
+
+        <div class="section-actions">
+          <a class="btn-secondary" href="/workspace">Open Research Workspace</a>
+          <a class="btn-primary" href="/live-market">Open Live Market</a>
+          <a class="btn-secondary" href="/app">Pair It With the Simulator</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="reality-surface">
+      <div class="surface-card">
+        <div class="surface-head">
+          <div class="surface-title">Tracked Tape Preview</div>
+        </div>
+        <div class="surface-list" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div class="surface-row">
+            <strong>S&P 500</strong>
+            <span>SPY</span>
+            <span class="surface-positive">+0.84%</span>
+          </div>
+          <div class="surface-row">
+            <strong>Nasdaq 100</strong>
+            <span>QQQ</span>
+            <span class="surface-positive">+1.12%</span>
+          </div>
+          <div class="surface-row">
+            <strong>Technology</strong>
+            <span>XLK</span>
+            <span class="surface-positive">+1.42%</span>
+          </div>
+          <div class="surface-row">
+            <strong>Energy</strong>
+            <span>XLE</span>
+            <span class="surface-negative">-0.45%</span>
+          </div>
+          <div class="surface-row">
+            <strong>Financials</strong>
+            <span>XLF</span>
+            <span class="surface-positive">+0.32%</span>
+          </div>
+          <div class="surface-row">
+            <strong>Small Cap</strong>
+            <span>IWM</span>
+            <span class="surface-negative">-0.18%</span>
+          </div>
+          <div class="surface-row">
+            <strong>Volatility</strong>
+            <span>VIX</span>
+            <span class="surface-negative">+2.11%</span>
+          </div>
+          <div class="surface-row">
+            <strong>10Y Yield</strong>
+            <span>^TNX</span>
+            <span class="surface-positive">+0.08%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="surface-card">
+        <div class="surface-head">
+          <div class="surface-title">Why It Matters</div>
+        </div>
+        <p class="surface-brief">
+          The simulator teaches market behavior. The live-market page shows how that behavior lines up with
+          the outside world right now — using a free source, graceful caching, and native StockAI presentation.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="section" style="padding-top:0;padding-bottom:0">
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-num" data-target="26">0</span>
+      <span class="stat-label">AI Agents</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num" data-target="25">0</span>
+      <span class="stat-label">Stocks</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num" data-target="6">0</span>
+      <span class="stat-label">Sectors</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num" data-target="1000000">0</span>
+      <span class="stat-label">Possibilities</span>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-label">What's Inside</div>
+  <h2 class="section-title">Everything a real<br>market needs.</h2>
+  <p class="section-sub">From behavioral finance to circuit breakers — StockAI models the complexity of real financial markets.</p>
+
+  <div class="features-grid">
+    <div class="feature-card" style="--accent-color:var(--lime)">
+      <div class="feature-marker"></div>
+      <div class="feature-name">LLM-Driven Agents</div>
+      <p class="feature-desc">Each agent is powered by Groq's Llama 3.3. They read market events, form opinions, debate in a forum, and trade autonomously.</p>
+    </div>
+    <div class="feature-card" style="--accent-color:var(--cyan)">
+      <div class="feature-marker"></div>
+      <div class="feature-name">Live WebSocket Feed</div>
+      <p class="feature-desc">Price ticks, trade executions, and market events stream live via WebSocket. Every session is visible in real time.</p>
+    </div>
+    <div class="feature-card" style="--accent-color:var(--magenta)">
+      <div class="feature-marker"></div>
+      <div class="feature-name">Order Book Engine</div>
+      <p class="feature-desc">A full limit-order matching engine with bid/ask queues, partial fills, and market orders. Real microstructure.</p>
+    </div>
+    <div class="feature-card" style="--accent-color:var(--yellow)">
+      <div class="feature-marker"></div>
+      <div class="feature-name">Circuit Breakers</div>
+      <p class="feature-desc">Stocks that move more than 10% in a session are automatically halted — just like real exchanges.</p>
+    </div>
+    <div class="feature-card" style="--accent-color:var(--lime)">
+      <div class="feature-marker"></div>
+      <div class="feature-name">Sector Correlation</div>
+      <p class="feature-desc">Price moves ripple across sectors based on a real correlation matrix. Tech and Finance move together; Energy stands apart.</p>
+    </div>
+    <div class="feature-card" style="--accent-color:var(--cyan)">
+      <div class="feature-marker"></div>
+      <div class="feature-name">Agent Forum</div>
+      <p class="feature-desc">Agents post bullish/bearish opinions each day. Watch the sentiment shift as events unfold and positions change.</p>
+    </div>
+    <div class="feature-card" style="--accent-color:var(--magenta)">
+      <div class="feature-marker"></div>
+      <div class="feature-name">Portfolio Race</div>
+      <p class="feature-desc">A live leaderboard races agent portfolios over time. See who compounds the fastest — and who blows up.</p>
+    </div>
+    <div class="feature-card" style="--accent-color:var(--yellow)">
+      <div class="feature-marker"></div>
+      <div class="feature-name">Price Alerts</div>
+      <p class="feature-desc">Set target prices for any stock. Get instant notifications when agents push prices through your thresholds.</p>
+    </div>
+    <div class="feature-card" style="--accent-color:var(--lime)">
+      <div class="feature-marker"></div>
+      <div class="feature-name">Explainability</div>
+      <p class="feature-desc">Inspect every agent's decision logic, bias distribution, win rate, and maximum drawdown. Full transparency.</p>
+    </div>
+  </div>
+</section>
+
+<!-- STATS ROW -->
+<section class="section" style="padding-top:0">
+  <div class="stats-row">
+    <div class="stat-card">
+      <span class="stat-num" data-target="1250">0</span>
+      <span class="stat-label">Daily Trades</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num" data-target="54">0</span>
+      <span class="stat-label">Mean Accuracy</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num" data-target="10">0</span>
+      <span class="stat-label">Agent Personas</span>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num" data-target="6">0</span>
+      <span class="stat-label">Market Regimes</span>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" style="padding-top:0">
+  <div class="section-label">How It Works</div>
+  <h2 class="section-title">A full market in<br>four steps.</h2>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-title">Configure</div>
+      <p class="step-desc">Set the number of days, volatility, speed and event intensity. Choose your agent mix.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-title">Simulate</div>
+      <p class="step-desc">Each day now runs phased market sessions — pre-open, auction, continuous trading, and close. Agents receive events, microstructure shifts, and execution constraints.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-title">Trade</div>
+      <p class="step-desc">Orders flow through the matching engine. Prices update, snapshots are saved, charts refresh live.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-title">Analyse</div>
+      <p class="step-desc">Rewind any day's snapshot, compare agent portfolios, inspect the heatmap and financial reports.</p>
+    </div>
+  </div>
+
+  <div class="terminal">
+    <code>
+      <span class="t-comment"># StockAI v2.0 — agent reasoning sample</span><br>
+      <span class="t-key">agent</span>: <span class="t-str">"Warren (Value Investor)"</span><br>
+      <span class="t-key">day</span>: <span class="t-num">7</span> &nbsp;&nbsp;<span class="t-key">session</span>: <span class="t-num">2</span><br>
+      <span class="t-key">event</span>: <span class="t-str">"Interest Rate Decision — HIGH severity"</span><br>
+      <span class="t-key">reasoning</span>: <span class="t-str">"Rate hike signals contraction. Rotating to defensive stocks."</span><br>
+      <span class="t-key">action</span>: <span class="t-val">SELL</span> &nbsp;<span class="t-key">stock</span>: <span class="t-str">"AAPL"</span> &nbsp;<span class="t-key">qty</span>: <span class="t-num">42</span> &nbsp;<span class="t-key">price</span>: <span class="t-str">$189.30</span><br>
+      <span class="t-key">portfolio_value</span>: <span class="t-val">$112,840</span> &nbsp;<span class="t-key">gain</span>: <span class="t-val">+12.8%</span>
+    </code>
+  </div>
+</section>
+
+<!-- CTA SECTION -->
+<section class="cta-section">
+  
+  <h2 class="cta-title">Ready to out-trade the simulation?</h2>
+  <p class="cta-sub">Join the next generation of quantitative researchers building with StockAI.</p>
+  <a class="btn-dark" href="/app">Get Started for Free →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">STOCKAI</div>
+  <div class="footer-note">© 2026 Advanced AI Market Systems. Experimental v2.0 Platform. &middot; <a href="/credits" style="color:var(--lime);text-decoration:none;">Credits</a></div>
+</footer>
+
+<div id="customCursorOuter"></div>
+<div id="customCursorInner"></div>
+
+<script>
+// ── Fake ticker data ──
+const TICKERS = [
+  {sym:'AAPL', p:182.50, chg:+1.4},{sym:'MSFT', p:412.30, chg:-0.6},
+  {sym:'NVDA', p:875.20, chg:+3.1},{sym:'TSLA', p:248.90, chg:-2.3},
+  {sym:'AMZN', p:198.40, chg:+0.9},{sym:'GOOG', p:171.30, chg:+0.4},
+  {sym:'META', p:524.10, chg:+1.8},{sym:'BRK',  p:390.00, chg:-0.2},
+  {sym:'JPM',  p:207.60, chg:+0.7},{sym:'V',    p:275.80, chg:+0.3},
+  {sym:'XOM',  p:118.40, chg:-1.1},{sym:'WMT',  p:172.20, chg:+0.5},
+];
+
+function buildTicker() {
+  const el = document.getElementById('ticker');
+  const doubled = [...TICKERS, ...TICKERS]; // double for seamless loop
+  el.innerHTML = doubled.map(t =>
+    `<div class="ticker-item">
+      <span class="ticker-sym">${t.sym}</span>
+      <span class="ticker-price">$${t.p.toFixed(2)}</span>
+      <span class="ticker-chg ${t.chg>=0?'up':'down'}">${t.chg>=0?'+':''}${t.chg}%</span>
+    </div>`
+  ).join('');
+}
+
+// ── Mini candlestick chart ──
+let previewPrices = [100,104,102,108,105,112,109,115,111,118,114,120,116,122,119,125,121,128,124,130];
+function buildPreviewChart() {
+  const chart = document.getElementById('preview-chart');
+  const maxP = Math.max(...previewPrices), minP = Math.min(...previewPrices);
+  const range = maxP - minP || 1;
+  const h = 120;
+  chart.innerHTML = previewPrices.map((p, i) => {
+    const prev = previewPrices[i-1] ?? p;
+    const up = p >= prev;
+    const open = prev, close = p;
+    const high = Math.max(open, close) + Math.random() * 2;
+    const low = Math.min(open, close) - Math.random() * 2;
+    const hi = Math.min(maxP, Math.max(minP, high));
+    const lo = Math.max(minP, Math.min(maxP, low));
+    const yHi = h - ((hi - minP) / range * h);
+    const yLo = h - ((lo - minP) / range * h);
+    const yOpen = h - ((open - minP) / range * h);
+    const yClose = h - ((close - minP) / range * h);
+    const bodyTop = Math.min(yOpen, yClose);
+    const bodyBot = Math.max(yOpen, yClose);
+    const bodyH = Math.max(4, bodyBot - bodyTop);
+    const wickTopH = Math.max(2, bodyTop - yHi);
+    const wickBotH = Math.max(2, yLo - bodyBot);
+    return `<div class="candle" style="height:${h}px;flex-direction:column;justify-content:flex-end;">
+      <div style="flex:0 0 ${yHi}px;"></div>
+      <div class="wick" style="height:${wickTopH}px;background:${up?'#00c896':'#e0354b'}"></div>
+      <div class="body" style="height:${bodyH}px;background:${up?'#00c896':'#e0354b'}"></div>
+      <div class="wick" style="height:${wickBotH}px;background:${up?'#00c896':'#e0354b'}"></div>
+    </div>`;
+  }).join('');
+}
+
+function updatePreviewChartLive() {
+  // Simulate a new price based on the last price
+  let last = previewPrices[previewPrices.length-1];
+  let change = (Math.random() - 0.5) * 4; // random walk
+  let next = Math.max(90, Math.min(140, last + change));
+  previewPrices.push(Math.round(next * 100) / 100);
+  if (previewPrices.length > 20) previewPrices.shift();
+  buildPreviewChart();
+}
+
+
+buildTicker();
+buildPreviewChart();
+setInterval(updatePreviewChartLive, 1000);
+
+// ── MARKET TOPOLOGY WAVES ──
+const canvas = document.getElementById('marketTopologyCanvas');
+const ctx = canvas.getContext('2d');
+let width, height, waves = [];
+let mouse = { x: -1000, y: -1000 };
+
+function initWaves() {
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+  waves = [];
+  for (let i = 0; i < 6; i++) {
+    waves.push({
+      y: height / 2 + (Math.random() - 0.5) * 200,
+      length: 0.002 + Math.random() * 0.005,
+      amplitude: 20 + Math.random() * 60,
+      frequency: 0.01 + Math.random() * 0.03,
+      drift: Math.random() * 100,
+      color: `rgba(200, 240, 74, ${0.05 + Math.random() * 0.1})`
+    });
+  }
+}
+
+function animateWaves() {
+  ctx.clearRect(0, 0, width, height);
+  waves.forEach(w => {
+    ctx.beginPath();
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = w.color;
+    for (let i = 0; i < width; i++) {
+      let dx = i - mouse.x;
+      let dy = (w.y + Math.sin(i * w.length + w.drift) * w.amplitude) - mouse.y;
+      let dist = Math.sqrt(dx*dx + dy*dy);
+      let warp = Math.max(0, (150 - dist) / 150) * 40;
+      
+      let x = i;
+      let y = w.y + Math.sin(i * w.length + w.drift) * w.amplitude - (dy / dist * warp || 0);
+      
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    w.drift += w.frequency;
+  });
+  requestAnimationFrame(animateWaves);
+}
+
+window.addEventListener('resize', initWaves);
+window.addEventListener('mousemove', e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
+initWaves();
+animateWaves();
+
+// ── CUSTOM CURSOR ──
+document.addEventListener('DOMContentLoaded', () => {
+    const cursorOuter = document.getElementById('customCursorOuter');
+    const cursorInner = document.getElementById('customCursorInner');
+    let curX = window.innerWidth / 2, curY = window.innerHeight / 2;
+    let targetX = curX, targetY = curY;
+
+    window.addEventListener('mousemove', e => {
+        targetX = e.clientX;
+        targetY = e.clientY;
+    });
+
+    function animateCursor() {
+  curX += (targetX - curX) * 0.15;
+  curY += (targetY - curY) * 0.15;
+  cursorOuter.style.transform = `translate(${curX}px, ${curY}px)`;
+  cursorInner.style.transform = `translate(${targetX}px, ${targetY}px)`;
+  document.documentElement.classList.add('custom-cursor-active');
+  requestAnimationFrame(animateCursor);
+}
+    animateCursor();
+
+    const updateHovers = () => {
+        document.querySelectorAll('a, button, [onclick], .feature-card').forEach(el => {
+            if (el.dataset.cursorBound) return;
+            el.dataset.cursorBound = "true";
+            el.addEventListener('mouseenter', () => {
+                cursorOuter.classList.add('hover');
+                cursorInner.classList.add('hover');
+            });
+            el.addEventListener('mouseleave', () => {
+                cursorOuter.classList.remove('hover');
+                cursorInner.classList.remove('hover');
+            });
+        });
+    };
+    updateHovers();
+    setInterval(updateHovers, 1000);
+
+    window.addEventListener('mousedown', () => cursorOuter.classList.add('click'));
+    window.addEventListener('mouseup', () => cursorOuter.classList.remove('click'));
+
+    // ── SCROLL OBSERVERS ──
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+          if (entry.target.classList.contains('stat-num') && !entry.target.dataset.animated) {
+            entry.target.dataset.animated = "true";
+            animateCounter(entry.target);
+          }
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.fade-in-up, .feature-card, .stat-num').forEach(el => observer.observe(el));
+    
+    typewriterEffect(document.getElementById('heroVersion'), 'VERSION 2.0', 150);
+});
+
+function animateCounter(el) {
+  const targetStr = el.getAttribute('data-target');
+  if (!targetStr) return;
+  const target = parseInt(targetStr.replace(/,/g, ''));
+  if (isNaN(target)) return;
+  
+  const duration = 2500;
+  const startTime = performance.now();
+  
+  function update(currentTime) {
+    const elapsed = currentTime - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const easeProgress = 1 - Math.pow(1 - progress, 4);
+    
+    const currentCount = Math.floor(easeProgress * target);
+    
+    if (target >= 1000000) {
+      el.innerText = progress > 0.9 ? '1M+' : (currentCount / 1000).toFixed(0) + 'K';
+    } else if (target >= 1000) {
+      el.innerText = currentCount.toLocaleString() + '+';
+    } else if (el.nextElementSibling && el.nextElementSibling.textContent.includes('Accuracy')) {
+      el.innerText = currentCount + '%';
+    } else {
+      el.innerText = currentCount;
+    }
+    
+    if (progress < 1) {
+      requestAnimationFrame(update);
+    } else {
+      if (target >= 1000000) el.innerText = '1M+';
+      else if (target >= 1000) el.innerText = target.toLocaleString() + '+';
+      else if (el.nextElementSibling && el.nextElementSibling.textContent.includes('Accuracy')) el.innerText = target + '%';
+      else el.innerText = target;
+    }
+  }
+  requestAnimationFrame(update);
+}
+
+// ── PROGRESS BAR ──
+window.addEventListener('scroll', () => {
+  const winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+  const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+  const scrolled = (winScroll / height) * 100;
+  document.getElementById("scrollProgressBar").style.width = scrolled + "%";
+});
+
+
+// ── HERO GLITCH ──
+setInterval(() => {
+  const title = document.getElementById('heroTitle');
+  title.classList.add('glitch');
+  setTimeout(() => title.classList.remove('glitch'), 500);
+}, 4000);
+</script>
+  <canvas id="bubbleCanvas" style="position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none;opacity:0.8;"></canvas>
+  <script src="/js/mood-controller.js"></script>
+  <script src="/js/voice-briefing.js"></script>
+  <script src="/js/topology-3d.js"></script>
+  <script src="/js/hud-controller.js"></script>
+  <script>
+  // ── 3D BUBBLE ANIMATION ──
+  (function() {
+    const canvas = document.getElementById('bubbleCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let width, height, bubbles = [];
+
+    function init() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+      bubbles = [];
+      for (let i = 0; i < 40; i++) {
+        bubbles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          r: 2 + Math.random() * 4,
+          vx: (Math.random() - 0.5) * 0.5,
+          vy: (Math.random() - 0.5) * 0.5,
+          alpha: 0.1 + Math.random() * 0.3
+        });
+      }
+    }
+
+    function animate() {
+      ctx.clearRect(0, 0, width, height);
+      bubbles.forEach(b => {
+        b.x += b.vx;
+        b.y += b.vy;
+        if (b.x < 0) b.x = width;
+        if (b.x > width) b.x = 0;
+        if (b.y < 0) b.y = height;
+        if (b.y > height) b.y = 0;
+
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(74, 222, 128, ${b.alpha})`;
+        ctx.fill();
+        
+        bubbles.forEach(b2 => {
+          const dx = b.x - b2.x;
+          const dy = b.y - b2.y;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist < 120) {
+            ctx.beginPath();
+            ctx.moveTo(b.x, b.y);
+            ctx.lineTo(b2.x, b2.y);
+            ctx.strokeStyle = `rgba(74, 222, 128, ${(1 - dist/120) * 0.1})`;
+            ctx.stroke();
+          }
+        });
+      });
+      requestAnimationFrame(animate);
+    }
+
+    window.addEventListener('resize', init);
+    init();
+    animate();
+  })();
+  </script>
+  <script>
+    // Initialize hero effects...
+    document.addEventListener('DOMContentLoaded', () => {
+       // Append mood indicator to nav
+       const navLinks = document.querySelector('.nav-links');
+       if (navLinks) {
+         const container = document.createElement('div');
+         container.style.cssText = 'display:inline-flex; align-items:center; margin-left:20px;';
+         
+         const moodLabel = document.createElement('span');
+         moodLabel.id = 'marketMoodLabel';
+         moodLabel.style.cssText = 'font-family:var(--mono); font-size:10px; border:1px solid var(--border); padding:2px 8px; border-radius:4px; text-transform:uppercase;';
+         moodLabel.textContent = 'NEUTRAL';
+         
+         const toggleBtn = document.createElement('button');
+         toggleBtn.innerHTML = '⏻';
+         toggleBtn.title = 'Toggle Mood Engine';
+         toggleBtn.style.cssText = 'background:transparent; border:1px solid var(--border); color:var(--muted); font-size:10px; cursor:pointer; padding:2px 6px; border-radius:4px; margin-left:6px; transition:all 0.2s;';
+         toggleBtn.onclick = () => {
+             const isOff = window.moodController.toggleMoodEngine();
+             toggleBtn.style.color = isOff ? 'var(--magenta)' : 'var(--muted)';
+             toggleBtn.style.borderColor = isOff ? 'var(--magenta)' : 'var(--border)';
+         };
+         
+         // Initial state
+         if (window.moodController.disabled) {
+             toggleBtn.style.color = 'var(--magenta)';
+             toggleBtn.style.borderColor = 'var(--magenta)';
+         }
+         
+         container.appendChild(moodLabel);
+         container.appendChild(toggleBtn);
+         navLinks.appendChild(container);
+       }
+    });
+  </script>
+</body>
+</html>

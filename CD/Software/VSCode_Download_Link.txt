@@ -1,0 +1,3 @@
+Visual Studio Code is the recommended IDE for viewing and editing StockAI code.
+Download VS Code from: https://code.visualstudio.com/
+Recommended extensions: Python, Pylance, JavaScript (ES6) code snippets.

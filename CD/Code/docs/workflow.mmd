@@ -1,0 +1,27 @@
+```mermaid
+sequenceDiagram
+    participant User as User (Browser)
+    participant UI as Streamlit UI
+    participant Engine as Simulation Engine
+    participant LLM as Groq/Gemini/Mock
+    participant Records as Records/Logs
+
+    User->>UI: Configure simulation & press Run
+    UI->>Engine: configure(...) / start()
+    Engine->>Engine: simulate step (agents act)
+    alt LLM mode enabled
+        Engine->>LLM: generate agent decisions
+        LLM-->>Engine: responses
+    else LLM disabled
+        Engine-->>Engine: use mock/random decisions
+    end
+    Engine->>Records: append trade & event logs
+    Engine-->>UI: state update (prices, metrics)
+    UI-->>User: render charts, leaderboard, forum
+
+```
+
+---
+
+Notes:
+- Sequence shows the typical flow per simulation tick; LLM calls are optional and rate-limited.

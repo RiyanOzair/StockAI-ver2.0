@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300" viewBox="0 0 900 300">
+  <style>
+    .box { fill:#ffffff; stroke:#0f172a; stroke-width:1; rx:6; }
+    .title { font: 600 13px sans-serif; fill:#0f172a; }
+    .label { font: 400 12px sans-serif; fill:#0f172a; }
+    .arrow { stroke:#0f172a; stroke-width:2; fill:none; marker-end:url(#arrowhead); }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0f172a" />
+    </marker>
+  </defs>
+
+  <rect x="40" y="30" width="160" height="60" class="box" />
+  <text x="120" y="60" text-anchor="middle" class="title">User (Browser)</text>
+  <rect x="240" y="30" width="160" height="60" class="box" />
+  <text x="320" y="60" text-anchor="middle" class="title">Streamlit UI</text>
+  <rect x="440" y="30" width="200" height="60" class="box" />
+  <text x="540" y="60" text-anchor="middle" class="title">Simulation Engine</text>
+  <rect x="680" y="30" width="160" height="60" class="box" />
+  <text x="760" y="60" text-anchor="middle" class="title">Records / Logs</text>
+
+  <path d="M200 60 L240 60" class="arrow" />
+  <path d="M400 60 L440 60" class="arrow" />
+  <path d="M640 60 L680 60" class="arrow" />
+
+  <rect x="440" y="120" width="200" height="60" class="box" />
+  <text x="540" y="150" text-anchor="middle" class="title">LLM (optional)</text>
+  <path d="M540 90 L540 120" class="arrow" />
+
+  <text x="60" y="230" class="label">Flow per tick: configure → simulate → (LLM call) → record → UI update</text>
+
+</svg>

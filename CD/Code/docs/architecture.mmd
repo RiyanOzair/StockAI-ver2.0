@@ -1,0 +1,27 @@
+```mermaid
+graph LR
+  UI[Streamlit UI (ui/app.py)] -->|calls| Engine[Simulation Engine (ui/simulation_engine.py)]
+  Engine -->|uses| Data[Local Data / Records (record.py, res/)]
+  Engine -->|calls LLM| Groq[Groq API (GROQ_API_KEY)]
+  Engine -->|logs| Logs[log/*]
+  subgraph Backend
+    Engine
+    Data
+    Logs
+  end
+  subgraph LLM Providers
+    Groq
+    Gemini[Google Gemini]
+    Mock[MockLLM]
+  end
+  UI -->|chat| Chat[StockAIAdvisor (ui/chatbot.py)]
+  Chat -->|selects| Groq
+  Chat -->|fallback| Mock
+```
+
+---
+
+Notes:
+- The UI (`ui/app.py`) is the Streamlit entrypoint and calls into the `SimulationEngine` for configuration and run control.
+- `SimulationEngine` may call an LLM provider when `GROQ_API_KEY` is configured; otherwise it falls back to `MockLLM`.
+- Persistent records and logs are saved under `res/` and `log/`.

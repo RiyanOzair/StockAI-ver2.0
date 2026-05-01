@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="420" viewBox="0 0 900 420">
+  <style>
+    .box { fill:#f3f4f6; stroke:#111827; stroke-width:1; rx:8; }
+    .title { font: 600 14px sans-serif; fill:#0f172a; }
+    .label { font: 400 12px sans-serif; fill:#0f172a; }
+    .arrow { stroke:#0f172a; stroke-width:2; fill:none; marker-end:url(#arrowhead); }
+  </style>
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#0f172a" />
+    </marker>
+  </defs>
+
+  <!-- UI -->
+  <rect x="40" y="40" width="220" height="80" class="box" />
+  <text x="150" y="70" text-anchor="middle" class="title">Streamlit UI</text>
+  <text x="150" y="90" text-anchor="middle" class="label">ui/app.py</text>
+
+  <!-- Chat/Advisor -->
+  <rect x="300" y="40" width="220" height="80" class="box" />
+  <text x="410" y="70" text-anchor="middle" class="title">StockAIAdvisor</text>
+  <text x="410" y="90" text-anchor="middle" class="label">ui/chatbot.py</text>
+
+  <!-- Engine -->
+  <rect x="560" y="40" width="280" height="120" class="box" />
+  <text x="700" y="70" text-anchor="middle" class="title">Simulation Engine</text>
+  <text x="700" y="92" text-anchor="middle" class="label">ui/simulation_engine.py</text>
+
+  <!-- Data/Logs -->
+  <rect x="300" y="180" width="220" height="80" class="box" />
+  <text x="410" y="210" text-anchor="middle" class="title">Records / Logs</text>
+  <text x="410" y="230" text-anchor="middle" class="label">res/ · record.py · log/</text>
+
+  <!-- LLM Providers -->
+  <rect x="40" y="180" width="220" height="120" class="box" />
+  <text x="150" y="210" text-anchor="middle" class="title">LLM Providers</text>
+  <text x="150" y="232" text-anchor="middle" class="label">Groq · Gemini · Mock</text>
+
+  <!-- Arrows -->
+  <path d="M260 80 L300 80" class="arrow" />
+  <path d="M520 100 L560 100" class="arrow" />
+  <path d="M670 160 L410 220" class="arrow" />
+  <path d="M200 160 L300 160" class="arrow" />
+
+  <!-- Notes -->
+  <text x="60" y="330" class="label">This simplified diagram shows UI → Advisor → Engine → Records and optional LLM providers.</text>
+
+</svg>

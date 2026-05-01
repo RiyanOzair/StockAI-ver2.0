@@ -1,0 +1,75 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# Docker Ignore — StockAI v2.0
+# The image only needs: backend/, frontend/, requirements.txt
+# ══════════════════════════════════════════════════════════════════════════════
+
+# Git
+.git
+.gitignore
+.github/
+
+# Secrets — supply at runtime with --env-file .env
+.env
+.env.*
+
+# Python byte-code / caches
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments (never copy into image)
+venv/
+env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing artefacts
+tests/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Runtime logs
+server_out.txt
+server_err.txt
+log/
+
+# Build outputs
+*.egg-info/
+dist/
+build/
+
+# Legacy / docs / scripts (not needed at runtime)
+legacy/
+docs/
+scripts/
+res/
+CHANGELOG.md
+README.md
+
+
+# Logs (except directory structure)
+log/*.log
+log/*.txt
+
+# Build outputs
+*.egg-info/
+dist/
+build/
+
+# Documentation
+*.md
+!README.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Streamlit cache
+.streamlit/secrets.toml

@@ -100,9 +100,10 @@ class MockProvider(LLMProvider):
         
         # 1. NEWS INJECTION MOCK
         if "financial analyst engine" in system_message.lower():
+            desc = "A simulated event triggered by: {}...".format(prompt[:30])
             return json.dumps({
                 "title": "Mock Market Shock",
-                "description": f"A simulated event triggered by: {prompt[:30]}...",
+                "description": desc,
                 "severity": random.choice(["LOW", "MEDIUM", "HIGH"]),
                 "impact_pct": round(random.uniform(-10.0, 5.0), 2),
                 "affected_stocks": ["AAPL", "MSFT", "NVDA"]
@@ -119,8 +120,9 @@ class MockProvider(LLMProvider):
         # 3. BRIEFING MOCK
         if "strategist" in system_message.lower():
             regime = prompt.split('Regime: ')[-1].split('\n')[0]
+            msg = "Market pulse is currently {}. Global telemetry indicates stable liquidity across all primary nodes.".format(regime)
             return json.dumps({
-                "briefing": f"Market pulse is currently {regime}. Global telemetry indicates stable liquidity across all primary nodes."
+                "briefing": msg
             })
 
         # 4. CHAT MOCK (Optional check, but default handles it)

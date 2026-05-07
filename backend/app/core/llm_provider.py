@@ -118,8 +118,9 @@ class MockProvider(LLMProvider):
 
         # 3. BRIEFING MOCK
         if "strategist" in system_message.lower():
+            regime = prompt.split('Regime: ')[-1].split('\n')[0]
             return json.dumps({
-                "briefing": f"Market pulse is currently {prompt.split('Regime: ')[-1].split('\\n')[0]}. Global telemetry indicates stable liquidity across all primary nodes."
+                "briefing": f"Market pulse is currently {regime}. Global telemetry indicates stable liquidity across all primary nodes."
             })
 
         # 4. CHAT MOCK (Optional check, but default handles it)

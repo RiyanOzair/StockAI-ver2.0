@@ -125,6 +125,7 @@ Data flow:
 - Run-scoped event feeds: run events are available via normal REST retrieval and SSE streaming.
 - Live market intelligence layer: free Yahoo Finance data is cached server-side, summarized, and compared with the simulator’s current regime.
 - Chat endpoint: advisor chat uses Groq first, Gemini second, and returns low-confidence fallback messaging when no provider is configured.
+- Project Singularity (Autonomous Engine): Includes 'The Architect' narrative generator, 'Neural Overdrive' visual shocks, 'Market Prophecy' HUD, 'Oracle Pulse' procedural audio, and the 'Inner Monologue' real-time logic stream.
 
 Partially built / in-progress / rough edges:
 - `legacy/` code is still present and partially reused for chat initialization, but it is not the primary UI/runtime anymore.
@@ -429,3 +430,6 @@ The following critical system and heuristic bugs were surgically fixed to stabil
 * **H7**: Aligned internal agent metric computation for "win rate" against universally standard per-period period financial returns models.
 * **H8**: Calibrated tracking scalar values up from baseline typical day boundaries (252) into the true granular tick boundaries (1008). 
 * **H9 / H10**: Audited CSS stylesheets deploying WCAG contrast standard color palettes (--muted) and globally enforced element focus bounds.
+* **S1 (Singularity)**: Integrated the 'Architect' autonomous narrative engine to inject dynamic market shocks via `/data/event`.
+* **S2 (Singularity)**: Resolved agent identity mapping bug in 'Inner Monologue' stream by attaching agent state to the global window scope.
+* **S3 (Singularity)**: Synchronized 'Neural Overdrive' glitch effects and 'Oracle Pulse' audio with the market volatility event bus for immersive feedback.

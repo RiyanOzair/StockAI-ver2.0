@@ -89,6 +89,8 @@
   pointer-events: none;
   opacity: 0.2;
 }
+    .chat-quick-btn{font:700 10px var(--mono);text-transform:uppercase;letter-spacing:.06em;padding:4px 10px;border:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+    .chat-quick-btn:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,229,255,.06)}
 </style>
 </head>
 <body>
@@ -147,7 +149,7 @@
     <section class="tools">
       <article class="tool">
         <div class="tool-meta">
-          <div><div class="tool-title">RUN LAUNCHER</div><p class="copy">Launch the next simulation run using the current dataset, scenario, experiment, and population context.</p></div>
+          <div><div class="tool-title">RUN LAUNCHER</div><p class="copy">Configure your market. Set your agents. Launch a simulation and see how AI behaves under pressure.</p></div>
           <div id="runLauncherStatus" class="pill">NO ACTIVE RUN</div>
         </div>
         <div class="tool-body">
@@ -288,7 +290,7 @@
 
       <article class="tool">
         <div class="tool-meta pink">
-          <div><div class="tool-title">EVALUATION BENCH</div><p class="copy">Benchmark registered bots across multiple seeds and collect aggregate PNL, SHARPE, and drawdown outputs.</p></div>
+          <div><div class="tool-title">EVALUATION BENCH</div><p class="copy">Run your strategy across multiple random seeds to see if it actually works — or just got lucky.</p></div>
           <div id="evaluationStatus" class="pill pink">0 COMPLETED EVALUATIONS</div>
         </div>
         <div class="tool-body">
@@ -337,7 +339,7 @@
 
       <article class="tool">
         <div class="tool-meta amber">
-          <div><div class="tool-title">EVENT INJECTION</div><p class="copy">Define a custom shock and send it through the existing event injection endpoint. Target day is recorded in the description without changing backend contracts.</p></div>
+          <div><div class="tool-title">EVENT INJECTION</div><p class="copy">Inject any event at any point. Earnings shock. Liquidity crisis. Sector rotation. Watch agents react.</p></div>
           <div id="eventStatus" class="pill amber">READY TO INJECT</div>
         </div>
         <div class="tool-body">
@@ -390,6 +392,12 @@
   <aside id="chatDrawer" class="chat-drawer">
     <div class="chat-head"><span>MARKET RESEARCH ASSISTANT</span><button id="chatClose" class="btn" type="button">CLOSE</button></div>
     <div id="chatLog" class="chat-log"></div>
+    <div style="padding:6px 14px 2px;display:flex;gap:6px;flex-wrap:wrap;">
+      <button class="chat-quick-btn" onclick="sendQuickChat('Which agent is winning and why?')">WHO IS WINNING?</button>
+      <button class="chat-quick-btn" onclick="sendQuickChat('Why did prices drop recently?')">WHY DID PRICES DROP?</button>
+      <button class="chat-quick-btn" onclick="sendQuickChat('What market regime are we in right now?')">WHAT REGIME ARE WE IN?</button>
+      <button class="chat-quick-btn" onclick="sendQuickChat('Should I inject a market event now? What would happen?')">SHOULD I INJECT AN EVENT?</button>
+    </div>
     <div class="chat-send"><input id="chatInput" type="text" placeholder="ASK ABOUT REGIME, RUN STATS, OR BOT PERFORMANCE" /><button id="chatSend" class="btn primary" type="button">SEND</button></div>
   </aside>
 
@@ -559,7 +567,44 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
 
     function toggleChat(force){app.chatOpen=typeof force==='boolean'?force:!app.chatOpen;$('chatDrawer').classList.toggle('open',app.chatOpen)}
     function bind(){ $('refreshBtn').addEventListener('click',loadWorkspace);$('exportRunBtn').addEventListener('click',exportRun);$('launchRunBtn').addEventListener('click',()=>launchRun(false));$('launchRunStartBtn').addEventListener('click',()=>launchRun(true));$('createBotBtn').addEventListener('click',createBot);$('calibrateBtn').addEventListener('click',calibrate);$('createScenarioBtn').addEventListener('click',createScenario);$('createExperimentBtn').addEventListener('click',createExperiment);$('runEvalBtn').addEventListener('click',runEvaluation);$('injectEventBtn').addEventListener('click',injectEvent);$('previewPurgeBtn').addEventListener('click',previewPurge);$('executePurgeBtn').addEventListener('click',executePurge);$('createNotebookBtn').addEventListener('click',createNotebook);$('mixLlm').addEventListener('input',normalizeMix);$('mixRule').addEventListener('input',normalizeMix);$('mixStrategy').addEventListener('input',normalizeMix);$('runAgents').addEventListener('input',normalizeMix);$('evtMagnitude').addEventListener('input',magnitude);$('chatFab').addEventListener('click',()=>toggleChat());$('chatClose').addEventListener('click',()=>toggleChat(false));$('chatSend').addEventListener('click',sendChat);$('chatInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});$('eventTapePanel').addEventListener('toggle',()=>{if(!$('eventTapePanel').open){closeEventStream();return}if(app.status?.run_id)openEventStream(app.status.run_id)})}
-    async function init(){bind();magnitude();renderEvents();loadChatHistory();addMsg('bot','ASK ABOUT THE CURRENT REGIME, ACTIVE RUN STATS, AGENT DECISIONS, OR WHICH BOTS LOOK READY FOR THE US EQUITIES SURFACE.');await loadStocks();await loadWorkspace();setInterval(()=>loadWorkspace().catch(()=>{}),8000)}
+    function sendQuickChat(msg){$('chatInput').value=msg;sendChat();if(!app.chatOpen)toggleChat(true)}
+    function applyPresets(){
+      const params = new URLSearchParams(window.location.search);
+      const preset = params.get('preset');
+      if(!preset) return;
+      if(preset === 'crash_scenario'){
+        $('runName').value='CRASH SCENARIO';
+        $('runDays').value='10';
+        $('runSeed').value='42';
+        $('runAgents').value='8';
+        $('runMode').value='hybrid';
+        $('runLLM').value='true';
+        $('mixLlm').value='50';$('mixRule').value='30';$('mixStrategy').value='20';
+        normalizeMix();
+        $('evtType').value='liquidity crisis';
+        $('evtDay').value='5';
+        $('evtMagnitude').value='3';
+        magnitude();
+        updateEventPreview();
+        showToast('PRESET LOADED: CRASH SCENARIO — CONFIGURE AND LAUNCH','success');
+      } else if(preset === 'mean_reversion_test'){
+        $('runName').value='MEAN REVERSION TEST';
+        $('runDays').value='10';
+        $('runSeed').value='11';
+        $('runAgents').value='6';
+        $('runMode').value='deterministic';
+        $('runLLM').value='false';
+        $('botName').value='MEAN REVERSION BOT';
+        $('botStrategy').value='mean_reversion';
+        $('botAttach').value='true';
+        $('evalSeeds').value='11,19,23,37,42';
+        $('evalDays').value='10';
+        normalizeMix();
+        showToast('PRESET LOADED: MEAN REVERSION TEST — CREATE BOT THEN RUN EVALUATION','success');
+      }
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+    async function init(){bind();magnitude();renderEvents();loadChatHistory();addMsg('bot','ASK ABOUT THE CURRENT REGIME, ACTIVE RUN STATS, AGENT DECISIONS, OR WHICH BOTS LOOK READY FOR THE US EQUITIES SURFACE.');await loadStocks();await loadWorkspace();applyPresets();setInterval(()=>loadWorkspace().catch(()=>{}),8000)}
     init().catch(err=>{$('overviewGrid').innerHTML=`<div class="empty">WORKSPACE LOAD FAILED: ${esc(err.message)}</div>`})
   </script>
 

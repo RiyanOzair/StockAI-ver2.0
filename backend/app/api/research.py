@@ -437,6 +437,105 @@ async def get_run_replay(run_id: str):
     return events
 
 
+@router.get("/runs/{run_id}/summary")
+async def get_run_summary(run_id: str):
+    """Generate a plain-English post-simulation summary for a completed run."""
+    run = state.research_store.get_record("runs", run_id)
+    if not run:
+        raise HTTPException(404, "Run not found")
+
+    events = state.research_store.list_run_events(run_id)
+    config = run.get("config_snapshot", {})
+    num_days = config.get("num_days", 0)
+    training_mode = config.get("training_mode", "hybrid")
+
+    # Gather agent performance data
+    agent_summaries = []
+    for agent in state.agents:
+        try:
+            prices = {
+                s: (state.market_books[s].last_price or state.STOCKS[s].initial_price)
+                for s in state.STOCKS
+            }
+            total_val = getattr(agent, "cash", 100_000)
+            holdings = getattr(agent, "holdings", {})
+            for sym, qty in holdings.items():
+                if sym in prices:
+                    total_val += qty * prices[sym]
+            pnl = total_val - getattr(agent, "initial_cash", 100_000)
+            agent_summaries.append({
+                "name": getattr(agent, "name", "Unknown Agent"),
+                "strategy": getattr(agent, "agent_kind", "unknown"),
+                "pnl": round(pnl, 2),
+                "trades": getattr(agent, "trade_count", 0),
+                "sharpe": getattr(agent, "_sharpe_ratio", 0.0),
+            })
+        except Exception:
+            continue  # Skip agents with incomplete state
+
+    # Sort to find best/worst
+    agent_summaries.sort(key=lambda a: a["pnl"], reverse=True)
+    top_agent = agent_summaries[0] if agent_summaries else {"name": "N/A", "strategy": "N/A", "pnl": 0}
+    worst_agent = agent_summaries[-1] if agent_summaries else {"name": "N/A", "strategy": "N/A", "pnl": 0}
+
+    best_sharpe = max((a["sharpe"] for a in agent_summaries), default=0.0)
+    worst_drawdown = 0.0  # simplified - would need full equity curve
+    total_trades = sum(a["trades"] for a in agent_summaries)
+    events_fired = len([e for e in events if e.get("event_type") in (
+        "market_event", "event_injection", "circuit_breaker"
+    )])
+
+    # Generate headline from template
+    if top_agent["strategy"] == "llm" and worst_agent["strategy"] == "rule":
+        headline = (
+            f"LLM agents outperformed rule-based agents — "
+            f"{top_agent['name']} led with ${top_agent['pnl']:+,.0f} PnL."
+        )
+    elif top_agent["pnl"] > 0:
+        headline = (
+            f"{top_agent['name']} ({top_agent['strategy']}) was the top performer "
+            f"with ${top_agent['pnl']:+,.0f} PnL across {num_days} days."
+        )
+    else:
+        headline = (
+            f"All agents struggled — best performer {top_agent['name']} "
+            f"finished at ${top_agent['pnl']:+,.0f}."
+        )
+
+    # Generate bullets
+    bullets = []
+    bullets.append(
+        f"Simulation ran for {num_days} day(s) in {training_mode} mode "
+        f"with {len(agent_summaries)} agents."
+    )
+    if top_agent["name"] != "N/A":
+        bullets.append(
+            f"{top_agent['name']} ({top_agent['strategy']}) achieved the highest PnL "
+            f"of ${top_agent['pnl']:+,.0f}."
+        )
+    if worst_agent["name"] != "N/A" and worst_agent["pnl"] < 0:
+        bullets.append(
+            f"{worst_agent['name']} ({worst_agent['strategy']}) had the worst performance "
+            f"at ${worst_agent['pnl']:+,.0f}."
+        )
+    if events_fired > 0:
+        bullets.append(f"{events_fired} market event(s) fired during the simulation.")
+    bullets.append(f"Total trades executed across all agents: {total_trades:,}.")
+
+    return {
+        "headline": headline,
+        "bullets": bullets,
+        "metrics": {
+            "best_sharpe": round(best_sharpe, 2),
+            "worst_drawdown": round(worst_drawdown, 2),
+            "total_trades": total_trades,
+            "events_fired": events_fired,
+        },
+        "top_agent": top_agent,
+        "worst_agent": worst_agent,
+    }
+
+
 @router.get("/runs/{run_id}/stream")
 async def stream_run_events(run_id: str, after_sequence: int = 0):
     _require_record("runs", run_id, "Run")

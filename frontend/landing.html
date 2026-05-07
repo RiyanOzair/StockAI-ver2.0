@@ -1011,17 +1011,39 @@ footer {
   </h1>
   <div class="hero-version" id="heroVersion"></div>
   <p class="hero-sub" id="heroSub" style="max-width: 800px; margin-left: auto; margin-right: auto;">
-    StockAI is a <strong>comprehensive global research ecosystem</strong> designed to study the complex interplay between <strong>LLM-driven agents</strong> and evolving market conditions. 
-    By combining a high-fidelity simulation engine with real-world performance monitoring, we enable researchers to calibrate multi-market datasets across <strong>US Equities and India NSE/BSE</strong>, inject <strong>custom macro-regimes</strong>, and benchmark <strong>autonomous strategies</strong> with extreme precision before graduating them into the <strong>live monitor</strong>.
+    <strong>Run a market. Watch AI trade it. Understand why.</strong><br><br>
+    Configure a stock market in seconds, inject any event — <strong>earnings shock, liquidity crisis, sector rotation</strong> — and watch LLM-powered agents make real trading decisions with <strong>full explanations</strong>. Then replay every moment.
   </p>
   <div class="hero-buttons">
     <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;width:100%">
-      <a class="btn-secondary" href="/workspace">OPEN RESEARCH WORKSPACE</a>
-      <a class="btn-secondary" href="/live-market">OPEN LIVE MONITOR</a>
-      <a class="btn-primary" href="/app">OPEN SIMULATOR</a>
+      <a class="btn-primary" href="/app">LAUNCH SIMULATOR →</a>
+      <a class="btn-secondary" href="/workspace">OPEN WORKSPACE</a>
+      <a class="btn-secondary" href="/live-market">LIVE MONITOR</a>
     </div>
-    <div style="display:flex;justify-content:center;width:100%;margin-top:16px">
-      <a class="btn-secondary" href="#features">VIEW PLATFORM CAPABILITIES</a>
+  </div>
+
+  <!-- WHAT CAN YOU DO IN 5 MINUTES? -->
+  <div class="scenario-section" style="margin-top:64px;max-width:900px;width:100%;">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--cyan);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;">What can you do in 5 minutes?</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2px;border:2px solid var(--border);">
+      <div class="feature-card" style="--accent-color:var(--red)">
+        <div class="feature-marker"></div>
+        <div class="feature-name" style="color:var(--red)">See how AI handles a crash</div>
+        <p class="feature-desc">Set volatility to High, inject a liquidity crisis on day 5, run 10 days. Watch agents panic, hedge, or double down — and read why each one made that call.</p>
+        <a class="btn-primary" href="/workspace?preset=crash_scenario" style="margin-top:16px;padding:12px 20px;font-size:12px;">START THIS SCENARIO →</a>
+      </div>
+      <div class="feature-card" style="--accent-color:var(--cyan)">
+        <div class="feature-marker"></div>
+        <div class="feature-name" style="color:var(--cyan)">Test if mean reversion works</div>
+        <p class="feature-desc">Create a mean reversion bot, run it against 5 random seeds, compare Sharpe ratios. See whether the strategy holds up across different market conditions.</p>
+        <a class="btn-secondary" href="/workspace?preset=mean_reversion_test" style="margin-top:16px;padding:12px 20px;font-size:12px;border-color:var(--cyan);color:var(--cyan);">RUN THIS TEST →</a>
+      </div>
+      <div class="feature-card" style="--accent-color:var(--lime)">
+        <div class="feature-marker"></div>
+        <div class="feature-name">Watch the market right now</div>
+        <p class="feature-desc">See what US markets are doing live, compare against the simulator's current regime, and ask the AI what it means.</p>
+        <a class="btn-secondary" href="/live-market" style="margin-top:16px;padding:12px 20px;font-size:12px;">OPEN LIVE MONITOR →</a>
+      </div>
     </div>
   </div>
 

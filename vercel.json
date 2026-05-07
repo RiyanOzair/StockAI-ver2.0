@@ -1,0 +1,39 @@
+{
+  "version": 2,
+  "buildCommand": "",
+  "outputDirectory": "frontend",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://your-backend-url.onrender.com/api/$1" },
+    { "source": "/chat", "destination": "https://your-backend-url.onrender.com/chat" },
+    { "source": "/simulation/(.*)", "destination": "https://your-backend-url.onrender.com/simulation/$1" },
+    { "source": "/market/(.*)", "destination": "https://your-backend-url.onrender.com/market/$1" },
+    { "source": "/agents/(.*)", "destination": "https://your-backend-url.onrender.com/agents/$1" },
+    { "source": "/data/(.*)", "destination": "https://your-backend-url.onrender.com/data/$1" },
+    { "source": "/runs/(.*)", "destination": "https://your-backend-url.onrender.com/runs/$1" },
+    { "source": "/health", "destination": "https://your-backend-url.onrender.com/health" },
+    { "source": "/workspace/summary", "destination": "https://your-backend-url.onrender.com/workspace/summary" }
+  ],
+  "routes": [
+    { "src": "/app", "dest": "/index.html" },
+    { "src": "/live-market", "dest": "/live-market.html" },
+    { "src": "/workspace", "dest": "/workspace.html" },
+    { "src": "/credits", "dest": "/credits.html" },
+    { "src": "/", "dest": "/landing.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    {
+      "source": "/js/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=3600" }
+      ]
+    }
+  ]
+}

@@ -839,6 +839,7 @@ main {
     <section class="section intel-grid">
       <div class="panel reveal">
         <div class="eyebrow">Simulator Alignment</div>
+        <p style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.6;">How does our simulator compare to what is actually happening right now? This is the reality check.</p>
         <h2 class="section-title" style="font-size:32px;">Real conditions vs. the research-trained world state.</h2>
         <div class="compare-list" id="comparison-list"></div>
         <div class="sim-stats" id="sim-stats"></div>
@@ -1055,11 +1056,25 @@ function renderHeroMeta(data) {
   const statusClass = data.provider_status === "live" ? "live" : data.provider_status === "stale_cache" ? "stale" : "fallback";
   const freshness = data.last_successful_at ? formatTimestamp(data.last_successful_at) : "No successful refresh yet";
   const ageNote = data.cache_age_seconds == null ? "No cached snapshot" : `${data.cache_age_seconds}s cache age`;
+  const mktStatus = data.market_status || "UNKNOWN";
+  const mktStatusColor = {
+    OPEN: "#4ade80",
+    PRE_MARKET: "#fbbf24",
+    AFTER_HOURS: "#f97316",
+    CLOSED: "#ef4e63",
+    UNKNOWN: "#a8a8a8"
+  }[mktStatus] || "#a8a8a8";
+  const isStale = data.stale || data.is_stale || false;
   els.heroMeta.innerHTML = `
+    <div class="nav-chip" style="border-color:${mktStatusColor};color:${mktStatusColor};">
+      <span class="status-dot" style="background:${mktStatusColor};"></span>
+      US MARKET: ${escapeHtml(mktStatus.replace("_", " "))}
+    </div>
     <div class="nav-chip"><span class="status-dot ${statusClass}"></span>${escapeHtml(data.provider_status.replace("_", " "))}</div>
     <div class="nav-chip">Provider: ${escapeHtml(data.provider_name || "Unknown")}</div>
     <div class="nav-chip">Freshness: ${escapeHtml(freshness)}</div>
     <div class="nav-chip">${escapeHtml(ageNote)}</div>
+    <div class="nav-chip" id="refresh-countdown" style="color:${isStale ? '#ef4e63' : '#a8a8a8'};">Next refresh: --s</div>
   `;
 }
 
@@ -1392,7 +1407,23 @@ async function loadSnapshot(forceRefresh = false) {
 els.refreshBtn.addEventListener("click", () => loadSnapshot(true));
 
 loadSnapshot(false);
-setInterval(() => loadSnapshot(false), 120000);
+
+// Auto-refresh every 60 seconds (dynamic — matches backend cache TTL)
+let refreshCountdown = 60;
+let lastRefreshAt = Date.now();
+const refreshIntervalMs = 60000;
+
+setInterval(() => {
+  const elapsed = Math.floor((Date.now() - lastRefreshAt) / 1000);
+  const remaining = Math.max(0, 60 - elapsed);
+  const el = document.getElementById("refresh-countdown");
+  if (el) el.textContent = `Next refresh: ${remaining}s`;
+}, 1000);
+
+setInterval(() => {
+  lastRefreshAt = Date.now();
+  loadSnapshot(false);
+}, refreshIntervalMs);
 
 // ── MARKET SELECTOR ──
 let currentMarket = "us";

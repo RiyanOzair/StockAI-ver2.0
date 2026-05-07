@@ -43,6 +43,7 @@ _SYSTEM_PROMPT = (
 
 
 def _build_context_snippet() -> str:
+    """Build a rich context string with simulation analytics for the LLM."""
     try:
         sim = state.simulation
         prices = {
@@ -53,11 +54,43 @@ def _build_context_snippet() -> str:
         top = max(prices, key=lambda s: (
             (prices[s] - state.STOCKS[s].initial_price) / state.STOCKS[s].initial_price
         ))
-        return (
-            f"[Day {sim.day}/{sim.total_days}, "
-            f"running={sim.is_running}, trades={sim.total_trade_count}, "
-            f"agents={agents_active}, top mover={state.STOCKS[top].name} @ ${prices[top]}]"
-        )
+        bottom = min(prices, key=lambda s: (
+            (prices[s] - state.STOCKS[s].initial_price) / state.STOCKS[s].initial_price
+        ))
+
+        # Agent performance rankings
+        agent_perf = []
+        for a in state.agents:
+            total_val = a.cash
+            for sym, qty in a.holdings.items():
+                if sym in prices:
+                    total_val += qty * prices[sym]
+            pnl = total_val - getattr(a, "initial_cash", 100_000)
+            agent_perf.append((a.name, getattr(a, "agent_kind", "unknown"), round(pnl, 2)))
+        agent_perf.sort(key=lambda x: x[2], reverse=True)
+        top_agents = agent_perf[:3]
+        bottom_agents = agent_perf[-2:] if len(agent_perf) > 2 else []
+
+        # Market analytics
+        from backend.app.core.analytics import compute_market_analytics
+        analytics = compute_market_analytics()
+        regime = analytics.get("regime", "unknown")
+        benchmark = analytics.get("benchmark", {})
+        bench_return = benchmark.get("return_pct", 0)
+        realized_vol = analytics.get("realized_vol_pct", 0)
+
+        lines = [
+            f"[SIMULATION STATUS: Day {sim.day}/{sim.total_days}, running={sim.is_running}]",
+            f"[REGIME: {regime}, BENCHMARK: {bench_return:+.2f}%, VOL: {realized_vol:.1f}%]",
+            f"[TRADES: {sim.total_trade_count}, ACTIVE AGENTS: {agents_active}]",
+            f"[TOP MOVER: {state.STOCKS[top].name} @ ${prices[top]}]",
+            f"[BOTTOM MOVER: {state.STOCKS[bottom].name} @ ${prices[bottom]}]",
+        ]
+        if top_agents:
+            lines.append(f"[TOP AGENTS: {', '.join(f'{n}({k})=${p:+,.0f}' for n, k, p in top_agents)}]")
+        if bottom_agents:
+            lines.append(f"[WORST AGENTS: {', '.join(f'{n}({k})=${p:+,.0f}' for n, k, p in bottom_agents)}]")
+        return "\n".join(lines)
     except Exception:
         return "[Simulation not started]"
 

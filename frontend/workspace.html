@@ -390,6 +390,14 @@
       <div class="stream-note">EXPAND THIS PANEL TO OPEN THE LIVE RUN EVENT STREAM.</div>
       <div id="eventTape" class="tape-body"></div>
     </details>
+
+    <details id="warRoomPanel" class="tape" style="margin-top:24px;border-color:var(--magenta)">
+      <summary><span style="color:var(--magenta)">⚔️ AI WAR ROOM (LIVE DEBATE)</span><button class="btn pink" onclick="refreshDebate(event)" type="button" style="height:28px">EAVESDROP</button></summary>
+      <div class="stream-note">LISTEN TO THE AGENTS DEBATE THE CURRENT MARKET STATE.</div>
+      <div id="warRoomBody" class="tape-body" style="display:grid;gap:12px">
+         <div class="empty">WAITING FOR DEBATE DATA... CLICK EAVESDROP TO START.</div>
+      </div>
+    </details>
   </div>
 
   <button id="chatFab" class="chat-fab" type="button">CHAT</button>
@@ -449,6 +457,15 @@
             window.voiceBriefing.speak(`Priority Alert: ${payload.title || 'Market Event'}. ${payload.description || ''}`);
           } else if (e.event_type === 'regime_shift' || payload.event_type === 'regime_shift') {
             window.voiceBriefing.speak(`Market Regime Shift Detected. Transitioning to ${payload.regime || 'new'} phase.`);
+          }
+        }
+
+        // --- STEP 4: 3D TOPOLOGY HOOK ---
+        if (window.marketTopology) {
+          const payload = e.payload || {};
+          if (e.event_type === 'injection' || payload.severity === 'HIGH') {
+             const isBad = (payload.title||'').toLowerCase().includes('crisis') || (payload.impact_pct < 0);
+             window.marketTopology.pulse(isBad ? -1 : 1);
           }
         }
       });
@@ -516,6 +533,27 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
       $('notebookStatus').textContent = `${data.length} ENTRIES`;
       $('notebookFeed').innerHTML = data.length ? data.map(d=>`<div class="item" style="border-bottom:1px solid #333;padding-bottom:8px;margin-bottom:8px"><div style="font-size:11px;color:var(--cyan);margin-bottom:4px"><strong>${esc(d.agent_id)}</strong> · DAY ${d.day} SESS ${d.session} · ${esc(d.entry_type.toUpperCase())}</div><div class="copy">${esc(d.content)}</div></div>`).join('') : '<div class="empty">NOTEBOOKS REQUIRE LLM AGENTS. CURRENT RUN MAY BE IN MOCK MODE OR NO NOTEBOOKS GENERATED YET.</div>';
     }
+
+    /* --- STEP 3: WAR ROOM DEBATE --- */
+    async function refreshDebate(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if(!app.status?.is_running) { showToast('SIMULATION MUST BE RUNNING','warning'); return; }
+      $('warRoomBody').innerHTML = `<div class="empty">LLMS ARE DEBATING...</div>`;
+      if (!$('warRoomPanel').open) $('warRoomPanel').open = true;
+      try {
+        const res = await api('/simulation/debate');
+        $('warRoomBody').innerHTML = res.messages.map(m => {
+          let color = 'var(--text)';
+          if(m.role==='bull') color='var(--green)';
+          else if(m.role==='bear') color='var(--pink)';
+          else color='var(--amber)';
+          return `<div class="msg" style="border-color:${color};background:rgba(0,0,0,0.5)"><strong style="color:${color};font-size:11px;display:block;margin-bottom:6px">${m.agent}</strong><div style="font-size:13px">${m.message}</div></div>`;
+        }).join('');
+      } catch(err) {
+        $('warRoomBody').innerHTML = `<div class="empty">FAILED TO GENERATE DEBATE: ${err.message}</div>`;
+      }
+    }
+
     async function createNotebook(){
       const content=$('nbContent').value.trim();
       if(!content){showToast('NOTEBOOK CONTENT IS REQUIRED','error');return}

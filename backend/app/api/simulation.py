@@ -190,3 +190,47 @@ async def inject_news(req: NewsInjectionRequest, x_session_id: Optional[str] = H
     except Exception as e:
         logger.error(f"Failed to process news injection: {e}")
         raise HTTPException(500, f"Failed to parse news into event: {str(e)}")
+
+@router.get("/debate")
+async def get_debate(x_session_id: Optional[str] = Header(None)):
+    _verify_session(x_session_id)
+    if not state.simulation.is_running:
+        raise HTTPException(400, "Simulation must be running to generate a debate.")
+
+    from backend.app.core.llm_provider import LLMFactory
+    import json
+    
+    # Pass current market state
+    prices = {s: (state.market_books[s].last_price or 100.0) for s in state.STOCKS}
+    regime = getattr(state.simulation, "liquidity_regime", "core")
+    
+    provider = LLMFactory.create_provider()
+    system_prompt = (
+        "You are an AI generating a real-time 'War Room' debate between 3 trading agents. "
+        "Based on the current market data, provide exactly 3 short, punchy, argumentative statements (max 2 sentences each): "
+        "1. A 'Bull' who wants to buy momentum.\n"
+        "2. A 'Bear' who is extremely pessimistic and wants to short.\n"
+        "3. A 'Risk Manager' who focuses on volatility, leverage, and capital preservation.\n"
+        "Output MUST be strict JSON matching this schema:\n"
+        "{\n"
+        '  "bull": "Bull statement",\n'
+        '  "bear": "Bear statement",\n'
+        '  "risk": "Risk manager statement"\n'
+        "}\n"
+    )
+    
+    prompt = f"Current Regime: {regime}\nPrices: {json.dumps(prices)}"
+    
+    try:
+        response_text = provider.generate(prompt=prompt, system_message=system_prompt)
+        data = json.loads(response_text)
+        return {
+            "messages": [
+                {"agent": "BULL-BOT", "role": "bull", "message": data.get("bull", "Momentum is strong.")},
+                {"agent": "BEAR-BOT", "role": "bear", "message": data.get("bear", "This is a trap.")},
+                {"agent": "RISK-MANAGER", "role": "risk", "message": data.get("risk", "Deleverage immediately.")}
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Failed to generate debate: {e}")
+        raise HTTPException(500, f"Failed to generate debate: {str(e)}")

@@ -343,13 +343,17 @@
           <div id="eventStatus" class="pill amber">READY TO INJECT</div>
         </div>
         <div class="tool-body">
-          <div class="grid3">
-            <div class="field"><label for="evtType">EVENT TYPE</label><select id="evtType" onchange="updateEventPreview()"><option value="earnings shock">EARNINGS SHOCK</option><option value="liquidity crisis">LIQUIDITY CRISIS</option><option value="macro announcement">MACRO ANNOUNCEMENT</option><option value="sector rotation">SECTOR ROTATION</option><option value="regulatory action">REGULATORY ACTION</option></select></div>
+          <div class="grid3" id="standardEventFields">
+            <div class="field"><label for="evtType">EVENT TYPE</label><select id="evtType" onchange="updateEventPreview()"><option value="earnings shock">EARNINGS SHOCK</option><option value="liquidity crisis">LIQUIDITY CRISIS</option><option value="macro announcement">MACRO ANNOUNCEMENT</option><option value="sector rotation">SECTOR ROTATION</option><option value="regulatory action">REGULATORY ACTION</option><option value="news">NEWS (AI PARSED)</option></select></div>
             <div class="field"><label for="evtSector">AFFECTED SECTOR</label><select id="evtSector" onchange="updateEventPreview()"><option value="ALL">ALL</option></select></div>
             <div class="field"><label for="evtDay">TARGET DAY</label><input id="evtDay" type="number" min="1" max="20" value="4" oninput="updateEventPreview()" /></div>
             <div class="field"><label for="evtMagnitude">MAGNITUDE</label><input id="evtMagnitude" type="range" min="1" max="3" value="2" oninput="updateEventPreview(); magnitude()" /></div>
             <div class="field"><label for="evtSeverity">SEVERITY</label><input id="evtSeverity" value="MODERATE" readonly /></div>
             <div class="field full"><label for="evtDesc">PLAIN-ENGLISH DESCRIPTION</label><textarea id="evtDesc">LIQUIDITY THINS MID-RUN AND EXECUTION COSTS WIDEN ACROSS THE TARGET SECTOR.</textarea></div>
+          </div>
+          
+          <div id="newsEventFields" style="display:none;margin-top:16px;">
+            <div class="field full"><label for="evtNewsText">REAL-WORLD NEWS HEADLINE</label><textarea id="evtNewsText" placeholder="Paste a headline (e.g. 'Tech giants report massive AI chip shortage') and the LLM will translate it into a simulation shock..."></textarea></div>
           </div>
           
           <div class="field full" style="margin-top:16px;margin-bottom:16px;">
@@ -385,6 +389,14 @@
       <summary><span>RUN EVENT TAPE</span><span id="eventTapeStatus" class="pill muted">0 EVENTS</span></summary>
       <div class="stream-note">EXPAND THIS PANEL TO OPEN THE LIVE RUN EVENT STREAM.</div>
       <div id="eventTape" class="tape-body"></div>
+    </details>
+
+    <details id="warRoomPanel" class="tape" style="margin-top:24px;border-color:var(--magenta)">
+      <summary><span style="color:var(--magenta)">⚔️ AI WAR ROOM (LIVE DEBATE)</span><button class="btn pink" onclick="refreshDebate(event)" type="button" style="height:28px">EAVESDROP</button></summary>
+      <div class="stream-note">LISTEN TO THE AGENTS DEBATE THE CURRENT MARKET STATE.</div>
+      <div id="warRoomBody" class="tape-body" style="display:grid;gap:12px">
+         <div class="empty">WAITING FOR DEBATE DATA... CLICK EAVESDROP TO START.</div>
+      </div>
     </details>
   </div>
 
@@ -433,7 +445,33 @@
     async function loadStocks(){app.stocks=await api('/market/stocks');const sectors=['ALL',...new Set(Object.values(app.stocks).map(v=>v.sector).filter(Boolean))];$('evtSector').innerHTML=sectors.map(s=>`<option value="${esc(s)}">${esc(s.toUpperCase())}</option>`).join('')}
     async function loadExplainability(){const agents=await api('/agents');const top=agents.slice(0,8);const payloads=await Promise.all(top.map(a=>api(`/agents/${a.id}/decisions`).catch(()=>({decisions:[]}))));const entries=[];payloads.forEach((p,i)=>{(p.decisions||[]).forEach(d=>entries.push({agent:top[i].name,kind:top[i].agent_kind,action:d.action,stock:d.stock,reasoning:d.reasoning,conviction:+(d?.memo?.conviction||0),timestamp:d.timestamp}))});entries.sort((a,b)=>new Date(b.timestamp||0)-new Date(a.timestamp||0));app.decisions=entries.slice(0,16);$('explainabilityStatus').textContent=`${app.decisions.length} ENTRIES`;$('explainabilityFeed').innerHTML=app.decisions.length?app.decisions.map(d=>`<div class="item"><div class="item-top"><div><strong>${esc(d.agent)} · ${esc(String(d.action||'hold').toUpperCase())}${d.stock?` · ${esc(d.stock)}`:''}</strong><div class="copy">${esc(d.kind||'agent')} · ${esc(ago(d.timestamp))}</div></div><div class="pill cyan">${Math.max(0,Math.min(100,d.conviction||0))}% CONFIDENCE</div></div><div class="copy">${esc(d.reasoning||'NO REASONING RECORDED')}</div><div class="bar"><div class="fill" style="width:${Math.max(0,Math.min(100,d.conviction||0))}%"></div></div></div>`).join(''):'<div class="empty">NO DECISION LOGS AVAILABLE YET</div>'}
     function renderEvents(){const rows=app.events.slice(-80).slice().reverse();$('eventTapeStatus').textContent=`${app.events.length} EVENTS`;$('eventTape').innerHTML=rows.length?rows.map(e=>`<div class="item"><div class="item-top"><strong>${esc(e.event_type||'EVENT')}</strong><div class="pill muted">#${esc(e.sequence)}</div></div><div class="copy">PHASE: ${esc(String(e.phase||'N/A').toUpperCase())} · ${esc(ago(e.created_at))}</div><div class="copy">${esc(JSON.stringify(e.payload||{}))}</div></div>`).join(''):'<div class="empty">NO EVENTS RECORDED YET</div>'}
-    function ingestEvents(rows){(rows||[]).forEach(e=>{app.events.push(e);app.cursor=Math.max(app.cursor,+e.sequence||0)});app.events=app.events.slice(-80);renderEvents()}
+    function ingestEvents(rows){
+      (rows||[]).forEach(e=>{
+        app.events.push(e);
+        app.cursor=Math.max(app.cursor,+e.sequence||0);
+        
+        // --- STEP 2: IMMERSIVE VOICE BRIEFING HOOK ---
+        if (window.voiceBriefing && !window.voiceBriefing.isSpeaking) {
+          const payload = e.payload || {};
+          if (e.event_type === 'injection' || payload.severity === 'HIGH') {
+            window.voiceBriefing.speak(`Priority Alert: ${payload.title || 'Market Event'}. ${payload.description || ''}`);
+          } else if (e.event_type === 'regime_shift' || payload.event_type === 'regime_shift') {
+            window.voiceBriefing.speak(`Market Regime Shift Detected. Transitioning to ${payload.regime || 'new'} phase.`);
+          }
+        }
+
+        // --- STEP 4: 3D TOPOLOGY HOOK ---
+        if (window.marketTopology) {
+          const payload = e.payload || {};
+          if (e.event_type === 'injection' || payload.severity === 'HIGH') {
+             const isBad = (payload.title||'').toLowerCase().includes('crisis') || (payload.impact_pct < 0);
+             window.marketTopology.pulse(isBad ? -1 : 1);
+          }
+        }
+      });
+      app.events=app.events.slice(-80);
+      renderEvents();
+    }
     function closeEventStream(){if(app.eventStream){app.eventStream.close();app.eventStream=null}}
     function openEventStream(runId){closeEventStream();if(!runId)return;const stream=new EventSource(`/runs/${runId}/stream?after_sequence=${app.cursor}`);app.eventStream=stream;stream.onmessage=e=>{try{ingestEvents([JSON.parse(e.data)])}catch{}};stream.onerror=()=>{$('eventTapeStatus').textContent=`${app.events.length} EVENTS · STREAM IDLE`}}
     async function refreshEvents(runId){if(!runId){closeEventStream();app.events=[];app.cursor=0;renderEvents();return}const rows=await api(`/runs/${runId}/events?after_sequence=${app.cursor}`);ingestEvents(rows);if($('eventTapePanel').open)openEventStream(runId)}
@@ -454,7 +492,19 @@
     async function createScenario(){const presets={stress:{regime_overrides:{market_regime:'risk_off',liquidity_regime:'thin'},shock_profile:{volatility_spike:1.35,spillover_bias:.9},config_overrides:{liquidity_regime:'thin',slippage_bps:10,training_mode:'deterministic'}},momentum:{regime_overrides:{market_regime:'trend',liquidity_regime:'core'},shock_profile:{volatility_spike:.9,spillover_bias:.35},config_overrides:{liquidity_regime:'core',slippage_bps:4.5,training_mode:'hybrid'}},balanced:{regime_overrides:{market_regime:'balanced',liquidity_regime:'core'},shock_profile:{volatility_spike:1,spillover_bias:.5},config_overrides:{liquidity_regime:'core',slippage_bps:6,training_mode:'hybrid'}}};const p=presets[$('scenarioRegime').value];await post('/scenarios',{name:$('scenarioName').value.trim()||'WORKSPACE SCENARIO',description:$('scenarioDesc').value.trim(),version:$('scenarioVersion').value.trim()||'1.0',regime_overrides:p.regime_overrides,shock_profile:p.shock_profile,config_overrides:p.config_overrides});await loadWorkspace()}
 async function createExperiment(){await post('/experiments',{name:$('experimentName').value.trim()||'WORKSPACE EXPERIMENT',description:$('experimentDesc').value.trim(),scenario_id:$('expScenario').value,dataset_id:$('expDataset').value,agent_population_id:$('expPopulation').value,config_snapshot:{training_mode:$('runMode').value,latency_ms:$('runMode').value==='deterministic'?80:120,slippage_bps:$('runMode').value==='deterministic'?4:6}});await loadWorkspace()}
     async function runEvaluation(){await post('/evaluations',{name:`WORKSPACE EVAL ${new Date().toISOString().slice(11,19)}`,bot_id:$('evalBot').value,scenario_id:$('runScenario').value||app.status?.scenario_id,dataset_id:$('runDataset').value||app.status?.dataset_version,seeds:$('evalSeeds').value.split(',').map(v=>+v.trim()).filter(v=>Number.isInteger(v)&&v>0),num_days:+$('evalDays').value||2,run_async:$('evalAsync').value==='true'});await loadWorkspace()}
-    async function injectEvent(){const m=magnitude(),sector=$('evtSector').value,affected=sector==='ALL'?[]:Object.entries(app.stocks).filter(([,meta])=>meta.sector===sector).map(([symbol])=>symbol),title=`${$('evtType').value.toUpperCase()} · DAY ${$('evtDay').value}`,description=`${$('evtDesc').value.trim()} TARGET DAY: ${$('evtDay').value}. SECTOR: ${sector}.`;await post('/data/event',{title,description,severity:m.severity,impact_pct:m.impact,affected_stocks:affected});$('eventStatus').textContent=`LAST INJECTED: ${title}`;await refreshEvents(app.status?.run_id)}
+    async function injectEvent(){
+      const type = $('evtType').value;
+      if (type === 'news') {
+        const text = $('evtNewsText').value.trim();
+        if (!text) { showToast('PLEASE PASTE NEWS TEXT', 'warning'); return; }
+        $('eventStatus').textContent = `PARSING NEWS AI...`;
+        const res = await post('/simulation/inject/news', {text});
+        $('eventStatus').textContent = `INJECTED: ${res.event.title}`;
+        await refreshEvents(app.status?.run_id);
+        return;
+      }
+      const m=magnitude(),sector=$('evtSector').value,affected=sector==='ALL'?[]:Object.entries(app.stocks).filter(([,meta])=>meta.sector===sector).map(([symbol])=>symbol),title=`${$('evtType').value.toUpperCase()} · DAY ${$('evtDay').value}`,description=`${$('evtDesc').value.trim()} TARGET DAY: ${$('evtDay').value}. SECTOR: ${sector}.`;await post('/data/event',{title,description,severity:m.severity,impact_pct:m.impact,affected_stocks:affected});$('eventStatus').textContent=`LAST INJECTED: ${title}`;await refreshEvents(app.status?.run_id)
+    }
     async function exportRun(){if(!app.status?.run_id)return;const bundle=await api(`/runs/${app.status.run_id}/export`),blob=new Blob([JSON.stringify(bundle,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`${app.status.run_id}.json`;a.click();URL.revokeObjectURL(url)}
     function addMsg(role,text,confidence){const n=document.createElement('div');n.className=`msg ${role}`;n.innerHTML=`<div>${esc(text)}</div>${confidence&&confidence!=='high'?'<div class="low">LOW CONFIDENCE</div>':''}`;$('chatLog').appendChild(n);$('chatLog').scrollTop=$('chatLog').scrollHeight}
     function getChatHistory(){try{return JSON.parse(sessionStorage.getItem('chatLog')||'[]')}catch{return []}}
@@ -483,6 +533,71 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
       $('notebookStatus').textContent = `${data.length} ENTRIES`;
       $('notebookFeed').innerHTML = data.length ? data.map(d=>`<div class="item" style="border-bottom:1px solid #333;padding-bottom:8px;margin-bottom:8px"><div style="font-size:11px;color:var(--cyan);margin-bottom:4px"><strong>${esc(d.agent_id)}</strong> · DAY ${d.day} SESS ${d.session} · ${esc(d.entry_type.toUpperCase())}</div><div class="copy">${esc(d.content)}</div></div>`).join('') : '<div class="empty">NOTEBOOKS REQUIRE LLM AGENTS. CURRENT RUN MAY BE IN MOCK MODE OR NO NOTEBOOKS GENERATED YET.</div>';
     }
+
+    /* --- STEP 3: WAR ROOM DEBATE --- */
+    let debateInterval = null;
+    async function refreshDebate(e) {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if(!app.status?.is_running) { 
+        showToast('SIMULATION MUST BE RUNNING','warning'); 
+        stopDebateInterval();
+        return; 
+      }
+      
+      const body = $('warRoomBody');
+      if (body.innerHTML.includes('WAITING') || body.innerHTML.includes('FAILED')) {
+        body.innerHTML = `<div class="empty">LLMS ARE DEBATING...</div>`;
+      }
+      
+      if (!$('warRoomPanel').open) $('warRoomPanel').open = true;
+      try {
+        const res = await api('/simulation/debate');
+        body.innerHTML = res.messages.map(m => {
+          let color = 'var(--text)';
+          if(m.role==='bull') color='var(--green)';
+          else if(m.role==='bear') color='var(--pink)';
+          else color='var(--amber)';
+          return `<div class="msg" style="border-color:${color};background:rgba(0,0,0,0.5)"><strong style="color:${color};font-size:11px;display:block;margin-bottom:6px">${m.agent}</strong><div style="font-size:13px">${m.message}</div></div>`;
+        }).join('');
+        
+        // Ensure voice briefing hooks into debate if desired (Optional but cool)
+        // if (window.voiceBriefing && !window.voiceBriefing.isSpeaking && Math.random() > 0.7) {
+        //   window.voiceBriefing.speak(`War Room Update: ${res.messages[0].agent} says ${res.messages[0].message}`);
+        // }
+
+      } catch(err) {
+        body.innerHTML = `<div class="empty">FAILED TO GENERATE DEBATE: ${err.message}</div>`;
+        stopDebateInterval();
+      }
+    }
+
+    function startDebateInterval() {
+      if (debateInterval) return;
+      refreshDebate(); // Initial call
+      debateInterval = setInterval(() => {
+        if ($('warRoomPanel').open && app.status?.is_running) {
+          refreshDebate();
+        } else if (!app.status?.is_running) {
+          stopDebateInterval();
+        }
+      }, 15000); // Every 15 seconds to be safe with rate limits
+    }
+
+    function stopDebateInterval() {
+      if (debateInterval) {
+        clearInterval(debateInterval);
+        debateInterval = null;
+      }
+    }
+
+    $('warRoomPanel').addEventListener('toggle', () => {
+      if ($('warRoomPanel').open) {
+        startDebateInterval();
+      } else {
+        stopDebateInterval();
+      }
+    });
+
     async function createNotebook(){
       const content=$('nbContent').value.trim();
       if(!content){showToast('NOTEBOOK CONTENT IS REQUIRED','error');return}
@@ -511,13 +626,18 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
 
     /* FEATURE 11: EVENT TIMELINE PREVIEW */
     function updateEventPreview() {
+      const type = $('evtType').value;
+      const isNews = type === 'news';
+      if($('standardEventFields')) $('standardEventFields').style.display = isNews ? 'none' : 'grid';
+      if($('newsEventFields')) $('newsEventFields').style.display = isNews ? 'block' : 'none';
+
       const day = +$('evtDay').value || 1;
       const mag = +$('evtMagnitude').value || 2;
       const t = $('eventTimeline');
       
       let html = '';
       for(let i=1; i<=20; i++) {
-        const isTarget = (i === day);
+        const isTarget = (!isNews && i === day);
         const isMajor = (i % 5 === 0 || i === 1);
         let bg = 'transparent';
         if(isTarget) {

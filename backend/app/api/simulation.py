@@ -9,6 +9,9 @@ from backend.app.core.analytics import compute_market_analytics
 class ExtendRequest(BaseModel):
     additional_days: int = Field(..., gt=0, description="Must be at least 1")
 
+class NewsInjectionRequest(BaseModel):
+    text: str
+
 router = APIRouter(prefix="/simulation", tags=["simulation"])
 logger = logging.getLogger("api.simulation")
 
@@ -138,3 +141,96 @@ async def get_snapshot(day: int):
         if s.day == day:
             return s.model_dump()
     raise HTTPException(404, f"No snapshot for day {day}")
+
+@router.post("/inject/news")
+async def inject_news(req: NewsInjectionRequest, x_session_id: Optional[str] = Header(None)):
+    _verify_session(x_session_id)
+    if not state.simulation.is_running:
+        raise HTTPException(400, "Simulation must be running to inject news.")
+
+    from backend.app.core.llm_provider import LLMFactory
+    import json
+    
+    provider = LLMFactory.create_provider()
+    system_prompt = (
+        "You are a financial analyst engine. You read real-world news and convert it "
+        "into a structured simulation market shock. "
+        "Output MUST be strict JSON matching this schema:\n"
+        "{\n"
+        '  "title": "Short title of the event",\n'
+        '  "description": "Brief description of what happened",\n'
+        '  "severity": "LOW" | "MEDIUM" | "HIGH",\n'
+        '  "impact_pct": float (e.g. -5.0 for negative 5 percent impact),\n'
+        '  "affected_stocks": ["AAPL", "MSFT"] (list of tickers likely affected, up to 3)\n'
+        "}\n"
+        "Available simulation stocks are: " + ", ".join(state.STOCKS.keys())
+    )
+    
+    try:
+        response_text = provider.generate(prompt=req.text, system_message=system_prompt)
+        # Parse the JSON
+        data = json.loads(response_text)
+        from backend.app.models.types import EventInjection
+        
+        # Make sure affected_stocks are actually in the simulation universe
+        affected = data.get("affected_stocks", [])
+        valid_affected = [s for s in affected if s in state.STOCKS]
+        
+        injection = EventInjection(
+            title=data.get("title", "News Shock"),
+            description=data.get("description", req.text[:100]),
+            severity=data.get("severity", "MEDIUM"),
+            impact_pct=float(data.get("impact_pct", 0.0)),
+            affected_stocks=valid_affected
+        )
+        
+        # Inject the event
+        event = state.simulation.inject_event(injection)
+        return {"message": "News processed and injected", "event": event.model_dump()}
+    except Exception as e:
+        logger.error(f"Failed to process news injection: {e}")
+        raise HTTPException(500, f"Failed to parse news into event: {str(e)}")
+
+@router.get("/debate")
+async def get_debate(x_session_id: Optional[str] = Header(None)):
+    _verify_session(x_session_id)
+    if not state.simulation.is_running:
+        raise HTTPException(400, "Simulation must be running to generate a debate.")
+
+    from backend.app.core.llm_provider import LLMFactory
+    import json
+    
+    # Pass current market state
+    prices = {s: (state.market_books[s].last_price or 100.0) for s in state.STOCKS}
+    regime = getattr(state.simulation, "liquidity_regime", "core")
+    
+    provider = LLMFactory.create_provider()
+    system_prompt = (
+        "You are an AI generating a real-time 'War Room' debate between 3 trading agents. "
+        "Based on the current market data, provide exactly 3 short, punchy, argumentative statements (max 2 sentences each): "
+        "1. A 'Bull' who wants to buy momentum.\n"
+        "2. A 'Bear' who is extremely pessimistic and wants to short.\n"
+        "3. A 'Risk Manager' who focuses on volatility, leverage, and capital preservation.\n"
+        "Output MUST be strict JSON matching this schema:\n"
+        "{\n"
+        '  "bull": "Bull statement",\n'
+        '  "bear": "Bear statement",\n'
+        '  "risk": "Risk manager statement"\n'
+        "}\n"
+    )
+    
+    prompt = f"Current Regime: {regime}\nPrices: {json.dumps(prices)}"
+    
+    try:
+        response_text = provider.generate(prompt=prompt, system_message=system_prompt)
+        data = json.loads(response_text)
+        return {
+            "messages": [
+                {"agent": "BULL-BOT", "role": "bull", "message": data.get("bull", "Momentum is strong.")},
+                {"agent": "BEAR-BOT", "role": "bear", "message": data.get("bear", "This is a trap.")},
+                {"agent": "RISK-MANAGER", "role": "risk", "message": data.get("risk", "Deleverage immediately.")}
+            ]
+        }
+    except Exception as e:
+        logger.error(f"Failed to generate debate: {e}")
+        raise HTTPException(500, f"Failed to generate debate: {str(e)}")

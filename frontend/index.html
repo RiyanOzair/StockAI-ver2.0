@@ -1242,10 +1242,48 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
   pointer-events: none;
   opacity: 0.35;
 }
+
+/* ── SINGULARITY GLITCH EFFECTS ── */
+@keyframes glitch {
+  0% { transform: translate(0) }
+  20% { transform: translate(-2px, 2px) }
+  40% { transform: translate(-2px, -2px) }
+  60% { transform: translate(2px, 2px) }
+  80% { transform: translate(2px, -2px) }
+  100% { transform: translate(0) }
+}
+.neural-overdrive {
+  animation: glitch 0.2s infinite;
+  filter: hue-rotate(90deg) brightness(1.2) contrast(1.5);
+  transition: filter 0.5s;
+}
+.singularity-glow {
+  box-shadow: 0 0 40px var(--lime), inset 0 0 20px var(--lime) !important;
+  border-color: var(--white) !important;
+}
+#prophecyHUD {
+  position: fixed;
+  bottom: 100px; left: 50%;
+  transform: translateX(-50%);
+  background: rgba(10, 10, 15, 0.9);
+  border: 1px solid var(--cyan);
+  padding: 8px 20px;
+  border-radius: 40px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--cyan);
+  z-index: 10000;
+  display: none;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 20px rgba(56, 189, 248, 0.3);
+  pointer-events: none;
+  letter-spacing: 1px;
+}
 </style>
 </head>
 <body>
   <canvas id="marketTopologyCanvas"></canvas>
+  <div id="prophecyHUD">SYNCING MARKET PROPHECY...</div>
 
 <!-- ONBOARDING TOUR -->
 <div id="tour-overlay"></div>
@@ -1320,8 +1358,17 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
       <a class="nav-link" data-page="replay" onclick="nav('replay')">
         <span class="nav-icon">⟳</span> Replay
       </a>
+      <a class="nav-link" data-page="matrix" onclick="nav('matrix')">
+        <span class="nav-icon">✧</span> Matrix View
+      </a>
       <a class="nav-link" data-page="settings" onclick="nav('settings')">
         <span class="nav-icon">≡</span> Settings
+      </a>
+      <a class="nav-link" id="nav-oracle" onclick="window.oraclePulse.toggle()" style="color:var(--amber); border-top:1px solid rgba(251,191,36,0.2); margin-top:8px; padding-top:12px;">
+        <span class="nav-icon">👁</span> Oracle Pulse
+      </a>
+      <a class="nav-link" id="nav-singularity" onclick="window.projectSingularity.toggle()" style="color:var(--cyan); border-top:1px solid rgba(56,189,248,0.1); margin-top:4px; padding-top:8px;">
+        <span class="nav-icon">♾</span> Project Singularity
       </a>
     </nav>
     <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);margin-bottom:8px;padding-left:14px;">
@@ -1942,6 +1989,34 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
     <!-- ════════════════════════════════════════
          PAGE: SETTINGS
     ════════════════════════════════════════ -->
+    <!-- ════════════════════════════════════════
+         PAGE: MATRIX VIEW
+    ════════════════════════════════════════ -->
+    <div id="page-matrix" class="page">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Matrix Topology</div>
+          <div class="page-sub">3D Visualization of Agent-Market Interplay</div>
+        </div>
+      </div>
+      <div class="page-content">
+        <div class="card" style="height: calc(100vh - 200px); position: relative; overflow: hidden; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px);">
+          <div class="empty" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1;">
+            <p style="font-size: 18px; color: var(--lime); margin-bottom: 12px;">MATRIX VIEW ACTIVE</p>
+            <p style="max-width: 400px; line-height: 1.6;">The 3D Constellation background is now emphasized. Major market events and agent decisions will pulse through the network.</p>
+            <button class="btn btn-lime" style="margin-top: 20px;" onclick="window.marketTopology.pulse(1)">TEST NETWORK PULSE</button>
+          </div>
+          <!-- We already have the canvas as a fixed background, but we can make it more prominent here if we want -->
+          <style>
+            #page-matrix.active ~ #marketTopologyCanvas {
+              opacity: 0.8 !important;
+              z-index: 0 !important;
+            }
+          </style>
+        </div>
+      </div>
+    </div>
+
     <div id="page-settings" class="page">
       <div class="page-header">
         <div>
@@ -2181,6 +2256,8 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<script src="/js/oracle-pulse.js"></script>
+<script src="/js/singularity.js"></script>
 <script>
 /* ═══════════════════════════════════════════
   GLOBALS
@@ -2197,6 +2274,8 @@ let configuredDays = 30; // ceiling: total days for this run, reset only on simR
 let allStocks = {};      // sym → stock meta+price
 let stockHistory = {};   // sym → price array
 let agents = [];
+window.agents = agents;
+window.state = state;
 let halted = [];
 let chartInstances = {};
 let marketAnalytics = null;
@@ -2227,6 +2306,12 @@ function nav(page) {
   if (page === 'dashboard')      { refreshPriceChart(); }
   if (page === 'analysis')       { loadAnalysis(); }
   if (page === 'agents' && agents.length) { setTimeout(loadRaceChart, 300); }
+  
+  const canvas = document.getElementById('marketTopologyCanvas');
+  if (canvas) {
+    canvas.style.opacity = (page === 'matrix') ? '0.8' : '0.15';
+    canvas.style.zIndex = (page === 'matrix') ? '1' : '-1';
+  }
   if (page === 'agents')         { loadAgents(); loadLoans(); }
   if (page === 'explainability') { loadExplainabilityPage(); }
   if (page === 'replay')         { loadReplayPage(); }
@@ -2403,6 +2488,12 @@ function handleTick(d) {
     // Debug: log stockHistory after push
     console.log('[handleTick] stockHistory:', JSON.parse(JSON.stringify(stockHistory)));
     refreshPriceChart();
+
+    // --- ORACLE PULSE: VOLATILITY DISPATCH ---
+    const prevBenchmark = marketAnalytics?.benchmark?.level || 100;
+    const currentBenchmark = d.benchmark?.value || 100;
+    const change = (currentBenchmark - prevBenchmark) / prevBenchmark;
+    window.dispatchEvent(new CustomEvent('marketVolatility', { detail: { change } }));
   }
 
   // Halted banner
@@ -2421,6 +2512,22 @@ function handleTick(d) {
       </div>`;
       feed.prepend(el);
       if (feed.children.length > 30) feed.removeChild(feed.lastChild);
+
+      // --- ORACLE PULSE: SIM EVENT DISPATCH ---
+      window.dispatchEvent(new CustomEvent('simEvent', { detail: { type: ev.severity, message: ev.title } }));
+
+      // --- MIND-BLOWING MODE: VOICE BRIEFING HOOK ---
+      if (window.voiceBriefing && !window.voiceBriefing.isSpeaking) {
+        if (ev.severity === 'HIGH' || ev.title.toLowerCase().includes('crisis') || ev.title.toLowerCase().includes('shock')) {
+           window.voiceBriefing.speak(`Priority Market Alert: ${ev.title}. ${ev.description || ''}`);
+        }
+      }
+
+      // --- MIND-BLOWING MODE: 3D TOPOLOGY HOOK ---
+      if (window.marketTopology) {
+        const impact = ev.impact_pct || 0;
+        window.marketTopology.pulse(impact !== 0 ? (impact > 0 ? 1 : -1) : 0);
+      }
     });
   }
 }
@@ -2565,6 +2672,16 @@ async function loadRunEvents() {
   rows.forEach(evt => {
     runEvents.push(evt);
     lastRunEventSeq = Math.max(lastRunEventSeq, evt.sequence || 0);
+
+    // --- ORACLE PULSE: AGENT THOUGHT DISPATCH ---
+    if (evt.event_type === 'agent_decision') {
+      const p = evt.payload || {};
+      const agentName = (agents || window.agents || []).find(a => String(a.id) === String(evt.agent_id || p.agent_id))?.name || 'Unknown Agent';
+      console.log("[OraclePulse] Dispatching thought for:", agentName);
+      window.dispatchEvent(new CustomEvent('agentThought', { 
+        detail: { agentName, thought: p.reasoning || p.thesis || 'No logic provided.' } 
+      }));
+    }
   });
   if (runEvents.length > 120) runEvents = runEvents.slice(-120);
   renderRunEvents();
@@ -3244,6 +3361,7 @@ async function loadAgents() {
   const data = await apiFetch('/agents');
   if (!data) return;
   agents = data;
+  window.agents = agents;
   const analyticsPairs = await Promise.all(agents.map(async a => [a.id, await apiFetch(`/agents/${a.id}/analytics`)]));
   agentAnalyticsCache = Object.fromEntries(analyticsPairs.filter(([_, val]) => !!val));
   updateMetrics();

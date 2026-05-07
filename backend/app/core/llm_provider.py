@@ -95,8 +95,38 @@ class GroqProvider(LLMProvider):
 
 class MockProvider(LLMProvider):
     def generate(self, prompt: str, system_message: str = "") -> str:
-        # Return a random valid JSON action for testing without API keys
+        # Return a random valid JSON based on what is being requested
         import random
+        
+        # 1. NEWS INJECTION MOCK
+        if "financial analyst engine" in system_message.lower():
+            return json.dumps({
+                "title": "Mock Market Shock",
+                "description": f"A simulated event triggered by: {prompt[:30]}...",
+                "severity": random.choice(["LOW", "MEDIUM", "HIGH"]),
+                "impact_pct": round(random.uniform(-10.0, 5.0), 2),
+                "affected_stocks": ["AAPL", "MSFT", "NVDA"]
+            })
+            
+        # 2. DEBATE MOCK
+        if "war room" in system_message.lower():
+            return json.dumps({
+                "bull": "This is a massive buying opportunity. Fundamentals are strong.",
+                "bear": "The bubble is about to burst. We need to exit all long positions.",
+                "risk": "Volatility is increasing. I recommend tightening stop-losses and reducing leverage."
+            })
+
+        # 3. BRIEFING MOCK
+        if "strategist" in system_message.lower():
+            return json.dumps({
+                "briefing": f"Market pulse is currently {prompt.split('Regime: ')[-1].split('\\n')[0]}. Global telemetry indicates stable liquidity across all primary nodes."
+            })
+
+        # 4. CHAT MOCK (Optional check, but default handles it)
+        if "assistant" in system_message.lower():
+             return json.dumps({"response": "I am a mock assistant. I see the market is moving.", "confidence": "high"})
+
+        # 4. DEFAULT AGENT ACTION MOCK
         actions = ["buy", "sell", "hold"]
         stocks = ["AAPL", "MSFT", "NVDA", "JPM", "XOM"]
         action = random.choice(actions)

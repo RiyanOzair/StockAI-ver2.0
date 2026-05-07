@@ -9,6 +9,9 @@ from backend.app.core.analytics import compute_market_analytics
 class ExtendRequest(BaseModel):
     additional_days: int = Field(..., gt=0, description="Must be at least 1")
 
+class NewsInjectionRequest(BaseModel):
+    text: str
+
 router = APIRouter(prefix="/simulation", tags=["simulation"])
 logger = logging.getLogger("api.simulation")
 
@@ -138,3 +141,52 @@ async def get_snapshot(day: int):
         if s.day == day:
             return s.model_dump()
     raise HTTPException(404, f"No snapshot for day {day}")
+
+@router.post("/inject/news")
+async def inject_news(req: NewsInjectionRequest, x_session_id: Optional[str] = Header(None)):
+    _verify_session(x_session_id)
+    if not state.simulation.is_running:
+        raise HTTPException(400, "Simulation must be running to inject news.")
+
+    from backend.app.core.llm_provider import LLMFactory
+    import json
+    
+    provider = LLMFactory.create_provider()
+    system_prompt = (
+        "You are a financial analyst engine. You read real-world news and convert it "
+        "into a structured simulation market shock. "
+        "Output MUST be strict JSON matching this schema:\n"
+        "{\n"
+        '  "title": "Short title of the event",\n'
+        '  "description": "Brief description of what happened",\n'
+        '  "severity": "LOW" | "MEDIUM" | "HIGH",\n'
+        '  "impact_pct": float (e.g. -5.0 for negative 5 percent impact),\n'
+        '  "affected_stocks": ["AAPL", "MSFT"] (list of tickers likely affected, up to 3)\n'
+        "}\n"
+        "Available simulation stocks are: " + ", ".join(state.STOCKS.keys())
+    )
+    
+    try:
+        response_text = provider.generate(prompt=req.text, system_message=system_prompt)
+        # Parse the JSON
+        data = json.loads(response_text)
+        from backend.app.models.types import EventInjection
+        
+        # Make sure affected_stocks are actually in the simulation universe
+        affected = data.get("affected_stocks", [])
+        valid_affected = [s for s in affected if s in state.STOCKS]
+        
+        injection = EventInjection(
+            title=data.get("title", "News Shock"),
+            description=data.get("description", req.text[:100]),
+            severity=data.get("severity", "MEDIUM"),
+            impact_pct=float(data.get("impact_pct", 0.0)),
+            affected_stocks=valid_affected
+        )
+        
+        # Inject the event
+        event = state.simulation.inject_event(injection)
+        return {"message": "News processed and injected", "event": event.model_dump()}
+    except Exception as e:
+        logger.error(f"Failed to process news injection: {e}")
+        raise HTTPException(500, f"Failed to parse news into event: {str(e)}")

@@ -116,16 +116,37 @@ class MoodController {
     toggleMoodEngine() {
         this.disabled = !this.disabled;
         localStorage.setItem('moodEngineEnabled', !this.disabled);
-        console.log(`Mood Engine ${this.disabled ? 'Disabled' : 'Enabled'}`);
+        
+        const label = document.getElementById('marketMoodLabel');
+        const statusHud = document.getElementById('moodStatusHud');
         
         if (this.disabled) {
+            console.log("Mood Engine Deactivating...");
+            if (statusHud) {
+                statusHud.textContent = "DEACTIVATING IMMERSIVE CORE...";
+                statusHud.classList.add('show', 'glitch');
+                setTimeout(() => statusHud.classList.remove('show', 'glitch'), 2000);
+            }
+            
             this.applyTheme('neutral');
             if (this.audioEnabled) this.stopAudio();
-            const label = document.getElementById('marketMoodLabel');
             if (label) label.textContent = 'OFF';
         } else {
-            this.updateMood();
-            if (this.audioEnabled) this.startAudio();
+            console.log("Mood Engine Syncing...");
+            if (statusHud) {
+                statusHud.textContent = "SYNCING NEURAL NETWORK...";
+                statusHud.classList.add('show', 'glitch');
+            }
+            
+            // Artificial delay for "calibration" feel
+            setTimeout(() => {
+                this.updateMood();
+                if (this.audioEnabled) this.startAudio();
+                if (statusHud) {
+                    statusHud.textContent = "CALIBRATION COMPLETE";
+                    setTimeout(() => statusHud.classList.remove('show'), 2000);
+                }
+            }, 2500);
         }
         
         return this.disabled;

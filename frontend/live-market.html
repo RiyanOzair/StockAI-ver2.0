@@ -881,6 +881,7 @@ main {
           <button class="nav-btn market-tab" data-market="global" style="border:none;border-left:1px solid var(--border);padding:10px 18px;font-size:11px;min-height:0;" onclick="switchMarket('global')">GLOBAL</button>
         </div>
         <div id="nse-status-badge" style="display:none;font-family:var(--mono);font-size:11px;font-weight:700;padding:4px 10px;border:2px solid var(--border);letter-spacing:1px;"></div>
+        <div id="india-api-status" style="font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-left:auto;color:var(--cyan);"></div>
       </div>
     </section>
 
@@ -1639,15 +1640,17 @@ function renderIndiaData(data) {
   // Render headline indices (Primary 4)
   const headlineGrid = document.getElementById("india-headline-grid");
   const headlineSymbols = ["NIFTY 50", "SENSEX", "NIFTY BANK", "NIFTY IT"];
-  const headlineIndices = indices.filter(idx => headlineSymbols.includes(idx.symbol));
+  const headlineIndices = (data.indices || []).filter(idx => headlineSymbols.includes(idx.symbol));
   
-  headlineGrid.innerHTML = headlineIndices.map(idx => `
-    <article class="snapshot-card reveal" style="border-width:3px; border-color:var(--cyan);">
-      <div class="snapshot-label" style="color:var(--cyan); font-weight:800;">${escapeHtml(idx.label)}</div>
-      <div class="snapshot-value" style="font-size:32px;">${fmtINR(idx.price)}</div>
-      <div class="delta ${deltaClass(idx.change_pct)}">${fmtPct(idx.change_pct)}</div>
-    </article>
-  `).join("");
+  if (headlineGrid) {
+    headlineGrid.innerHTML = headlineIndices.map(idx => `
+      <article class="snapshot-card reveal" style="border-width:3px; border-color:var(--cyan);">
+        <div class="snapshot-label" style="color:var(--cyan); font-weight:800;">${escapeHtml(idx.label)}</div>
+        <div class="snapshot-value" style="font-size:32px;">${fmtINR(idx.price)}</div>
+        <div class="delta ${deltaClass(idx.change_pct)}">${fmtPct(idx.change_pct)}</div>
+      </article>
+    `).join("");
+  }
 
   // Render heatmap
   const heatmapEl = document.getElementById("india-heatmap");
@@ -1687,13 +1690,16 @@ function renderIndiaData(data) {
   losersEl.innerHTML = losers.map(mkMoverRow).join("") || '<div class="small-note">No losers</div>';
 
   // Render all indices
-  indicesGrid.innerHTML = indices.length ? indices.map(idx => `
-    <article class="snapshot-card reveal">
-      <div class="snapshot-label">${escapeHtml(idx.label)} <span style="font-size:9px;color:var(--muted);">${escapeHtml(idx.exchange)}</span></div>
-      <div class="snapshot-value" style="font-size:20px;">${fmtINR(idx.price)}</div>
-      <div class="delta ${deltaClass(idx.change_pct)}">${fmtPct(idx.change_pct)}</div>
-    </article>
-  `).join("") : '<div class="empty-state">No Indian index data available.</div>';
+  if (indicesGrid) {
+    const indices = data.indices || [];
+    indicesGrid.innerHTML = indices.length ? indices.map(idx => `
+      <article class="snapshot-card reveal">
+        <div class="snapshot-label">${escapeHtml(idx.label)} <span style="font-size:9px;color:var(--muted);">${escapeHtml(idx.exchange)}</span></div>
+        <div class="snapshot-value" style="font-size:20px;">${fmtINR(idx.price)}</div>
+        <div class="delta ${deltaClass(idx.change_pct)}">${fmtPct(idx.change_pct)}</div>
+      </article>
+    `).join("") : '<div class="empty-state">No Indian index data available.</div>';
+  }
 
   // Render stocks
   const stocks = Array.isArray(data.top_stocks) ? data.top_stocks : [];

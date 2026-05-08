@@ -946,6 +946,10 @@ footer {
   .fade-in-up { opacity: 1; transform: none; transition: none; }
 }
 
+.btn-amber:hover {
+  background: rgba(245, 200, 66, 0.08) !important;
+}
+
 /* ── THEMED SCROLLBARS ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #0a0a0a; }
@@ -1023,26 +1027,32 @@ footer {
   </div>
 
   <!-- WHAT CAN YOU DO IN 5 MINUTES? -->
-  <div class="scenario-section" style="margin-top:64px;max-width:900px;width:100%;">
-    <div style="font-family:var(--mono);font-size:11px;color:var(--cyan);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;">What can you do in 5 minutes?</div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2px;border:2px solid var(--border);">
-      <div class="feature-card" style="--accent-color:var(--red)">
-        <div class="feature-marker"></div>
-        <div class="feature-name" style="color:var(--red)">See how AI handles a crash</div>
-        <p class="feature-desc">Set volatility to High, inject a liquidity crisis on day 5, run 10 days. Watch agents panic, hedge, or double down — and read why each one made that call.</p>
-        <a class="btn-primary" href="/workspace?preset=crash_scenario" style="margin-top:16px;padding:12px 20px;font-size:12px;">START THIS SCENARIO →</a>
+  <div class="scenario-section" style="margin-top:64px;max-width:900px;width:100%; border:none;">
+    <div style="font-family:var(--mono);font-size:11px;color:var(--cyan);letter-spacing:3px;text-transform:uppercase;margin-bottom:40px;text-align:center;">What can you do in 5 minutes?</div>
+    <div class="scenario-grid" style="display:grid;grid-template-columns:repeat(3,1fr);align-items:stretch;gap:1px;background:var(--border);">
+      <div class="feature-card scenario-card" style="--accent-color:var(--red); display:flex; flex-direction:column; justify-content:space-between;">
+        <div style="flex:1;">
+          <div class="feature-marker" style="width:28px; height:3px; margin-bottom:16px; display:block; margin-left:auto; margin-right:auto;"></div>
+          <div class="feature-name" style="color:var(--red); font-size:13px; text-align:center;">See how AI handles a crash</div>
+          <p class="feature-desc" style="text-align:left;">Set volatility to High, inject a liquidity crisis on day 5, run 10 days. Watch agents panic, hedge, or double down — and read why each one made that call.</p>
+        </div>
+        <a class="btn-primary" href="/workspace?preset=crash_scenario" style="margin-top:16px; padding:14px 24px; font-size:11px; letter-spacing:0.1em; font-family:var(--mono); font-weight:500; width:100%; display:block; text-align:center; cursor:pointer;">START THIS SCENARIO →</a>
       </div>
-      <div class="feature-card" style="--accent-color:var(--cyan)">
-        <div class="feature-marker"></div>
-        <div class="feature-name" style="color:var(--cyan)">Test if mean reversion works</div>
-        <p class="feature-desc">Create a mean reversion bot, run it against 5 random seeds, compare Sharpe ratios. See whether the strategy holds up across different market conditions.</p>
-        <a class="btn-secondary" href="/workspace?preset=mean_reversion_test" style="margin-top:16px;padding:12px 20px;font-size:12px;border-color:var(--cyan);color:var(--cyan);">RUN THIS TEST →</a>
+      <div class="feature-card scenario-card" style="--accent-color:var(--cyan); display:flex; flex-direction:column; justify-content:space-between;">
+        <div style="flex:1;">
+          <div class="feature-marker" style="width:28px; height:3px; margin-bottom:16px; display:block; margin-left:auto; margin-right:auto;"></div>
+          <div class="feature-name" style="color:var(--cyan); font-size:13px; text-align:center;">Test if mean reversion works</div>
+          <p class="feature-desc" style="text-align:left;">Create a mean reversion bot, run it against 5 random seeds, compare Sharpe ratios. See whether the strategy holds up across different market conditions.</p>
+        </div>
+        <a class="btn-secondary" href="/workspace?preset=mean_reversion_test" style="margin-top:16px; padding:14px 24px; font-size:11px; letter-spacing:0.1em; font-family:var(--mono); font-weight:500; width:100%; display:block; text-align:center; cursor:pointer; border-color:var(--cyan); color:var(--cyan);">RUN THIS TEST →</a>
       </div>
-      <div class="feature-card" style="--accent-color:var(--lime)">
-        <div class="feature-marker"></div>
-        <div class="feature-name">Watch the market right now</div>
-        <p class="feature-desc">See what US markets are doing live, compare against the simulator's current regime, and ask the AI what it means.</p>
-        <a class="btn-secondary" href="/live-market" style="margin-top:16px;padding:12px 20px;font-size:12px;">OPEN LIVE MONITOR →</a>
+      <div class="feature-card scenario-card" style="--accent-color:var(--yellow); display:flex; flex-direction:column; justify-content:space-between;">
+        <div style="flex:1;">
+          <div class="feature-marker" style="width:28px; height:3px; margin-bottom:16px; display:block; margin-left:auto; margin-right:auto;"></div>
+          <div class="feature-name" style="color:var(--yellow); font-size:13px; text-align:center;">Watch the market right now</div>
+          <p class="feature-desc" style="text-align:left;">See what US markets are doing live, compare against the simulator's current regime, and ask the AI what it means.</p>
+        </div>
+        <a class="btn-secondary btn-amber" href="/live-market" style="margin-top:16px; padding:14px 24px; font-size:11px; letter-spacing:0.1em; font-family:var(--mono); font-weight:500; width:100%; display:block; text-align:center; cursor:pointer; border:1.5px solid #f5c842; color:#f5c842; background:transparent;">OPEN LIVE MONITOR →</a>
       </div>
     </div>
   </div>

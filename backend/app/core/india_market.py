@@ -60,22 +60,36 @@ def next_nse_open() -> str:
 # ── Symbol Definitions ──
 
 INDIA_INDEX_SYMBOLS = [
-    {"symbol": "NIFTY 50", "label": "Nifty 50", "kind": "index", "exchange": "NSE"},
-    {"symbol": "SENSEX", "label": "BSE Sensex", "kind": "index", "exchange": "BSE"},
-    {"symbol": "NIFTY BANK", "label": "Nifty Bank", "kind": "index", "exchange": "NSE"},
-    {"symbol": "NIFTY IT", "label": "Nifty IT", "kind": "index", "exchange": "NSE"},
-    {"symbol": "NIFTY AUTO", "label": "Nifty Auto", "kind": "index", "exchange": "NSE"},
+    {"symbol": "NIFTY 50", "label": "Nifty 50", "kind": "index", "exchange": "NSE", "yf_symbol": "^NSEI"},
+    {"symbol": "SENSEX", "label": "BSE Sensex", "kind": "index", "exchange": "BSE", "yf_symbol": "^BSESN"},
+    {"symbol": "NIFTY BANK", "label": "Nifty Bank", "kind": "index", "exchange": "NSE", "yf_symbol": "^CNXBANK"},
+    {"symbol": "NIFTY IT", "label": "Nifty IT", "kind": "index", "exchange": "NSE", "yf_symbol": "^CNXIT"},
+    {"symbol": "NIFTY MIDCAP 100", "label": "Nifty Midcap 100", "kind": "index", "exchange": "NSE", "yf_symbol": "^NSMIDCP"},
+    {"symbol": "NIFTY SMALLCAP 100", "label": "Nifty Smallcap 100", "kind": "index", "exchange": "NSE", "yf_symbol": "^CNXSMCAP"},
+    {"symbol": "NIFTY AUTO", "label": "Nifty Auto", "kind": "index", "exchange": "NSE", "yf_symbol": "^CNXAUTO"},
+    {"symbol": "NIFTY PHARMA", "label": "Nifty Pharma", "kind": "index", "exchange": "NSE", "yf_symbol": "^CNXPHARMA"},
+    {"symbol": "NIFTY FMCG", "label": "Nifty FMCG", "kind": "index", "exchange": "NSE", "yf_symbol": "^CNXFMCG"},
+    {"symbol": "NIFTY INFRA", "label": "Nifty Infra", "kind": "index", "exchange": "NSE", "yf_symbol": "^CNXINFRA"},
+    {"symbol": "NIFTY METAL", "label": "Nifty Metal", "kind": "index", "exchange": "NSE", "yf_symbol": "^CNXMETAL"},
+    {"symbol": "NIFTY REALTY", "label": "Nifty Realty", "kind": "index", "exchange": "NSE", "yf_symbol": "^CNXREALTY"},
 ]
 
 INDIA_TOP_STOCKS = [
-    {"symbol": "RELIANCE", "label": "Reliance Industries", "exchange": "NSE"},
-    {"symbol": "TCS", "label": "Tata Consultancy", "exchange": "NSE"},
-    {"symbol": "HDFCBANK", "label": "HDFC Bank", "exchange": "NSE"},
-    {"symbol": "INFY", "label": "Infosys", "exchange": "NSE"},
-    {"symbol": "ICICIBANK", "label": "ICICI Bank", "exchange": "NSE"},
-    {"symbol": "HINDUNILVR", "label": "Hindustan Unilever", "exchange": "NSE"},
-    {"symbol": "ITC", "label": "ITC Limited", "exchange": "NSE"},
-    {"symbol": "BHARTIARTL", "label": "Bharti Airtel", "exchange": "NSE"},
+    {"symbol": "RELIANCE", "label": "Reliance Industries", "exchange": "NSE", "sector": "Energy"},
+    {"symbol": "TCS", "label": "Tata Consultancy", "exchange": "NSE", "sector": "IT"},
+    {"symbol": "HDFCBANK", "label": "HDFC Bank", "exchange": "NSE", "sector": "Banking"},
+    {"symbol": "INFY", "label": "Infosys", "exchange": "NSE", "sector": "IT"},
+    {"symbol": "ICICIBANK", "label": "ICICI Bank", "exchange": "NSE", "sector": "Banking"},
+    {"symbol": "HINDUNILVR", "label": "Hindustan Unilever", "exchange": "NSE", "sector": "FMCG"},
+    {"symbol": "WIPRO", "label": "Wipro", "exchange": "NSE", "sector": "IT"},
+    {"symbol": "SBIN", "label": "State Bank of India", "exchange": "NSE", "sector": "Banking"},
+    {"symbol": "BAJFINANCE", "label": "Bajaj Finance", "exchange": "NSE", "sector": "Finance"},
+    {"symbol": "MARUTI", "label": "Maruti Suzuki", "exchange": "NSE", "sector": "Auto"},
+    {"symbol": "SUNPHARMA", "label": "Sun Pharma", "exchange": "NSE", "sector": "Pharma"},
+    {"symbol": "TATAMOTORS", "label": "Tata Motors", "exchange": "NSE", "sector": "Auto"},
+    {"symbol": "ADANIENT", "label": "Adani Enterprises", "exchange": "NSE", "sector": "Conglomerate"},
+    {"symbol": "LTIM", "label": "LTIMindtree", "exchange": "NSE", "sector": "IT"},
+    {"symbol": "AXISBANK", "label": "Axis Bank", "exchange": "NSE", "sector": "Banking"},
 ]
 
 
@@ -274,6 +288,7 @@ class IndiaMarketService:
                             "symbol": stock["symbol"],
                             "label": stock["label"],
                             "exchange": stock.get("exchange", "NSE"),
+                            "sector": stock.get("sector", "Other"),
                             "price": data.get("price"),
                             "change": data.get("change"),
                             "change_pct": data.get("change_pct"),
@@ -285,22 +300,51 @@ class IndiaMarketService:
                 await asyncio.sleep(0.15)
 
         nse_open = is_nse_open()
+        
+        # Build sector heatmap
+        sector_map = {}
+        for stock in stocks:
+            s_name = stock.get("sector", "Other")
+            if s_name not in sector_map:
+                sector_map[s_name] = {"sector": s_name, "changes": [], "stocks": []}
+            sector_map[s_name]["changes"].append(stock["change_pct"])
+            sector_map[s_name]["stocks"].append(stock["symbol"])
+        
+        sector_heatmap = []
+        for s_data in sector_map.values():
+            avg_change = round(sum(s_data["changes"]) / len(s_data["changes"]), 2) if s_data["changes"] else 0
+            sector_heatmap.append({
+                "sector": s_data["sector"],
+                "change_pct": avg_change,
+                "stocks": s_data["stocks"]
+            })
+        
+        # Sort heatmap by change
+        sector_heatmap.sort(key=lambda x: x["change_pct"], reverse=True)
+
+        # Top gainers/losers
+        valid_stocks = [s for s in stocks if s["change_pct"] is not None]
+        top_gainers = sorted(valid_stocks, key=lambda x: x["change_pct"], reverse=True)[:3]
+        top_losers = sorted(valid_stocks, key=lambda x: x["change_pct"])[:3]
+
         return {
             "data_source": "Twelve Data",
-            "data_source_note": "Real-time Indian market data via Twelve Data API (free tier). "
-                                "Data may be delayed up to 1 minute.",
+            "data_source_note": "Real-time Indian market data via Twelve Data API (free tier).",
             "api_key_configured": True,
             "market_status": "NSE OPEN" if nse_open else "NSE CLOSED",
             "nse_open": nse_open,
             "next_open": None if nse_open else next_nse_open(),
             "indices": indices,
             "top_stocks": stocks,
+            "sector_heatmap": sector_heatmap,
+            "top_gainers": top_gainers,
+            "top_losers": top_losers,
             "generated_at": now.isoformat(),
+            "last_updated": now.isoformat(),
             "cache_age_seconds": 0,
             "is_stale": False,
             "warnings": warnings,
-            "attribution": "Data provided by Twelve Data. Not financial advice. "
-                           "Delayed data — do not use for live trading decisions.",
+            "attribution": "Data provided by Twelve Data. Not financial advice.",
         }
 
     async def _fetch_quote(self, client: httpx.AsyncClient, api_key: str,
@@ -346,9 +390,20 @@ class IndiaMarketService:
             "SENSEX": "^BSESN",
             "NIFTY BANK": "^NSEBANK",
             "NIFTY IT": "^CNXIT",
-            "NIFTY AUTO": "^CNXAUTO"
+            "NIFTY AUTO": "^CNXAUTO",
+            "NIFTY PHARMA": "^CNXPHARMA",
+            "NIFTY FMCG": "^CNXFMCG",
+            "NIFTY INFRA": "^CNXINFRA",
+            "NIFTY METAL": "^CNXMETAL",
+            "NIFTY REALTY": "^CNXREALTY",
+            "NIFTY MIDCAP 100": "^NSMIDCP",
+            "NIFTY SMALLCAP 100": "^CNXSMCAP"
         }
-        yf_symbol = mapping.get(symbol)
+        idx_meta = next((i for i in INDIA_INDEX_SYMBOLS if i["symbol"] == symbol), {})
+        yf_symbol = idx_meta.get("yf_symbol")
+        if not yf_symbol:
+            yf_symbol = mapping.get(symbol)
+        
         if not yf_symbol:
             suffix = ".NS" if exchange == "NSE" else ".BO"
             yf_symbol = f"{symbol}{suffix}"

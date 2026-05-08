@@ -706,6 +706,67 @@ main {
 @keyframes pGreen { 0% { box-shadow: 0 0 0 0 rgba(0, 229, 204, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(0, 229, 204, 0); } 100% { box-shadow: 0 0 0 0 rgba(0, 229, 204, 0); } }
 @keyframes pRed { 0% { box-shadow: 0 0 0 0 rgba(228, 53, 75, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(228, 53, 75, 0); } 100% { box-shadow: 0 0 0 0 rgba(228, 53, 75, 0); } }
 
+.flash-up { animation: flashGreen 0.8s ease-out; }
+.flash-down { animation: flashRed 0.8s ease-out; }
+@keyframes flashGreen { 0% { background: rgba(184, 255, 87, 0.25); color: #b8ff57; } 100% { background: transparent; } }
+@keyframes flashRed { 0% { background: rgba(255, 68, 68, 0.25); color: #ff4444; } 100% { background: transparent; } }
+
+.fetching .live-dot { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(200, 240, 74, 0.1);
+  padding: 4px 10px;
+  border: 1px solid var(--lime);
+  color: var(--lime);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+
+.live-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--lime);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--lime);
+}
+
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.heatmap-box {
+  padding: 16px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.heatmap-name { font-family: var(--mono); font-size: 11px; text-transform: uppercase; color: var(--muted); }
+.heatmap-val { font-family: var(--mono); font-size: 18px; font-weight: 800; }
+
+.movers-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin: 20px 0;
+}
+
+.mover-mini-list {
+  background: var(--surface);
+  border: 2px solid var(--border);
+  padding: 16px;
+}
+
 /* CUSTOM CURSOR */
 #customCursorOuter, #customCursorInner {
   position: fixed;
@@ -890,13 +951,35 @@ main {
 
     <!-- ── INDIA NSE/BSE SECTION ── -->
     <div id="india-section" style="display:none;">
+      <!-- Headline Indices (Primary 4) -->
+      <section class="section" id="india-headline-indices" style="margin-bottom: 24px;">
+        <div class="snapshot-grid" id="india-headline-grid" style="grid-template-columns: repeat(4, 1fr);"></div>
+      </section>
+
+      <!-- Sector Heatmap -->
+      <section class="section">
+        <div class="eyebrow">Sector Heatmap</div>
+        <div class="heatmap-grid" id="india-heatmap"></div>
+      </section>
+
+      <!-- Top Gainers / Losers -->
+      <section class="section movers-split">
+        <div class="mover-mini-list" style="border-color: var(--lime);">
+          <div class="eyebrow" style="color: var(--lime);">Top Gainers</div>
+          <div id="india-gainers" style="display:grid; gap:8px; margin-top:12px;"></div>
+        </div>
+        <div class="mover-mini-list" style="border-color: var(--red);">
+          <div class="eyebrow" style="color: var(--red);">Top Losers</div>
+          <div id="india-losers" style="display:grid; gap:8px; margin-top:12px;"></div>
+        </div>
+      </section>
+
       <section class="section">
         <div class="section-head">
           <div>
-            <div class="eyebrow">Indian Market Indices</div>
-            <h2 class="section-title">NSE & BSE tracked tape preview.</h2>
+            <div class="eyebrow">All Tracked Indices</div>
+            <h2 class="section-title">NSE & BSE telemetry.</h2>
           </div>
-          <div id="india-api-status" class="nav-chip" style="font-size:11px;"></div>
         </div>
         <div class="snapshot-grid" id="india-indices-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));"></div>
       </section>
@@ -905,10 +988,10 @@ main {
         <div class="section-head">
           <div>
             <div class="eyebrow">Top NSE Stocks</div>
-            <h2 class="section-title">Market-cap leaders on the National Stock Exchange.</h2>
+            <h2 class="section-title">Market-cap leaders.</h2>
           </div>
         </div>
-        <div class="snapshot-grid" id="india-stocks-grid" style="grid-template-columns:repeat(auto-fill,minmax(200px,1fr));"></div>
+        <div class="snapshot-grid" id="india-stocks-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));"></div>
       </section>
 
       <div id="india-connect-prompt" style="display:none; position:relative; overflow:hidden; border:2px solid var(--border); padding:40px; text-align:center; background:rgba(10,10,10,0.4); backdrop-filter:blur(10px); margin-top:24px; border-radius:12px;">
@@ -1066,16 +1149,23 @@ function renderHeroMeta(data) {
   }[mktStatus] || "#a8a8a8";
   const isStale = data.stale || data.is_stale || false;
   els.heroMeta.innerHTML = `
+    <div class="live-badge" id="live-indicator">
+      <span class="live-dot"></span>
+      LIVE
+    </div>
     <div class="nav-chip" style="border-color:${mktStatusColor};color:${mktStatusColor};">
-      <span class="status-dot" style="background:${mktStatusColor};"></span>
       US MARKET: ${escapeHtml(mktStatus.replace("_", " "))}
     </div>
-    <div class="nav-chip"><span class="status-dot ${statusClass}"></span>${escapeHtml(data.provider_status.replace("_", " "))}</div>
     <div class="nav-chip">Provider: ${escapeHtml(data.provider_name || "Unknown")}</div>
     <div class="nav-chip">Freshness: ${escapeHtml(freshness)}</div>
-    <div class="nav-chip">${escapeHtml(ageNote)}</div>
-    <div class="nav-chip" id="refresh-countdown" style="color:${isStale ? '#ef4e63' : '#a8a8a8'};">Next refresh: --s</div>
+    <div class="nav-chip" id="refresh-countdown" style="color:${isStale ? '#ef4e63' : '#a8a8a8'};">UPDATED 0s AGO</div>
   `;
+
+  // Pulse 3D Topology
+  if (window.marketTopology) {
+    const sentiment = data.market_sentiment === 'BULLISH' ? 1 : (data.market_sentiment === 'BEARISH' ? -1 : 0);
+    window.marketTopology.pulse(sentiment);
+  }
 }
 
 function renderAlerts(data) {
@@ -1344,6 +1434,7 @@ async function loadSnapshot(forceRefresh = false) {
     els.refreshBtn.disabled = true;
     els.refreshBtn.textContent = "Refreshing...";
   }
+  document.body.classList.add('fetching');
 
   try {
     const response = await fetch(`/api/live-market/snapshot${forceRefresh ? "?refresh=true" : ""}`, {
@@ -1392,6 +1483,7 @@ async function loadSnapshot(forceRefresh = false) {
     }
   } finally {
     isLoading = false;
+    document.body.classList.remove('fetching');
     if (els.refreshBtn) {
       els.refreshBtn.disabled = false;
       els.refreshBtn.textContent = "REFRESH TAPE";
@@ -1408,22 +1500,33 @@ els.refreshBtn.addEventListener("click", () => loadSnapshot(true));
 
 loadSnapshot(false);
 
-// Auto-refresh every 60 seconds (dynamic — matches backend cache TTL)
-let refreshCountdown = 60;
+const REFRESH_INTERVAL = 30000;
+let refreshCountdown = 30;
 let lastRefreshAt = Date.now();
-const refreshIntervalMs = 60000;
+
+function flashUpdate(element, newValue, oldValue) {
+  if (newValue === oldValue) return;
+  const increased = newValue > oldValue;
+  element.classList.add(increased ? 'flash-up' : 'flash-down');
+  setTimeout(() => {
+    element.classList.remove('flash-up', 'flash-down');
+  }, 800);
+}
 
 setInterval(() => {
   const elapsed = Math.floor((Date.now() - lastRefreshAt) / 1000);
-  const remaining = Math.max(0, 60 - elapsed);
+  const remaining = Math.max(0, 30 - elapsed);
   const el = document.getElementById("refresh-countdown");
-  if (el) el.textContent = `Next refresh: ${remaining}s`;
+  if (el) el.textContent = `UPDATED ${elapsed}s AGO`;
 }, 1000);
 
 setInterval(() => {
   lastRefreshAt = Date.now();
   loadSnapshot(false);
-}, refreshIntervalMs);
+  if (currentMarket === 'india' || currentMarket === 'global') {
+    loadIndiaData();
+  }
+}, REFRESH_INTERVAL);
 
 // ── MARKET SELECTOR ──
 let currentMarket = "us";
@@ -1527,13 +1630,68 @@ function renderIndiaData(data) {
   apiStatus.innerHTML = `SOURCE: ${escapeHtml(data.data_source)}${staleTag}`;
   apiStatus.style.color = data.is_stale ? "var(--yellow)" : "var(--cyan)";
 
-  // Render indices
-  const indices = Array.isArray(data.indices) ? data.indices : [];
+  // Pulse 3D Topology
+  if (window.marketTopology) {
+    const sentiment = (data.top_gainers?.length || 0) > (data.top_losers?.length || 0) ? 1 : -1;
+    window.marketTopology.pulse(sentiment);
+  }
+
+  // Render headline indices (Primary 4)
+  const headlineGrid = document.getElementById("india-headline-grid");
+  const headlineSymbols = ["NIFTY 50", "SENSEX", "NIFTY BANK", "NIFTY IT"];
+  const headlineIndices = indices.filter(idx => headlineSymbols.includes(idx.symbol));
+  
+  headlineGrid.innerHTML = headlineIndices.map(idx => `
+    <article class="snapshot-card reveal" style="border-width:3px; border-color:var(--cyan);">
+      <div class="snapshot-label" style="color:var(--cyan); font-weight:800;">${escapeHtml(idx.label)}</div>
+      <div class="snapshot-value" style="font-size:32px;">${fmtINR(idx.price)}</div>
+      <div class="delta ${deltaClass(idx.change_pct)}">${fmtPct(idx.change_pct)}</div>
+    </article>
+  `).join("");
+
+  // Render heatmap
+  const heatmapEl = document.getElementById("india-heatmap");
+  const heatmap = Array.isArray(data.sector_heatmap) ? data.sector_heatmap : [];
+  heatmapEl.innerHTML = heatmap.map(s => {
+    const abs = Math.abs(s.change_pct);
+    let opacity = 0.05;
+    if (abs >= 2.0) opacity = 0.3;
+    else if (abs >= 1.0) opacity = 0.2;
+    else if (abs >= 0.5) opacity = 0.12;
+    
+    const bg = s.change_pct >= 0 ? `rgba(184,255,87, ${opacity})` : `rgba(255,68,68, ${opacity})`;
+    const color = s.change_pct >= 0 ? 'var(--lime)' : 'var(--red)';
+    
+    return `
+      <div class="heatmap-box" style="background:${bg}; border-color:${color}44;">
+        <div class="heatmap-name">${escapeHtml(s.sector)}</div>
+        <div class="heatmap-val" style="color:${color}">${fmtPct(s.change_pct)}</div>
+      </div>
+    `;
+  }).join("");
+
+  // Top gainers/losers
+  const gainersEl = document.getElementById("india-gainers");
+  const losersEl = document.getElementById("india-losers");
+  const gainers = Array.isArray(data.top_gainers) ? data.top_gainers : [];
+  const losers = Array.isArray(data.top_losers) ? data.top_losers : [];
+
+  const mkMoverRow = s => `
+    <div style="display:flex; justify-content:space-between; font-family:var(--mono); font-size:12px; padding:4px 0; border-bottom:1px solid var(--border);">
+      <span>${escapeHtml(s.symbol)}</span>
+      <span class="${deltaClass(s.change_pct)}">${fmtPct(s.change_pct)}</span>
+    </div>
+  `;
+
+  gainersEl.innerHTML = gainers.map(mkMoverRow).join("") || '<div class="small-note">No gainers</div>';
+  losersEl.innerHTML = losers.map(mkMoverRow).join("") || '<div class="small-note">No losers</div>';
+
+  // Render all indices
   indicesGrid.innerHTML = indices.length ? indices.map(idx => `
     <article class="snapshot-card reveal">
       <div class="snapshot-label">${escapeHtml(idx.label)} <span style="font-size:9px;color:var(--muted);">${escapeHtml(idx.exchange)}</span></div>
-      <div class="snapshot-value">${fmtINR(idx.price)}</div>
-      <div class="delta ${deltaClass(idx.change_pct)}">${fmtPct(idx.change_pct)} &middot; ${fmtSignedNumber(idx.change)}</div>
+      <div class="snapshot-value" style="font-size:20px;">${fmtINR(idx.price)}</div>
+      <div class="delta ${deltaClass(idx.change_pct)}">${fmtPct(idx.change_pct)}</div>
     </article>
   `).join("") : '<div class="empty-state">No Indian index data available.</div>';
 
@@ -1542,7 +1700,7 @@ function renderIndiaData(data) {
   stocksGrid.innerHTML = stocks.length ? stocks.map(s => `
     <article class="snapshot-card reveal">
       <div class="snapshot-label">${escapeHtml(s.symbol)} <span style="font-size:9px;color:var(--muted);">NSE</span></div>
-      <div style="font-weight:600;font-size:13px;margin-top:4px;color:var(--muted);">${escapeHtml(s.label)}</div>
+      <div style="font-weight:600;font-size:11px;margin-top:4px;color:var(--muted); text-transform:uppercase;">${escapeHtml(s.label)}</div>
       <div class="snapshot-value" style="font-size:22px;">${fmtINR(s.price)}</div>
       <div class="delta ${deltaClass(s.change_pct)}">${fmtPct(s.change_pct)}</div>
     </article>
@@ -1558,7 +1716,7 @@ setTimeout(() => {
 }, 2000);
 </script>
 <!-- KBD SHORTCUTS OVERLAY -->
-<div id="kbdMap" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;border:3px solid #2a2a2a;padding:24px;z-index:9999;font-family:var(--mono, monospace);box-shadow:0 10px 30px rgba(0,0,0,.8);color:#e8e8e8;">
+  <div id="kbdMap" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#111;border:3px solid #2a2a2a;padding:24px;z-index:10000;font-family:var(--mono, monospace);box-shadow:0 10px 30px rgba(0,0,0,.8);color:#e8e8e8;">
   <div style="font-size:12px;color:gray;margin-bottom:12px;letter-spacing:1px">KEYBOARD SHORTCUTS</div>
   <div style="display:grid;grid-template-columns:auto 1fr;gap:12px 24px;font-size:13px;align-items:center;">
     <strong style="color:var(--cyan,#00e5cc)">G + S</strong> <span>SIMULATION CONSOLE</span>
@@ -1571,7 +1729,7 @@ setTimeout(() => {
 </div>
 
 <!-- CHAT DRAWER -->
-<button id="chatFabBtn" style="position:fixed;right:24px;bottom:24px;width:48px;height:48px;background:#111;border:2px solid #ff2d78;color:#ff2d78;cursor:pointer;z-index:9998;display:flex;align-items:center;justify-content:center;">
+<button id="chatFabBtn" style="position:fixed;right:24px;bottom:24px;width:48px;height:48px;background:#111;border:2px solid #ff2d78;color:#ff2d78;cursor:pointer;z-index:9999;display:flex;align-items:center;justify-content:center;">
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
 </button>
 <div id="chatDrawerPanel" style="position:fixed;right:24px;bottom:86px;width:360px;height:520px;background:#111;border:2px solid #2a2a2a;z-index:9998;display:flex;flex-direction:column;transform:translateY(120%);transition:transform 200ms linear;opacity:0;pointer-events:none;font-family:var(--mono, monospace);">

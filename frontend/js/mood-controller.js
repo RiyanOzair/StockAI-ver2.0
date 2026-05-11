@@ -9,7 +9,8 @@ class MoodController {
         this.gainNode = null;
         
         const savedState = localStorage.getItem('moodEngineEnabled');
-        this.disabled = savedState === 'true' ? false : true; 
+        // Default to ENABLED (disabled = false) if no preference or if 'true'
+        this.disabled = (savedState === 'false'); 
         
         this.themes = {
             neutral: { lime: '#b8ff57', cyan: '#00f3ff', magenta: '#ff00ff', bg: '#0a0a0c', speed: '25s' },

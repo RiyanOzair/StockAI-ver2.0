@@ -46,8 +46,7 @@
       top: 0; left: 0;
       pointer-events: none;
       z-index: 10000;
-      transition: transform 0.08s ease-out, opacity 0.3s;
-      mix-blend-mode: difference;
+      opacity: 0;
     }
     #customCursorOuter {
       width: 20px; height: 20px;
@@ -189,6 +188,11 @@
               <div class="grid2">
                 <div class="field"><label for="runMode">TRAINING MODE</label><select id="runMode"><option value="hybrid">HYBRID</option><option value="deterministic">DETERMINISTIC</option></select></div>
                 <div class="field"><label for="runLLM">LLM AGENTS</label><select id="runLLM"><option value="true">ENABLED</option><option value="false">DISABLED</option></select></div>
+                <div class="field full">
+                  <label for="runSync" style="color:var(--cyan);display:flex;align-items:center;gap:8px;cursor:pointer">
+                    <input type="checkbox" id="runSync" style="width:16px;min-height:auto" /> REAL-MARKET SYNC (SYNC TO LIVE YFINANCE INDEX)
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -392,7 +396,7 @@
     </details>
 
     <details id="warRoomPanel" class="tape" style="margin-top:24px;border-color:var(--magenta)">
-      <summary><span style="color:var(--magenta)">⚔️ AI WAR ROOM (LIVE DEBATE)</span><button class="btn pink" onclick="refreshDebate(event)" type="button" style="height:28px">EAVESDROP</button></summary>
+      <summary><span style="color:var(--magenta)">AI WAR ROOM (LIVE DEBATE)</span><button class="btn pink" onclick="refreshDebate(event)" type="button" style="height:28px">EAVESDROP</button></summary>
       <div class="stream-note">LISTEN TO THE AGENTS DEBATE THE CURRENT MARKET STATE.</div>
       <div id="warRoomBody" class="tape-body" style="display:grid;gap:12px">
          <div class="empty">WAITING FOR DEBATE DATA... CLICK EAVESDROP TO START.</div>
@@ -486,7 +490,7 @@
       }
       mb.style.display = (app.status?.llm_mode === 'mock') ? 'block' : 'none';
     }
-    async function launchRun(autostart){const mix=normalizeMix();closeEventStream();await post('/runs',{name:$('runName').value.trim()||'WORKSPACE RUN',autostart,config:{num_agents:+$('runAgents').value||10,num_days:+$('runDays').value||4,seed:+$('runSeed').value||42,use_llm:$('runLLM').value==='true',speed:autostart?0.5:0.1,training_mode:$('runMode').value,dataset_version:$('runDataset').value,scenario_id:$('runScenario').value,experiment_id:$('runExperiment').value,agent_population_id:$('runPopulation').value,agent_mix:mix,market_context:$('runMarketContext').value||'us_equities',latency_ms:$('runMode').value==='deterministic'?80:120,slippage_bps:$('runMode').value==='deterministic'?4:6}});app.hydrated=false;await loadWorkspace()}
+    async function launchRun(autostart){const mix=normalizeMix();closeEventStream();await post('/runs',{name:$('runName').value.trim()||'WORKSPACE RUN',autostart,config:{num_agents:+$('runAgents').value||10,num_days:+$('runDays').value||4,seed:+$('runSeed').value||42,use_llm:$('runLLM').value==='true',real_world_sync:$('runSync').checked,speed:autostart?0.5:0.1,training_mode:$('runMode').value,dataset_version:$('runDataset').value,scenario_id:$('runScenario').value,experiment_id:$('runExperiment').value,agent_population_id:$('runPopulation').value,agent_mix:mix,market_context:$('runMarketContext').value||'us_equities',latency_ms:$('runMode').value==='deterministic'?80:120,slippage_bps:$('runMode').value==='deterministic'?4:6}});app.hydrated=false;await loadWorkspace()}
     async function createBot(){await post('/bots',{name:$('botName').value.trim()||'WORKSPACE BOT',bot_type:'strategy',strategy_id:$('botStrategy').value,description:$('botDesc').value.trim(),config:JSON.parse($('botConfig').value||'{}'),attach_to_active_simulation:$('botAttach').value==='true'});await loadWorkspace()}
     async function calibrate(){await post('/datasets/calibrate',{dataset_id:$('calDataset').value,returns:$('calReturns').value.split(',').map(v=>+v.trim()).filter(Number.isFinite),spreads_bps:$('calSpreads').value.split(',').map(v=>+v.trim()).filter(Number.isFinite),volumes_millions:$('calVolumes').value.split(',').map(v=>+v.trim()).filter(Number.isFinite),event_frequency:1});await loadWorkspace()}
     async function createScenario(){const presets={stress:{regime_overrides:{market_regime:'risk_off',liquidity_regime:'thin'},shock_profile:{volatility_spike:1.35,spillover_bias:.9},config_overrides:{liquidity_regime:'thin',slippage_bps:10,training_mode:'deterministic'}},momentum:{regime_overrides:{market_regime:'trend',liquidity_regime:'core'},shock_profile:{volatility_spike:.9,spillover_bias:.35},config_overrides:{liquidity_regime:'core',slippage_bps:4.5,training_mode:'hybrid'}},balanced:{regime_overrides:{market_regime:'balanced',liquidity_regime:'core'},shock_profile:{volatility_spike:1,spillover_bias:.5},config_overrides:{liquidity_regime:'core',slippage_bps:6,training_mode:'hybrid'}}};const p=presets[$('scenarioRegime').value];await post('/scenarios',{name:$('scenarioName').value.trim()||'WORKSPACE SCENARIO',description:$('scenarioDesc').value.trim(),version:$('scenarioVersion').value.trim()||'1.0',regime_overrides:p.regime_overrides,shock_profile:p.shock_profile,config_overrides:p.config_overrides});await loadWorkspace()}
@@ -737,10 +741,17 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
       const cursorInner = document.getElementById('customCursorInner');
       let curX = window.innerWidth / 2, curY = window.innerHeight / 2;
       let targetX = curX, targetY = curY;
+      let cursorVisible = false;
 
       window.addEventListener('mousemove', e => {
         targetX = e.clientX;
         targetY = e.clientY;
+        if (!cursorVisible) {
+          cursorVisible = true;
+          cursorOuter.style.opacity = '1';
+          cursorInner.style.opacity = '1';
+          document.documentElement.classList.add('custom-cursor-active');
+        }
       });
 
       function animateCursor() {
@@ -748,7 +759,6 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
         curY += (targetY - curY) * 0.15;
         cursorOuter.style.transform = `translate(${curX}px, ${curY}px)`;
         cursorInner.style.transform = `translate(${targetX}px, ${targetY}px)`;
-        document.documentElement.classList.add('custom-cursor-active');
         requestAnimationFrame(animateCursor);
       }
       animateCursor();
@@ -840,40 +850,6 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
   <script src="/js/voice-briefing.js"></script>
   <script src="/js/topology-3d.js"></script>
   <script src="/js/hud-controller.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-       const header = document.querySelector('.nav');
-       if (header) {
-         const container = document.createElement('div');
-         container.style.cssText = 'display:inline-flex; align-items:center; margin-left:15px;';
-         
-         const moodLabel = document.createElement('span');
-         moodLabel.id = 'marketMoodLabel';
-         moodLabel.style.cssText = 'font-family:var(--mono); font-size:11px; border:1px solid var(--line); padding:2px 10px; border-radius:4px; vertical-align:middle; text-transform:uppercase;';
-         moodLabel.textContent = 'NEUTRAL';
-         
-         const toggleBtn = document.createElement('button');
-         toggleBtn.innerHTML = '⏻';
-         toggleBtn.title = 'Toggle Mood Engine';
-         toggleBtn.style.cssText = 'background:transparent; border:2px solid var(--line); color:var(--muted); font-size:11px; cursor:pointer; padding:2px 8px; border-radius:4px; margin-left:8px; vertical-align:middle; transition:all 0.2s;';
-         toggleBtn.onclick = () => {
-             const isOff = window.moodController.toggleMoodEngine();
-             toggleBtn.style.color = isOff ? 'var(--pink)' : 'var(--muted)';
-             toggleBtn.style.borderColor = isOff ? 'var(--pink)' : 'var(--line)';
-         };
-         
-         // Initial state
-         if (window.moodController.disabled) {
-             toggleBtn.style.color = 'var(--pink)';
-             toggleBtn.style.borderColor = 'var(--pink)';
-         }
-         
-         container.appendChild(moodLabel);
-         container.appendChild(toggleBtn);
-         header.appendChild(container);
-       }
-    });
-  </script>
 </body>
 <footer style="padding: 24px; border-top: 1px solid var(--border); text-align: center; background: #0a0a0a;">
   <a href="/credits" style="color: var(--cyan); font-family: var(--mono); font-size: 11px; text-decoration: none; text-transform: uppercase;">Team Credits</a>

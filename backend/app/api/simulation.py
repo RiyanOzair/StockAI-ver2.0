@@ -211,6 +211,7 @@ async def get_debate(x_session_id: Optional[str] = Header(None)):
         "1. A 'Bull' who wants to buy momentum.\n"
         "2. A 'Bear' who is extremely pessimistic and wants to short.\n"
         "3. A 'Risk Manager' who focuses on volatility, leverage, and capital preservation.\n"
+        "Do not use any emojis in the messages. "
         "Output MUST be strict JSON matching this schema:\n"
         "{\n"
         '  "bull": "Bull statement",\n'

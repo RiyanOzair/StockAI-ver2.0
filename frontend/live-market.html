@@ -1024,6 +1024,20 @@ main {
       </div>
     </div>
 
+    <!-- ── GLOBAL SECTION ── -->
+    <div id="global-section" style="display:none;">
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Global Benchmarks</div>
+            <h2 class="section-title">International market telemetry.</h2>
+          </div>
+          <p class="section-copy">StockAI tracks primary indices across Europe, Asia, and Oceania to provide a macro backdrop for global strategy deployment.</p>
+        </div>
+        <div class="snapshot-grid" id="global-indices-grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr));"></div>
+      </section>
+    </div>
+
     <!-- ── ATTRIBUTION FOOTER ── -->
     <div style="margin-top:40px;padding:20px;border-top:1px solid var(--border);text-align:center;">
       <div id="data-attribution" style="font-family:var(--mono);font-size:10px;color:#555;line-height:1.8;letter-spacing:0.5px;">
@@ -1559,23 +1573,26 @@ function switchMarket(market) {
 
   const usSection = document.getElementById("us-section");
   const indiaSection = document.getElementById("india-section");
+  const globalSection = document.getElementById("global-section");
   const nseBadge = document.getElementById("nse-status-badge");
 
   if (market === "us") {
     usSection.style.display = "block";
     indiaSection.style.display = "none";
+    globalSection.style.display = "none";
     nseBadge.style.display = "none";
   } else if (market === "india") {
     usSection.style.display = "none";
     indiaSection.style.display = "block";
+    globalSection.style.display = "none";
     nseBadge.style.display = "inline-flex";
     loadIndiaData();
-  } else {
-    // GLOBAL: show both
-    usSection.style.display = "block";
-    indiaSection.style.display = "block";
-    nseBadge.style.display = "inline-flex";
-    loadIndiaData();
+  } else if (market === "global") {
+    usSection.style.display = "none";
+    indiaSection.style.display = "none";
+    globalSection.style.display = "block";
+    nseBadge.style.display = "none";
+    loadGlobalData();
   }
 }
 
@@ -1602,6 +1619,8 @@ function renderIndiaData(data) {
   const apiStatus = document.getElementById("india-api-status");
   const connectPrompt = document.getElementById("india-connect-prompt");
 
+  if (!data) return;
+
   // NSE status badge
   if (data.nse_open) {
     nseBadge.textContent = "NSE OPEN";
@@ -1620,15 +1639,15 @@ function renderIndiaData(data) {
   if (!data.api_key_configured) {
     apiStatus.textContent = "API KEY NOT SET";
     apiStatus.style.color = "var(--yellow)";
-    connectPrompt.style.display = "block";
-    indicesGrid.innerHTML = "";
-    stocksGrid.innerHTML = "";
+    if (connectPrompt) connectPrompt.style.display = "block";
+    if (indicesGrid) indicesGrid.innerHTML = "";
+    if (stocksGrid) stocksGrid.innerHTML = "";
     return;
   }
 
-  connectPrompt.style.display = "none";
+  if (connectPrompt) connectPrompt.style.display = "none";
   const staleTag = data.is_stale ? ' <span style="color:var(--yellow);font-size:10px;">[STALE]</span>' : "";
-  apiStatus.innerHTML = `SOURCE: ${escapeHtml(data.data_source)}${staleTag}`;
+  apiStatus.innerHTML = `SOURCE: ${escapeHtml(data.data_source || 'Twelve Data')}${staleTag}`;
   apiStatus.style.color = data.is_stale ? "var(--yellow)" : "var(--cyan)";
 
   // Pulse 3D Topology
@@ -1654,24 +1673,26 @@ function renderIndiaData(data) {
 
   // Render heatmap
   const heatmapEl = document.getElementById("india-heatmap");
-  const heatmap = Array.isArray(data.sector_heatmap) ? data.sector_heatmap : [];
-  heatmapEl.innerHTML = heatmap.map(s => {
-    const abs = Math.abs(s.change_pct);
-    let opacity = 0.05;
-    if (abs >= 2.0) opacity = 0.3;
-    else if (abs >= 1.0) opacity = 0.2;
-    else if (abs >= 0.5) opacity = 0.12;
-    
-    const bg = s.change_pct >= 0 ? `rgba(184,255,87, ${opacity})` : `rgba(255,68,68, ${opacity})`;
-    const color = s.change_pct >= 0 ? 'var(--lime)' : 'var(--red)';
-    
-    return `
-      <div class="heatmap-box" style="background:${bg}; border-color:${color}44;">
-        <div class="heatmap-name">${escapeHtml(s.sector)}</div>
-        <div class="heatmap-val" style="color:${color}">${fmtPct(s.change_pct)}</div>
-      </div>
-    `;
-  }).join("");
+  if (heatmapEl) {
+    const heatmap = Array.isArray(data.sector_heatmap) ? data.sector_heatmap : [];
+    heatmapEl.innerHTML = heatmap.map(s => {
+      const abs = Math.abs(s.change_pct);
+      let opacity = 0.05;
+      if (abs >= 2.0) opacity = 0.3;
+      else if (abs >= 1.0) opacity = 0.2;
+      else if (abs >= 0.5) opacity = 0.12;
+      
+      const bg = s.change_pct >= 0 ? `rgba(184,255,87, ${opacity})` : `rgba(255,68,68, ${opacity})`;
+      const color = s.change_pct >= 0 ? 'var(--lime)' : 'var(--red)';
+      
+      return `
+        <div class="heatmap-box" style="background:${bg}; border-color:${color}44;">
+          <div class="heatmap-name">${escapeHtml(s.sector)}</div>
+          <div class="heatmap-val" style="color:${color}">${fmtPct(s.change_pct)}</div>
+        </div>
+      `;
+    }).join("");
+  }
 
   // Top gainers/losers
   const gainersEl = document.getElementById("india-gainers");
@@ -1686,8 +1707,8 @@ function renderIndiaData(data) {
     </div>
   `;
 
-  gainersEl.innerHTML = gainers.map(mkMoverRow).join("") || '<div class="small-note">No gainers</div>';
-  losersEl.innerHTML = losers.map(mkMoverRow).join("") || '<div class="small-note">No losers</div>';
+  if (gainersEl) gainersEl.innerHTML = gainers.map(mkMoverRow).join("") || '<div class="small-note">No gainers</div>';
+  if (losersEl) losersEl.innerHTML = losers.map(mkMoverRow).join("") || '<div class="small-note">No losers</div>';
 
   // Render all indices
   if (indicesGrid) {
@@ -1702,15 +1723,52 @@ function renderIndiaData(data) {
   }
 
   // Render stocks
-  const stocks = Array.isArray(data.top_stocks) ? data.top_stocks : [];
-  stocksGrid.innerHTML = stocks.length ? stocks.map(s => `
-    <article class="snapshot-card reveal">
-      <div class="snapshot-label">${escapeHtml(s.symbol)} <span style="font-size:9px;color:var(--muted);">NSE</span></div>
-      <div style="font-weight:600;font-size:11px;margin-top:4px;color:var(--muted); text-transform:uppercase;">${escapeHtml(s.label)}</div>
-      <div class="snapshot-value" style="font-size:22px;">${fmtINR(s.price)}</div>
-      <div class="delta ${deltaClass(s.change_pct)}">${fmtPct(s.change_pct)}</div>
+  if (stocksGrid) {
+    const stocks = Array.isArray(data.top_stocks) ? data.top_stocks : [];
+    stocksGrid.innerHTML = stocks.length ? stocks.map(s => `
+      <article class="snapshot-card reveal">
+        <div class="snapshot-label">${escapeHtml(s.symbol)} <span style="font-size:9px;color:var(--muted);">NSE</span></div>
+        <div style="font-weight:600;font-size:11px;margin-top:4px;color:var(--muted); text-transform:uppercase;">${escapeHtml(s.label)}</div>
+        <div class="snapshot-value" style="font-size:22px;">${fmtINR(s.price)}</div>
+        <div class="delta ${deltaClass(s.change_pct)}">${fmtPct(s.change_pct)}</div>
+      </article>
+    `).join("") : '<div class="empty-state">No Indian stock data available.</div>';
+  }
+}
+
+async function loadGlobalData() {
+  const grid = document.getElementById("global-indices-grid");
+  if (!grid) return;
+  grid.innerHTML = '<div class="loading">Fetching global telemetry...</div>';
+  try {
+    const response = await fetch("/api/live-market/global/summary");
+    if (!response.ok) throw new Error("Global data fetch failed");
+    const data = await response.json();
+    renderGlobalData(data);
+  } catch (err) {
+    grid.innerHTML = `<div class="empty-state">Error: ${err.message}</div>`;
+  }
+}
+
+function renderGlobalData(data) {
+  const grid = document.getElementById("global-indices-grid");
+  if (!grid) return;
+  if (!data.indices || !data.indices.length) {
+    grid.innerHTML = '<div class="empty-state">No global indices available.</div>';
+    return;
+  }
+  grid.innerHTML = data.indices.map(idx => `
+    <article class="snapshot-card reveal" style="border-left: 4px solid var(--magenta);">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div>
+          <div class="snapshot-label">${escapeHtml(idx.label)}</div>
+          <div style="font-size:9px; color:var(--muted); font-family:var(--mono); margin-top:2px;">${escapeHtml(idx.region)}</div>
+        </div>
+        <div class="delta ${deltaClass(idx.change_pct)}">${fmtPct(idx.change_pct)}</div>
+      </div>
+      <div class="snapshot-value" style="margin-top:12px; font-size:28px;">${fmtNumber(idx.price)} <span style="font-size:12px; opacity:0.5;">${escapeHtml(idx.currency)}</span></div>
     </article>
-  `).join("") : '<div class="empty-state">No Indian stock data available.</div>';
+  `).join("");
 }
 
 // Load India data in background on page load for GLOBAL toggle
@@ -1931,40 +1989,6 @@ document.addEventListener('DOMContentLoaded', () => {
   <script src="/js/voice-briefing.js"></script>
   <script src="/js/topology-3d.js"></script>
   <script src="/js/hud-controller.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-       const header = document.querySelector('.nav-left');
-       if (header) {
-         const container = document.createElement('div');
-         container.style.cssText = 'display:inline-flex; align-items:center; margin-left:12px;';
-         
-         const moodLabel = document.createElement('div');
-         moodLabel.id = 'marketMoodLabel';
-         moodLabel.style.cssText = 'font-family:var(--mono); font-size:10px; border:1px solid var(--border); padding:3px 10px; border-radius:4px; text-transform:uppercase;';
-         moodLabel.textContent = 'NEUTRAL';
-         
-         const toggleBtn = document.createElement('button');
-         toggleBtn.innerHTML = '⏻';
-         toggleBtn.title = 'Toggle Mood Engine';
-         toggleBtn.style.cssText = 'background:transparent; border:1px solid var(--border); color:var(--muted); font-size:10px; cursor:pointer; padding:3px 6px; border-radius:4px; margin-left:6px; transition:all 0.2s;';
-         toggleBtn.onclick = () => {
-             const isOff = window.moodController.toggleMoodEngine();
-             toggleBtn.style.color = isOff ? 'var(--red)' : 'var(--muted)';
-             toggleBtn.style.borderColor = isOff ? 'var(--red)' : 'var(--border)';
-         };
-         
-         // Initial state
-         if (window.moodController.disabled) {
-             toggleBtn.style.color = 'var(--red)';
-             toggleBtn.style.borderColor = 'var(--red)';
-         }
-         
-         container.appendChild(moodLabel);
-         container.appendChild(toggleBtn);
-         header.appendChild(container);
-       }
-    });
-  </script>
 </body>
 </html>
 

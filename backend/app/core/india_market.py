@@ -258,46 +258,50 @@ class IndiaMarketService:
         warnings: list[str] = []
 
         async with httpx.AsyncClient(timeout=self.REQUEST_TIMEOUT_SECONDS) as client:
-            # Fetch indices
-            for idx in INDIA_INDEX_SYMBOLS:
-                try:
-                    data = await self._fetch_quote(client, api_key, idx["symbol"], idx.get("exchange", "NSE"))
-                    if data:
-                        indices.append({
-                            "symbol": idx["symbol"],
-                            "label": idx["label"],
-                            "kind": idx["kind"],
-                            "exchange": idx.get("exchange", "NSE"),
-                            "price": data.get("price"),
-                            "change": data.get("change"),
-                            "change_pct": data.get("change_pct"),
-                            "previous_close": data.get("previous_close"),
-                            "currency": "INR",
-                        })
-                except Exception as e:
-                    warnings.append(f"{idx['symbol']}: {e}")
-                # Rate-limit friendly delay
-                await asyncio.sleep(0.15)
+            # Parallel fetch for indices and stocks
+            index_tasks = [self._fetch_quote(client, api_key, idx["symbol"], idx.get("exchange", "NSE")) for idx in INDIA_INDEX_SYMBOLS]
+            stock_tasks = [self._fetch_quote(client, api_key, stock["symbol"], stock.get("exchange", "NSE")) for stock in INDIA_TOP_STOCKS]
+            
+            all_tasks = index_tasks + stock_tasks
+            all_results = await asyncio.gather(*all_tasks, return_exceptions=True)
+            
+            # Distribute results
+            index_results = all_results[:len(INDIA_INDEX_SYMBOLS)]
+            stock_results = all_results[len(INDIA_INDEX_SYMBOLS):]
+            
+            for idx, res in zip(INDIA_INDEX_SYMBOLS, index_results):
+                if isinstance(res, Exception):
+                    warnings.append(f"{idx['symbol']}: {res}")
+                    continue
+                if res:
+                    indices.append({
+                        "symbol": idx["symbol"],
+                        "label": idx["label"],
+                        "kind": idx["kind"],
+                        "exchange": idx.get("exchange", "NSE"),
+                        "price": res.get("price"),
+                        "change": res.get("change"),
+                        "change_pct": res.get("change_pct"),
+                        "previous_close": res.get("previous_close"),
+                        "currency": "INR",
+                    })
 
-            # Fetch top stocks
-            for stock in INDIA_TOP_STOCKS:
-                try:
-                    data = await self._fetch_quote(client, api_key, stock["symbol"], stock.get("exchange", "NSE"))
-                    if data:
-                        stocks.append({
-                            "symbol": stock["symbol"],
-                            "label": stock["label"],
-                            "exchange": stock.get("exchange", "NSE"),
-                            "sector": stock.get("sector", "Other"),
-                            "price": data.get("price"),
-                            "change": data.get("change"),
-                            "change_pct": data.get("change_pct"),
-                            "previous_close": data.get("previous_close"),
-                            "currency": "INR",
-                        })
-                except Exception as e:
-                    warnings.append(f"{stock['symbol']}: {e}")
-                await asyncio.sleep(0.15)
+            for stock, res in zip(INDIA_TOP_STOCKS, stock_results):
+                if isinstance(res, Exception):
+                    warnings.append(f"{stock['symbol']}: {res}")
+                    continue
+                if res:
+                    stocks.append({
+                        "symbol": stock["symbol"],
+                        "label": stock["label"],
+                        "exchange": stock.get("exchange", "NSE"),
+                        "sector": stock.get("sector", "Other"),
+                        "price": res.get("price"),
+                        "change": res.get("change"),
+                        "change_pct": res.get("change_pct"),
+                        "previous_close": res.get("previous_close"),
+                        "currency": "INR",
+                    })
 
         nse_open = is_nse_open()
         

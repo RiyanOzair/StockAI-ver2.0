@@ -238,6 +238,7 @@ class SimulationConfig(BaseModel):
     latency_ms: int = Field(default=120, ge=0, le=5000)
     slippage_bps: float = Field(default=6.0, ge=0.0, le=200.0)
     training_mode: str = "hybrid"
+    real_world_sync: bool = False
     agent_mix: Dict[str, float] = Field(default_factory=lambda: {"llm": 0.35, "rule": 0.45, "strategy": 0.20})
     market_context: str = "us_equities"
     config_snapshot_label: Optional[str] = None

@@ -157,6 +157,7 @@ html, body {
   z-index: 10000;
   transition: transform 0.08s ease-out, opacity 0.3s;
   mix-blend-mode: difference;
+  opacity: 0;
 }
 #customCursorOuter {
   width: 20px; height: 20px;
@@ -666,40 +667,6 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
 }
 .toast.show { transform: translateX(0); }
 
-/* MOOD HUD */
-#moodStatusHud {
-  position: fixed;
-  bottom: 100px;
-  left: 50%;
-  transform: translateX(-50%) translateY(50px);
-  padding: 12px 24px;
-  background: rgba(0,0,0,0.85);
-  border: 1px solid var(--lime);
-  color: var(--lime);
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  z-index: 10001;
-  opacity: 0;
-  pointer-events: none;
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-  backdrop-filter: blur(10px);
-}
-#moodStatusHud.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-.glitch {
-  animation: glitch 0.3s cubic-bezier(.25,.46,.45,.94) both infinite;
-}
-@keyframes glitch {
-  0% { transform: translate(0) translateX(-50%); }
-  20% { transform: translate(-2px, 2px) translateX(-50%); }
-  40% { transform: translate(-2px, -2px) translateX(-50%); }
-  60% { transform: translate(2px, 2px) translateX(-50%); }
-  80% { transform: translate(2px, -2px) translateX(-50%); }
-  100% { transform: translate(0) translateX(-50%); }
-}
 
 /* HEATMAP */
 .heatmap-grid {
@@ -1339,7 +1306,6 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
   <aside id="sidebar">
     <div class="sidebar-logo">
       <h1><a href="/" style="text-decoration:none;color:inherit">STOCK<span style="color:var(--magenta)">AI</span></a></h1>
-      <span>v2.0 — simulator</span>
     </div>
 
     <div class="sidebar-status">
@@ -2125,7 +2091,7 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
               <label>Seed (optional)</label>
               <input type="number" id="cfg-seed" placeholder="random…" />
             </div>
-            <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px">
+            <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
               <label style="display:flex;gap:6px;align-items:center;cursor:pointer">
                 <input type="checkbox" id="cfg-llm" checked style="width:auto;accent-color:var(--lime)">
                 <span style="font-family:var(--mono);font-size:11px">Enable LLM Agents</span>
@@ -2133,6 +2099,10 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
               <label style="display:flex;gap:6px;align-items:center;cursor:pointer">
                 <input type="checkbox" id="cfg-loans" checked style="width:auto;accent-color:var(--lime)">
                 <span style="font-family:var(--mono);font-size:11px">Enable Loans</span>
+              </label>
+              <label style="display:flex;gap:6px;align-items:center;cursor:pointer">
+                <input type="checkbox" id="cfg-real-world-sync" style="width:auto;accent-color:var(--cyan)">
+                <span style="font-family:var(--mono);font-size:11px;color:var(--cyan)">Real-Market Sync</span>
               </label>
             </div>
             <button class="btn btn-lime" onclick="applyConfig()">Apply Config</button>
@@ -2291,8 +2261,6 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
-<!-- MOOD HUD -->
-<div id="moodStatusHud">SYNCING NEURAL NETWORK...</div>
 
 <script src="/js/oracle-pulse.js"></script>
 <script src="/js/singularity.js"></script>
@@ -3988,9 +3956,12 @@ async function applyConfig() {
   const seedVal    = document.getElementById('cfg-seed').value;
   const seed       = seedVal ? parseInt(seedVal) : null;
 
+  const real_world_sync = document.getElementById('cfg-real-world-sync').checked;
+
   const r = await apiPost('/simulation/config', {
     num_agents, num_days, use_llm, enable_loans, seed,
-    volatility, speed, regime_sensitivity, benchmark_mode, analytics_detail
+    volatility, speed, regime_sensitivity, benchmark_mode, analytics_detail,
+    real_world_sync
   });
   if (r) {
     configuredDays = num_days;
@@ -5454,9 +5425,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let curX = window.innerWidth / 2, curY = window.innerHeight / 2;
     let targetX = curX, targetY = curY;
 
+    let cursorVisible = false;
+
     window.addEventListener('mousemove', e => {
         targetX = e.clientX;
         targetY = e.clientY;
+        if (!cursorVisible) {
+            cursorVisible = true;
+            cursorOuter.style.opacity = '1';
+            cursorInner.style.opacity = '1';
+        }
     });
 
     function animateCursor() {
@@ -5464,7 +5442,9 @@ document.addEventListener('DOMContentLoaded', () => {
         curY += (targetY - curY) * 0.15;
         cursorOuter.style.transform = `translate(${curX}px, ${curY}px)`;
         cursorInner.style.transform = `translate(${targetX}px, ${targetY}px)`;
-        document.documentElement.classList.add('custom-cursor-active');
+        if (cursorVisible) {
+            document.documentElement.classList.add('custom-cursor-active');
+        }
         requestAnimationFrame(animateCursor);
     }
     animateCursor();
@@ -5488,40 +5468,6 @@ document.addEventListener('DOMContentLoaded', () => {
   <script src="/js/voice-briefing.js"></script>
   <script src="/js/topology-3d.js"></script>
   <script src="/js/hud-controller.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-       const header = document.querySelector('.inline-flex');
-       if (header) {
-         const container = document.createElement('div');
-         container.style.cssText = 'display:inline-flex; align-items:center; margin-left:20px;';
-         
-         const moodLabel = document.createElement('span');
-         moodLabel.id = 'marketMoodLabel';
-         moodLabel.style.cssText = 'font-family:var(--mono); font-size:10px; border:1px solid var(--border); padding:2px 8px; border-radius:4px; vertical-align:middle; text-transform:uppercase;';
-         moodLabel.textContent = 'NEUTRAL';
-         
-         const toggleBtn = document.createElement('button');
-         toggleBtn.innerHTML = '⏻';
-         toggleBtn.title = 'Toggle Mood Engine';
-         toggleBtn.style.cssText = 'background:transparent; border:1px solid var(--border); color:var(--muted); font-size:10px; cursor:pointer; padding:2px 6px; border-radius:4px; margin-left:6px; vertical-align:middle; transition:all 0.2s;';
-         toggleBtn.onclick = () => {
-             const isOff = window.moodController.toggleMoodEngine();
-             toggleBtn.style.color = isOff ? '#ef4e63' : 'var(--muted)';
-             toggleBtn.style.borderColor = isOff ? '#ef4e63' : 'var(--border)';
-         };
-         
-         // Initial state
-         if (window.moodController.disabled) {
-             toggleBtn.style.color = '#ef4e63';
-             toggleBtn.style.borderColor = '#ef4e63';
-         }
-         
-         container.appendChild(moodLabel);
-         container.appendChild(toggleBtn);
-         header.appendChild(container);
-       }
-     });
-  </script>
   <script>
   // ── 3D BUBBLE ANIMATION ──
   (function() {

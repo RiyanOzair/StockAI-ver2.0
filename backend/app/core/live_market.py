@@ -193,15 +193,9 @@ class LiveMarketService:
             headers=self.REQUEST_HEADERS,
             follow_redirects=True,
         ) as client:
-            # FIX: Introduce small jitter between requests to avoid burst blocking
-            results = []
-            for symbol in symbols:
-                try:
-                    res = await self._fetch_symbol_chart(client, symbol)
-                    results.append(res)
-                except Exception as exc:
-                    results.append(exc)
-                await asyncio.sleep(random.uniform(0.1, 0.3))
+            # Parallelize requests to speed up fetch and avoid timeouts
+            tasks = [self._fetch_symbol_chart(client, s) for s in symbols]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
 
         quote_map: dict[str, dict[str, Any]] = {}
         for symbol, result in zip(symbols, results):

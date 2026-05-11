@@ -3,15 +3,15 @@
   "buildCommand": "",
   "outputDirectory": "frontend",
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "https://your-backend-url.onrender.com/api/$1" },
-    { "source": "/chat", "destination": "https://your-backend-url.onrender.com/chat" },
-    { "source": "/simulation/(.*)", "destination": "https://your-backend-url.onrender.com/simulation/$1" },
-    { "source": "/market/(.*)", "destination": "https://your-backend-url.onrender.com/market/$1" },
-    { "source": "/agents/(.*)", "destination": "https://your-backend-url.onrender.com/agents/$1" },
-    { "source": "/data/(.*)", "destination": "https://your-backend-url.onrender.com/data/$1" },
-    { "source": "/runs/(.*)", "destination": "https://your-backend-url.onrender.com/runs/$1" },
-    { "source": "/health", "destination": "https://your-backend-url.onrender.com/health" },
-    { "source": "/workspace/summary", "destination": "https://your-backend-url.onrender.com/workspace/summary" }
+    { "source": "/api/(.*)", "destination": "https://stockai-ver2-0.onrender.com/api/$1" },
+    { "source": "/chat", "destination": "https://stockai-ver2-0.onrender.com/chat" },
+    { "source": "/simulation/(.*)", "destination": "https://stockai-ver2-0.onrender.com/simulation/$1" },
+    { "source": "/market/(.*)", "destination": "https://stockai-ver2-0.onrender.com/market/$1" },
+    { "source": "/agents/(.*)", "destination": "https://stockai-ver2-0.onrender.com/agents/$1" },
+    { "source": "/data/(.*)", "destination": "https://stockai-ver2-0.onrender.com/data/$1" },
+    { "source": "/runs/(.*)", "destination": "https://stockai-ver2-0.onrender.com/runs/$1" },
+    { "source": "/health", "destination": "https://stockai-ver2-0.onrender.com/health" },
+    { "source": "/workspace/summary", "destination": "https://stockai-ver2-0.onrender.com/workspace/summary" }
   ],
   "routes": [
     { "src": "/app", "dest": "/index.html" },

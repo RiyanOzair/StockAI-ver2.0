@@ -155,6 +155,8 @@ class VoiceBriefing {
             return "Simulator Console Active: This environment manages real-time WebSocket streams, order book matching, and agent trade execution cycles in a high-fidelity synthetic market.";
         } else if (path.includes('live-market')) {
             return "Live Monitor Synced: This surface tracks real-world equity data across U.S. and Indian markets, providing a direct comparison between live conditions and simulator benchmarks.";
+        } else if (path.includes('credits')) {
+            return "StockAI Credits: This platform was engineered by the development team of Mohammed Samiullah, Mohammed Riyan Ozair, and Mohammed Nabeel Rizwan. We extend our deepest gratitude to our project guide, Professor Bhushra Siddiqua, for her invaluable mentorship and technical direction throughout this research initiative.";
         } else if (path === '/' || path.includes('landing')) {
             return "StockAI v2.0 Platform: You are viewing the global research ecosystem interface. This platform studies the interplay between autonomous LLM agents and multi-market financial telemetry.";
         }

@@ -1,3 +1,0 @@
-Python is the primary programming language used for the StockAI backend.
-Download Python 3.9 or higher from: https://www.python.org/downloads/
-Make sure to check "Add Python to PATH" during installation.

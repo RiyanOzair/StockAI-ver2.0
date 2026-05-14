@@ -1,3 +1,0 @@
-Git is used for version control and cloning the repository.
-Download Git from: https://git-scm.com/downloads
-It is recommended to use Git Bash on Windows.

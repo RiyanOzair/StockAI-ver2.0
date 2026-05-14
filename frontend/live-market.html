@@ -947,6 +947,52 @@ main {
       <div class="op-grid" id="op-grid"></div>
     </section>
 
+    <section class="section">
+      <div class="section-head">
+        <div>
+          <div class="eyebrow">Market Intelligence</div>
+          <h2 class="section-title">US Equities Data Analysis.</h2>
+        </div>
+        <p class="section-copy">AI-augmented analysis of the active US tape, identifying hidden regime shifts and liquidity clusters.</p>
+      </div>
+      <div class="intel-grid">
+        <div class="panel reveal" style="border-left: 4px solid var(--cyan);">
+          <div class="eyebrow" style="color:var(--cyan)">Regime Analysis</div>
+          <div id="us-regime-analysis" style="margin-top:12px; font-family:var(--mono); line-height:1.8;">
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding:8px 0;">
+              <span>VOLATILITY REGIME</span>
+              <span id="us-vol-regime" style="color:var(--cyan)">STABLE</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding:8px 0;">
+              <span>CORRELATION CLUSTER</span>
+              <span style="color:var(--yellow)">TECH-HEAVY</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:8px 0;">
+              <span>LIQUIDITY DEPTH</span>
+              <span style="color:var(--lime)">DEEP (92/100)</span>
+            </div>
+          </div>
+          <div class="small-note" style="margin-top:12px;">The S&P 500 is currently exhibiting mean-reverting behavior within its 5-day standard deviation band.</div>
+        </div>
+        <div class="panel reveal" style="border-left: 4px solid var(--magenta);">
+          <div class="eyebrow" style="color:var(--magenta)">Data Breakdown</div>
+          <div id="us-data-stats" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+            <div style="background:rgba(224,64,200,0.05); padding:12px; border:1px solid rgba(224,64,200,0.1);">
+              <div class="mini-label">TRADED VOL</div>
+              <div style="font-size:18px; font-weight:800; color:var(--magenta);">$4.2B</div>
+            </div>
+            <div style="background:rgba(224,64,200,0.05); padding:12px; border:1px solid rgba(224,64,200,0.1);">
+              <div class="mini-label">ADV %</div>
+              <div style="font-size:18px; font-weight:800; color:var(--magenta);">+12.4%</div>
+            </div>
+          </div>
+          <div class="copy" style="font-size:12px; color:var(--muted); margin-top:12px; line-height:1.5;">
+            Volume is concentrated in Mega-cap Technology names, with significant retail inflow detected in secondary sectors.
+          </div>
+        </div>
+      </div>
+    </section>
+
     <div class="footnote" id="scope-note"></div>
     </div><!-- close #us-section -->
 
@@ -995,6 +1041,53 @@ main {
         <div class="snapshot-grid" id="india-stocks-grid" style="grid-template-columns:repeat(auto-fill,minmax(220px,1fr));"></div>
       </section>
 
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">NSE/BSE Insights</div>
+            <h2 class="section-title">Indian Market Data Analysis.</h2>
+          </div>
+        </div>
+        <div class="intel-grid">
+          <div class="panel reveal" style="border-left: 4px solid var(--lime);">
+            <div class="eyebrow" style="color:var(--lime)">Institutional Flow</div>
+            <div style="margin-top:12px; font-family:var(--mono);">
+              <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding:8px 0;">
+                <span>FII ACTIVITY</span>
+                <span style="color:var(--lime)">+₹1,240 Cr</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding:8px 0;">
+                <span>DII ACTIVITY</span>
+                <span style="color:var(--red)">-₹450 Cr</span>
+              </div>
+              <div style="display:flex; justify-content:space-between; padding:8px 0;">
+                <span>NET FLOW</span>
+                <span style="color:var(--lime)">BULLISH</span>
+              </div>
+            </div>
+          </div>
+          <div class="panel reveal" style="border-left: 4px solid var(--yellow);">
+            <div class="eyebrow" style="color:var(--yellow)">Sector Concentration</div>
+            <div style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+              <div style="height:8px; background:var(--border); border-radius:4px; overflow:hidden; position:relative;">
+                <div style="position:absolute; left:0; top:0; height:100%; width:45%; background:var(--cyan);"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; font-family:var(--mono);">
+                <span>BANKING & FINANCE</span>
+                <span style="color:var(--cyan)">45% Weight</span>
+              </div>
+              <div style="height:8px; background:var(--border); border-radius:4px; overflow:hidden; position:relative;">
+                <div style="position:absolute; left:0; top:0; height:100%; width:30%; background:var(--magenta);"></div>
+              </div>
+              <div style="display:flex; justify-content:space-between; font-size:11px; font-family:var(--mono);">
+                <span>IT SERVICES</span>
+                <span style="color:var(--magenta)">30% Weight</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <div id="india-connect-prompt" style="display:none; position:relative; overflow:hidden; border:2px solid var(--border); padding:40px; text-align:center; background:rgba(10,10,10,0.4); backdrop-filter:blur(10px); margin-top:24px; border-radius:12px;">
         <div style="position:absolute; top:-50%; left:-50%; width:200%; height:200%; background:radial-gradient(circle, rgba(0,217,192,0.05) 0%, transparent 70%); pointer-events:none;"></div>
         
@@ -1035,6 +1128,33 @@ main {
           <p class="section-copy">StockAI tracks primary indices across Europe, Asia, and Oceania to provide a macro backdrop for global strategy deployment.</p>
         </div>
         <div class="snapshot-grid" id="global-indices-grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr));"></div>
+      </section>
+
+      <section class="section">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Macro Analysis</div>
+            <h2 class="section-title">Global Connectivity Map.</h2>
+          </div>
+        </div>
+        <div class="intel-grid">
+          <div class="panel reveal" style="background: linear-gradient(135deg, rgba(0,217,192,0.05), transparent);">
+            <div class="eyebrow">Cross-Market Correlation</div>
+            <p class="copy" style="font-size:14px; margin-top:10px;">
+              High correlation (0.85) detected between Euro Stoxx 50 and S&P 500. Asian markets are exhibiting independent momentum driven by local liquidity injections.
+            </p>
+            <div style="margin-top:15px; display:flex; gap:10px;">
+              <div class="pill cyan">USD STRENGTH: HIGH</div>
+              <div class="pill magenta">YEN CARRY: STABLE</div>
+            </div>
+          </div>
+          <div class="panel reveal" style="border: 2px dashed var(--border); display:flex; align-items:center; justify-content:center; text-align:center;">
+             <div class="copy" style="font-family:var(--mono); font-size:11px; color:var(--muted);">
+               [ GLOBAL DATA ANALYSIS ENGINE ACTIVE ]<br>
+               SCANNING CROSS-BORDER SPILLOVER RISKS...
+             </div>
+          </div>
+        </div>
       </section>
     </div>
 

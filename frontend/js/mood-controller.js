@@ -106,6 +106,11 @@ class MoodController {
                 transform: translateX(-50%);
             }
 
+            #moodGlobalIndicator.floating.offset-workspace {
+                left: calc(40% - 8px);
+                transform: translateX(-50%);
+            }
+            
             #moodGlobalIndicator:hover { background: rgba(20, 20, 25, 0.95); border-color: var(--lime); }
             
             .mood-label-box { color: var(--lime); font-weight: 800; }
@@ -133,8 +138,11 @@ class MoodController {
         `;
 
         // Routing Logic
+        const isWorkspace = window.location.pathname.includes('workspace');
         if (isCenteredPage) {
             indicator.classList.add('floating', 'centered');
+        } else if (isWorkspace) {
+            indicator.classList.add('floating', 'offset-workspace');
         } else {
             indicator.classList.add('floating', 'offset-40');
         }

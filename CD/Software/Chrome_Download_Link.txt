@@ -1,2 +1,0 @@
-Google Chrome is the primary browser used for testing StockAI.
-Download Chrome from: https://www.google.com/chrome/

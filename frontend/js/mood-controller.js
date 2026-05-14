@@ -102,7 +102,7 @@ class MoodController {
             }
 
             #moodGlobalIndicator.floating.offset-40 {
-                left: 40%;
+                left: calc(40% - 3px);
                 transform: translateX(-50%);
             }
 

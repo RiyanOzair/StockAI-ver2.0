@@ -220,9 +220,9 @@
             <div class="field"><label for="runAgents">TOTAL AGENTS</label><input id="runAgents" type="number" min="2" max="100" value="10" oninput="normalizeMix()" /></div>
             <div class="field"><label>MIX PREVIEW</label><div id="mixPreview" class="mix-preview"><div class="seg llm">LLM</div><div class="seg rule">RULE</div><div class="seg strategy">STRATEGY</div></div></div>
           </div>
-          <div class="slider"><label class="mini" for="mixLlm">LLM AGENTS</label><input id="mixLlm" type="range" min="0" max="100" value="35" oninput="normalizeMix()" /><strong id="mixLlmValue">35%</strong></div>
-          <div class="slider"><label class="mini" for="mixRule">RULE-BASED</label><input id="mixRule" type="range" min="0" max="100" value="45" oninput="normalizeMix()" /><strong id="mixRuleValue">45%</strong></div>
-          <div class="slider"><label class="mini" for="mixStrategy">STRATEGY BOTS</label><input id="mixStrategy" type="range" min="0" max="100" value="20" oninput="normalizeMix()" /><strong id="mixStrategyValue">20%</strong></div>
+          <div class="slider"><label class="mini" for="mixLlm">LLM AGENTS</label><input id="mixLlm" type="range" min="0" max="100" value="60" oninput="normalizeMix()" /><strong id="mixLlmValue">60%</strong></div>
+          <div class="slider"><label class="mini" for="mixRule">RULE-BASED</label><input id="mixRule" type="range" min="0" max="100" value="25" oninput="normalizeMix()" /><strong id="mixRuleValue">25%</strong></div>
+          <div class="slider"><label class="mini" for="mixStrategy">STRATEGY BOTS</label><input id="mixStrategy" type="range" min="0" max="100" value="15" oninput="normalizeMix()" /><strong id="mixStrategyValue">15%</strong></div>
           <div id="mixNote" class="note">THE MIX IS NORMALIZED TO 100% BEFORE RUN LAUNCH.</div>
         </div>
       </article>
@@ -728,7 +728,7 @@ async function createExperiment(){await post('/experiments',{name:$('experimentN
       }
       window.history.replaceState({}, '', window.location.pathname);
     }
-    async function init(){bind();magnitude();renderEvents();loadChatHistory();addMsg('bot','ASK ABOUT THE CURRENT REGIME, ACTIVE RUN STATS, AGENT DECISIONS, OR WHICH BOTS LOOK READY FOR THE US EQUITIES SURFACE.');await loadStocks();await loadWorkspace();applyPresets();setInterval(()=>loadWorkspace().catch(()=>{}),8000)}
+    async function init(){bind();magnitude();normalizeMix();renderEvents();loadChatHistory();addMsg('bot','ASK ABOUT THE CURRENT REGIME, ACTIVE RUN STATS, AGENT DECISIONS, OR WHICH BOTS LOOK READY FOR THE US EQUITIES SURFACE.');await loadStocks();await loadWorkspace();applyPresets();setInterval(()=>loadWorkspace().catch(()=>{}),8000)}
     init().catch(err=>{$('overviewGrid').innerHTML=`<div class="empty">WORKSPACE LOAD FAILED: ${esc(err.message)}</div>`})
   </script>
 

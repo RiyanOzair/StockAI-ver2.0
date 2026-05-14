@@ -110,6 +110,9 @@ class VoiceBriefing {
 
         // Add a "loading" state
         const btn = document.getElementById('briefingToggle');
+        const moodToggle = document.getElementById('moodAudioToggle');
+        if (moodToggle) moodToggle.style.display = 'flex';
+        
         btn.style.animation = 'core-thinking 2s infinite ease-in-out';
         this.ui.ring.style.animationDuration = '1s';
         this.ui.ring.style.borderColor = 'var(--cyan)';

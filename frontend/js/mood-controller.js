@@ -272,7 +272,7 @@ class MoodController {
             background: rgba(0,0,0,0.5); border: 1px solid var(--border);
             color: var(--text); padding: 8px; border-radius: 50%;
             cursor: pointer; font-size: 18px; width: 40px; height: 40px;
-            display: flex; align-items: center; justify-content: center;
+            display: none; align-items: center; justify-content: center;
             transition: all 0.2s; backdrop-filter: blur(5px);
         `;
         btn.onclick = () => this.toggleAudio();

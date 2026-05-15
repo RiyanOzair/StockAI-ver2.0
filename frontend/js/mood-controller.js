@@ -1,6 +1,6 @@
 class MoodController {
     constructor() {
-        this.pollInterval = 60000; // 1 minute
+        this.pollInterval = 10000; // 10 seconds
         this.currentMood = 'neutral';
         this.score = 0.0;
         this.audioEnabled = false;
@@ -193,7 +193,9 @@ class MoodController {
     async updateMood() {
         if (this.disabled) return;
         try {
-            const resp = await fetch('/market/sentiment');
+            const endpoint = (window.API || '') + '/market/sentiment';
+            const resp = await fetch(endpoint);
+            if (!resp.ok) throw new Error("Sentiment fetch failed");
             const data = await resp.json();
             
             this.score = data.mood_score;

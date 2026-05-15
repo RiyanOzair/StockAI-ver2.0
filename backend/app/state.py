@@ -169,6 +169,12 @@ def build_world_bundle(config: Optional[dict] = None, extra_agents: Optional[Lis
         STOCKS.update(INDIA_STOCKS)
     else:
         STOCKS.update(US_STOCKS)
+    
+    selected = cfg.get("selected_symbols", [])
+    if selected:
+        # Filter global STOCKS to only include those in selected_symbols
+        STOCKS = {k: v for k, v in STOCKS.items() if k in selected}
+        
     ALL_SYMBOLS.clear()
     ALL_SYMBOLS.extend(sorted(STOCKS.keys()))
 

@@ -176,9 +176,11 @@ docker compose logs -f
 docker compose down
 ```
 
-## Architecture Docs
+## Documentation
 
-Editable Mermaid diagrams live in `docs/architecture.mmd` and `docs/workflow.mmd`.
+- [Step-by-Step User Guide](docs/USER_GUIDE_STEP_BY_STEP.md) — How to use the research workplace.
+- [Project Q&A](docs/PROJECT_Q_AND_A.md) — Answers to common questions.
+- [Architecture Docs](docs/architecture.mmd) — Mermaid diagrams.
 
 ## License
 

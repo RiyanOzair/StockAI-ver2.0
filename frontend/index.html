@@ -415,6 +415,35 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
 .tab:hover { color: var(--white); }
 .tab.active { color: var(--lime); border-bottom-color: var(--lime); }
 
+/* STOCK SELECTION */
+.stock-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: var(--bg3);
+  padding: 12px;
+  border: 2px solid var(--border);
+  border-radius: 4px;
+}
+.stock-selection-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 2px;
+}
+.stock-selection-item:hover { background: rgba(255,255,255,0.05); }
+.stock-checkbox {
+  width: auto !important;
+  accent-color: var(--lime);
+  cursor: pointer;
+}
+
 /* SCROLLABLE FEED */
 .feed {
   max-height: 260px;
@@ -2048,6 +2077,20 @@ input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px;
                      oninput="document.getElementById('cfg-intensity-val').textContent=this.value">
             </div>
             <div class="form-row">
+              <label>Market Universe</label>
+              <select id="cfg-market-context" onchange="updateStockSelectionUI()">
+                <option value="us_equities" selected>US Equities (Nasdaq/NYSE)</option>
+                <option value="india_nse_bse">India (NSE/BSE)</option>
+                <option value="global">Global Hybrid (US + India)</option>
+              </select>
+            </div>
+            <div class="form-row" style="margin-top: 10px;">
+              <label>Stock Universe Selection <span style="font-size: 10px; color: var(--muted)">(Max 25 for stability)</span></label>
+              <div id="cfg-stock-selection" class="stock-selection-grid">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+            <div class="form-row">
               <label>Speed</label>
               <select id="cfg-speed">
                 <option value="0.5">Slow</option>
@@ -2295,6 +2338,31 @@ let priceAlerts = [];               // { sym, dir, target, id }
 let runEvents = [];
 let lastRunEventSeq = 0;
 let activeRunId = null;
+let universes = {}; // market_context -> { sym: name }
+
+async function loadUniverses() {
+  const data = await apiFetch('/market/universes');
+  if (data) {
+    universes = data;
+    updateStockSelectionUI();
+  }
+}
+
+function updateStockSelectionUI() {
+  const ctx = document.getElementById('cfg-market-context').value;
+  const container = document.getElementById('cfg-stock-selection');
+  if (!container) return;
+  
+  const stocks = universes[ctx] || {};
+  const sorted = Object.keys(stocks).sort();
+  
+  container.innerHTML = sorted.map(sym => `
+    <label class="stock-selection-item">
+      <input type="checkbox" class="stock-checkbox" value="${sym}" checked>
+      <span>${sym}</span>
+    </label>
+  `).join('');
+}
 
 /* ═══════════════════════════════════════════
    NAVIGATION
@@ -2500,6 +2568,9 @@ function handleTick(d) {
     const currentBenchmark = d.benchmark?.value || 100;
     const change = (currentBenchmark - prevBenchmark) / prevBenchmark;
     window.dispatchEvent(new CustomEvent('marketVolatility', { detail: { change } }));
+    
+    // Notify Singularity / Prophecy
+    window.dispatchEvent(new CustomEvent('agentThought', { detail: { ticker: d.day } }));
   }
 
   // Halted banner
@@ -3957,11 +4028,17 @@ async function applyConfig() {
   const seed       = seedVal ? parseInt(seedVal) : null;
 
   const real_world_sync = document.getElementById('cfg-real-world-sync').checked;
+  const market_context = document.getElementById('cfg-market-context').value;
+  
+  const selected_symbols = [];
+  document.querySelectorAll('.stock-checkbox:checked').forEach(cb => {
+    selected_symbols.push(cb.value);
+  });
 
   const r = await apiPost('/simulation/config', {
     num_agents, num_days, use_llm, enable_loans, seed,
     volatility, speed, regime_sensitivity, benchmark_mode, analytics_detail,
-    real_world_sync
+    real_world_sync, market_context, selected_symbols
   });
   if (r) {
     configuredDays = num_days;
@@ -4187,6 +4264,7 @@ async function init() {
     connectWS();
     await pollStatus();
     await loadMarketAnalytics();
+    await loadUniverses();
     await loadMarketStocks();
     await loadAgents();
     loadTrades();

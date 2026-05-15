@@ -129,12 +129,19 @@ class ProjectSingularity {
     updateProphecy() {
         if (!this.prophecyHUD) return;
         
-        // Simple heuristic for prophecy based on agent state
-        const totalValue = window.agents?.reduce((s, a) => s + (a.pnl || 0), 0) || 0;
-        const trend = totalValue > 0 ? "BULLISH ACCUMULATION" : "BEARISH DISTRIBUTION";
-        const confidence = Math.min(99, Math.abs(Math.round(totalValue / 1000)));
+        // Advanced heuristic for prophecy based on multi-agent signals
+        const activeAgents = window.agents?.filter(a => a.status === 'active') || [];
+        if (activeAgents.length === 0) return;
+
+        const totalPnL = activeAgents.reduce((s, a) => s + (a.pnl || 0), 0);
+        const avgPnL = totalPnL / activeAgents.length;
+        const topPerformer = [...activeAgents].sort((a, b) => b.pnl - a.pnl)[0];
         
-        const prediction = `PROPHECY: ${trend} DETECTED // CONFIDENCE ${confidence}% // T+3 PROJECTION: ${totalValue > 0 ? 'UPSIDE' : 'CORRECTION'}`;
+        const trend = avgPnL > 0 ? "ALGORITHMIC ASCENSION" : "SYSTEMIC DE-RISKING";
+        const confidence = Math.min(99, 40 + Math.abs(Math.round(avgPnL / 500)));
+        const signal = avgPnL > 0 ? 'LONG_BIAS' : 'SHORT_BIAS';
+        
+        const prediction = `PROPHECY: ${trend} DETECTED // CONFIDENCE ${confidence}% // SIGNAL: ${signal} // ALPHA: ${topPerformer?.name || 'Architect'}`;
         
         if (prediction !== this.lastPrediction) {
             this.prophecyHUD.textContent = prediction;

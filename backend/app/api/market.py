@@ -7,6 +7,16 @@ from backend.app.core.analytics import compute_market_analytics
 from backend.app.core.sentiment import mood_engine
 
 router = APIRouter(prefix="/market", tags=["market"])
+ 
+ 
+@router.get("/universes")
+async def get_universes():
+    """Return all possible stock universes for selection."""
+    return {
+        "us_equities": {sym: meta.name for sym, meta in state.US_STOCKS.items()},
+        "india_nse_bse": {sym: meta.name for sym, meta in state.INDIA_STOCKS.items()},
+        "global": {sym: meta.name for sym, meta in {**state.US_STOCKS, **state.INDIA_STOCKS}.items()},
+    }
 
 
 @router.get("/sentiment")

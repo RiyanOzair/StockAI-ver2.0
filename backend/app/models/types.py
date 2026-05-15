@@ -241,6 +241,7 @@ class SimulationConfig(BaseModel):
     real_world_sync: bool = False
     agent_mix: Dict[str, float] = Field(default_factory=lambda: {"llm": 0.60, "rule": 0.25, "strategy": 0.15})
     market_context: str = "us_equities"
+    selected_symbols: List[str] = Field(default_factory=list)
     config_snapshot_label: Optional[str] = None
     notes: Dict[str, Any] = Field(default_factory=dict)
 

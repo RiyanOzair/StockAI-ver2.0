@@ -11,6 +11,7 @@ from backend.app.agents.behavioral_agent import BaseAgent
 from backend.app.agents.strategy_agent import StrategyAgent
 from backend.app.core.analytics import compute_index_level, compute_market_analytics, compute_sector_indices
 from backend.app.core.live_market import live_market_service
+from backend.app.core.india_market import india_market_service
 from backend.app.core.research_store import ResearchStore
 from backend.app.models.research import RunEventRecord
 from backend.app.models.types import DaySnapshot, FinancialReport, ForumMessage, LOAN_TERMS, Loan, MarketEvent, Order, OrderSide, REPORT_DAYS
@@ -298,6 +299,12 @@ class SimulationLoop:
                     watchlist[item["symbol"]] = item["price"]
 
             applied_count = 0
+            
+            # Fetch Indian market data too
+            india_snapshot = await india_market_service.get_summary()
+            for item in india_snapshot.get("top_stocks", []):
+                watchlist[item["symbol"]] = item["price"]
+
             for symbol, book in self.order_books.items():
                 if symbol in watchlist:
                     real_price = watchlist[symbol]

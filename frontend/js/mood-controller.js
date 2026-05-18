@@ -9,8 +9,8 @@ class MoodController {
         this.gainNode = null;
         
         const savedState = localStorage.getItem('moodEngineEnabled');
-        // Default to ENABLED (disabled = false) if no preference or if 'true'
-        this.disabled = (savedState === 'false'); 
+        // Default to DISABLED (disabled = true) if no preference or if 'false'
+        this.disabled = (savedState !== 'true'); 
         
         this.themes = {
             neutral: { lime: '#b8ff57', cyan: '#00f3ff', magenta: '#ff00ff', bg: '#0a0a0c', speed: '25s' },
@@ -182,7 +182,7 @@ class MoodController {
         if (!this.disabled) {
             await this.updateMood();
         } else {
-            this.applyTheme('neutral');
+            this.applyTheme('neutral', true);
             this.updateToggleState();
         }
         
@@ -214,8 +214,8 @@ class MoodController {
         }
     }
 
-    applyTheme(regime) {
-        if (this.currentMood === regime) return false;
+    applyTheme(regime, force = false) {
+        if (!force && this.currentMood === regime) return false;
         this.currentMood = regime;
         const theme = this.themes[regime];
 
@@ -233,7 +233,7 @@ class MoodController {
         const label = document.getElementById('marketMoodLabel');
         if (label) {
             label.textContent = this.disabled ? 'OFF' : regime.toUpperCase();
-            label.style.color = theme.lime;
+            label.style.color = this.disabled ? 'var(--muted)' : theme.lime;
         }
         return true;
     }
@@ -245,9 +245,10 @@ class MoodController {
         
         if (this.disabled) {
             this.showStatus("DEACTIVATING IMMERSIVE CORE...", 2000, true);
-            this.applyTheme('neutral');
+            this.applyTheme('neutral', true);
             if (this.audioEnabled) this.stopAudio();
         } else {
+            this.currentMood = null;
             this.showStatus("SYNCING NEURAL NETWORK...", 0, true);
             setTimeout(() => {
                 this.updateMood();

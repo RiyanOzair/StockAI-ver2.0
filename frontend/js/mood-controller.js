@@ -253,8 +253,8 @@ class MoodController {
             setTimeout(() => {
                 this.updateMood();
                 if (this.audioEnabled) this.startAudio();
-                this.showStatus("CALIBRATION COMPLETE", 2000);
-            }, 2500);
+                this.showStatus("CALIBRATION COMPLETE", 1000);
+            }, 500);
         }
         
         return this.disabled;

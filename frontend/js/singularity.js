@@ -60,10 +60,13 @@ class ProjectSingularity {
     }
 
     startArchitect() {
+        // Trigger immediately on start
+        this.generateArchitectEvent();
+        
         // The Architect generates autonomous events based on market state
         this.architectInterval = setInterval(() => {
-            if (Math.random() > 0.7) this.generateArchitectEvent();
-        }, 15000);
+            if (Math.random() > 0.4) this.generateArchitectEvent();
+        }, 5000);
     }
 
     stopArchitect() {
